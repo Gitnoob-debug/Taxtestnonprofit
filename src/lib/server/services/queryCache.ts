@@ -11,11 +11,22 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY!;
+// Lazy-initialize Supabase client to avoid build-time errors
+let supabase: SupabaseClient | null = null;
 
-const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
+function getSupabase(): SupabaseClient {
+  if (!supabase) {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables');
+    }
+
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
+  return supabase;
+}
 
 export interface CacheEntry {
   embedding: number[] | null;
@@ -62,7 +73,7 @@ export async function getCachedEmbedding(query: string): Promise<CacheEntry | nu
   try {
     const queryHash = hashQuery(query);
     
-    const { data, error } = await supabase.rpc('get_cached_embedding', {
+    const { data, error } = await getSupabase().rpc('get_cached_embedding', {
       p_query_hash: queryHash,
     });
 
@@ -109,7 +120,7 @@ export async function cacheEmbedding(
       ttlDays = 7,
     } = options;
 
-    const { error } = await supabase.rpc('set_cache_entry', {
+    const { error } = await getSupabase().rpc('set_cache_entry', {
       p_query_hash: queryHash,
       p_query_text: query,
       p_embedding: embedding,
@@ -142,7 +153,7 @@ export async function updateCachedResponse(
   try {
     const queryHash = hashQuery(query);
 
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('query_cache')
       .update({
         cached_response: response,
@@ -167,7 +178,7 @@ export async function updateCachedResponse(
  */
 export async function getCacheStats(): Promise<CacheStats | null> {
   try {
-    const { data, error } = await supabase.rpc('get_cache_stats');
+    const { data, error } = await getSupabase().rpc('get_cache_stats');
 
     if (error) {
       console.error('Cache stats error:', error);
@@ -203,7 +214,7 @@ export async function getCacheStats(): Promise<CacheStats | null> {
  */
 export async function cleanupExpiredCache(): Promise<number> {
   try {
-    const { data, error } = await supabase.rpc('cleanup_expired_cache');
+    const { data, error } = await getSupabase().rpc('cleanup_expired_cache');
 
     if (error) {
       console.error('Cache cleanup error:', error);
@@ -224,7 +235,7 @@ export async function invalidateCache(query: string): Promise<boolean> {
   try {
     const queryHash = hashQuery(query);
 
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('query_cache')
       .delete()
       .eq('query_hash', queryHash);
@@ -246,7 +257,7 @@ export async function invalidateCache(query: string): Promise<boolean> {
  */
 export async function clearAllCache(): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('query_cache')
       .delete()
       .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all

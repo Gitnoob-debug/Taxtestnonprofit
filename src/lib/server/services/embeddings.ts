@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { config } from '../utils/config';
+import { config } from '../config';
 import { getCachedEmbedding, cacheEmbedding } from './queryCache';
 
 const openai = new OpenAI({ apiKey: config.openaiApiKey });

@@ -1,25 +1,41 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+// Read env vars at module load time for initialization check only
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
 
-if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
-  console.warn('⚠ Missing Supabase environment variables - Supabase features disabled');
-}
+const isValidAdminConfig = supabaseUrl && supabaseServiceKey;
+const isValidClientConfig = supabaseUrl && supabaseAnonKey;
 
-export const supabaseAdmin: SupabaseClient | null = supabaseUrl && supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey, {
+// Lazy-init admin client
+let _supabaseAdmin: SupabaseClient | null = null;
+export function getSupabaseAdmin(): SupabaseClient | null {
+  if (!isValidAdminConfig) return null;
+  if (!_supabaseAdmin) {
+    _supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
       }
-    })
-  : null;
+    });
+  }
+  return _supabaseAdmin;
+}
 
-export const supabaseClient: SupabaseClient | null = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+// Lazy-init client
+let _supabaseClient: SupabaseClient | null = null;
+export function getSupabaseClient(): SupabaseClient | null {
+  if (!isValidClientConfig) return null;
+  if (!_supabaseClient) {
+    _supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  }
+  return _supabaseClient;
+}
+
+// Legacy exports for compatibility (deprecated - use getters)
+export const supabaseAdmin: SupabaseClient | null = null;
+export const supabaseClient: SupabaseClient | null = null;
 
 export { supabaseUrl, supabaseAnonKey };
 
@@ -35,12 +51,13 @@ export interface AnonymousQueryLog {
 }
 
 export async function logAnonymousQuery(data: AnonymousQueryLog): Promise<void> {
-  if (!supabaseAdmin) {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
     return;
   }
-  
+
   try {
-    await supabaseAdmin
+    await admin
       .from('anonymous_queries')
       .insert({
         session_id: data.session_id,

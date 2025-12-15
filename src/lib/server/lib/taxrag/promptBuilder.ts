@@ -90,25 +90,21 @@ function getAnswerInstructions(
     if (ctx.profile.employmentType === 'self-employed') {
       instructions.push('- Remember they are SELF-EMPLOYED: use T2125 (not T777) for home office, mention quarterly instalments if relevant, reference business deductions');
     }
-    
-    if (ctx.profile.incomeRange === '$150,000+') {
-      instructions.push('- Remember they have HIGH INCOME ($150K+): emphasize RRSP tax savings (~43%+ bracket), note CCB clawback, mention instalment requirements');
+
+    if (ctx.profile.hasChildren) {
+      instructions.push('- Remember they have CHILDREN: mention childcare expense limits, CCB, RESP if relevant');
     }
-    
-    if (ctx.profile.hasChildren && ctx.profile.childrenUnder6 && ctx.profile.childrenUnder6 > 0) {
-      instructions.push(`- Remember they have ${ctx.profile.childrenUnder6} CHILDREN UNDER 6: $8,000/child childcare limit, mention CCB, RESP if relevant`);
-    }
-    
+
     if (ctx.profile.maritalStatus === 'married' || ctx.profile.maritalStatus === 'common-law') {
       instructions.push('- Remember they are MARRIED: mention spousal RRSP, income splitting opportunities, lower-income spouse rules');
     }
-    
+
     if (ctx.profile.province) {
       instructions.push(`- Remember they are in ${ctx.profile.province.toUpperCase()}: reference ${ctx.profile.province} tax rates/credits when relevant`);
     }
-    
-    if (ctx.profile.hasDisability && !ctx.profile.hasDTC) {
-      instructions.push('- Remember they have a DISABILITY but NO DTC: may want to suggest applying for DTC if eligible');
+
+    if (ctx.profile.hasDisability) {
+      instructions.push('- Remember they have a DISABILITY: may be eligible for DTC if not already claimed');
     }
   }
   

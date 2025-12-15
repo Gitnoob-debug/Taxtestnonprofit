@@ -13,7 +13,12 @@
 import { embedText } from './embeddings';
 import { searchSimilar, SearchResult } from './vectorStore';
 import { config } from '../config';
-import { ConversationMessage } from './generator';
+
+// Conversation message type (defined locally to avoid circular deps)
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 import { redactPII, RedactionResult } from './piiRedactor';
 import { classifyQuery, ClassificationResult, QueryType } from './queryClassifier';

@@ -1,15 +1,22 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { config } from '../utils/config';
+import { config } from '../config';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+// Lazy-initialize Supabase client to avoid build-time errors
+let supabase: SupabaseClient | null = null;
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables');
+function getSupabase(): SupabaseClient {
+  if (!supabase) {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables');
+    }
+
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
+  return supabase;
 }
-
-const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
 
 export interface Chunk {
   id: number;
@@ -40,7 +47,7 @@ export async function searchSimilar(
 ): Promise<SearchResult[]> {
   try {
     // Use the semantic_search RPC function
-    const { data, error } = await supabase.rpc('semantic_search', {
+    const { data, error } = await getSupabase().rpc('semantic_search', {
       query_embedding: embedding,
       match_count: topK,
       category_filter: sourceTypes?.[0] || null, // Map source_type to category
@@ -80,7 +87,7 @@ export async function searchSimilar(
  */
 export async function getChunkCount(): Promise<number> {
   try {
-    const { count, error } = await supabase
+    const { count, error } = await getSupabase()
       .from('documents')
       .select('*', { count: 'exact', head: true });
 
@@ -97,7 +104,7 @@ export async function getChunkCount(): Promise<number> {
  */
 export async function testConnection(): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('documents')
       .select('id')
       .limit(1);
@@ -121,7 +128,7 @@ export async function searchHybrid(
   bm25Weight: number = 0.3
 ): Promise<SearchResult[]> {
   try {
-    const { data, error } = await supabase.rpc('hybrid_search', {
+    const { data, error } = await getSupabase().rpc('hybrid_search', {
       query_embedding: embedding,
       query_text: queryText,
       match_count: topK,
@@ -192,6 +199,6 @@ export async function getChunkCountV2(): Promise<number> {
 }
 
 /**
- * Export the Supabase client for use in other modules if needed
+ * Export the Supabase client getter for use in other modules if needed
  */
-export { supabase };
+export { getSupabase };

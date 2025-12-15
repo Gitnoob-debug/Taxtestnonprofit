@@ -8,15 +8,22 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { cachedEmbedText } from './embeddings';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY!;
+// Lazy-initialize Supabase client to avoid build-time errors
+let supabase: SupabaseClient | null = null;
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables');
+function getSupabase(): SupabaseClient {
+  if (!supabase) {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables');
+    }
+
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
+  return supabase;
 }
-
-const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
 
 export interface HybridSearchResult {
   chunk_id: string;
@@ -109,7 +116,7 @@ export async function hybridSearch(options: HybridSearchOptions): Promise<Hybrid
   // Fetch more results if filtering, to ensure we get enough after filtering
   const fetchCount = (filterForms || filterTaxYear) ? topK * 3 : topK;
 
-  const { data, error } = await supabase.rpc('hybrid_search', {
+  const { data, error } = await getSupabase().rpc('hybrid_search', {
     query_embedding: embedding,
     query_text: query,
     match_count: fetchCount,
@@ -180,7 +187,7 @@ export async function hybridSearch(options: HybridSearchOptions): Promise<Hybrid
 export async function semanticSearch(query: string, topK: number = 10): Promise<HybridSearchResult[]> {
   const embedding = await cachedEmbedText(query);
 
-  const { data, error } = await supabase.rpc('semantic_search', {
+  const { data, error } = await getSupabase().rpc('semantic_search', {
     query_embedding: embedding,
     match_count: topK,
     category_filter: null,
@@ -217,7 +224,7 @@ export async function searchByForm(formNumber: string, topK: number = 10): Promi
 export async function isHybridSearchAvailable(): Promise<boolean> {
   try {
     // Check if the documents table exists and has data
-    const { count, error } = await supabase
+    const { count, error } = await getSupabase()
       .from('documents')
       .select('*', { count: 'exact', head: true });
 
