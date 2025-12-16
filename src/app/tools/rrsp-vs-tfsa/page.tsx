@@ -102,34 +102,34 @@ export default function RRSPvsTFSAPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Back Link */}
         <Link
           href="/tools"
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-6"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Tools
         </Link>
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+        <div className="mb-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
             RRSP vs TFSA Comparison Calculator
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-lg text-slate-600 dark:text-slate-400">
             Compare these two powerful savings accounts and see which is better for your situation.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div className="grid lg:grid-cols-5 gap-6 lg:gap-10">
           {/* Input Section */}
-          <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">
               Your Information
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
                 <Label htmlFor="currentIncome">Current Annual Income</Label>
                 <div className="relative mt-1">
@@ -219,11 +219,11 @@ export default function RRSPvsTFSAPage() {
           </div>
 
           {/* Results Section */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-6 lg:space-y-8">
             {results ? (
               <>
                 {/* Recommendation Card */}
-                <div className={`rounded-xl border p-6 ${
+                <div className={`rounded-2xl border p-6 sm:p-8 ${
                   results.recommendation === 'rrsp'
                     ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'
                     : results.recommendation === 'tfsa'
@@ -264,10 +264,10 @@ export default function RRSPvsTFSAPage() {
                 </div>
 
                 {/* Side by Side Comparison */}
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-6">
                   {/* RRSP Card */}
-                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-                    <h3 className="font-bold text-blue-600 dark:text-blue-400 mb-4 text-lg">RRSP</h3>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+                    <h3 className="font-bold text-blue-600 dark:text-blue-400 mb-6 text-xl">RRSP</h3>
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-slate-600 dark:text-slate-400">Contribution</span>
@@ -293,8 +293,8 @@ export default function RRSPvsTFSAPage() {
                   </div>
 
                   {/* TFSA Card */}
-                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-                    <h3 className="font-bold text-green-600 dark:text-green-400 mb-4 text-lg">TFSA</h3>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+                    <h3 className="font-bold text-green-600 dark:text-green-400 mb-6 text-xl">TFSA</h3>
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-slate-600 dark:text-slate-400">Contribution</span>
@@ -321,8 +321,8 @@ export default function RRSPvsTFSAPage() {
                 </div>
 
                 {/* Tax Rate Comparison */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-                  <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Tax Rate Comparison</h3>
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">Tax Rate Comparison</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
                       <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Current Marginal Rate</p>
@@ -340,9 +340,9 @@ export default function RRSPvsTFSAPage() {
                 </div>
               </>
             ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-8 text-center">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 sm:p-12 text-center">
                 <Scale className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-lg text-slate-500 dark:text-slate-400">
                   Enter your information to compare RRSP and TFSA
                 </p>
               </div>
@@ -351,7 +351,7 @@ export default function RRSPvsTFSAPage() {
         </div>
 
         {/* Comparison Table */}
-        <div className="mt-12 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="mt-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 dark:bg-slate-700">
               <tr>
@@ -401,30 +401,36 @@ export default function RRSPvsTFSAPage() {
         </div>
 
         {/* SEO Content */}
-        <div className="mt-12 prose prose-slate dark:prose-invert max-w-none">
-          <h2>RRSP vs TFSA: Which is Better?</h2>
-          <p>
+        <div className="mt-16 sm:mt-20 max-w-3xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6">
+            RRSP vs TFSA: Which is Better?
+          </h2>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
             Both RRSPs and TFSAs are excellent savings vehicles, but they work differently. The best choice depends on your current income, expected retirement income, and financial goals.
           </p>
 
-          <h3>Choose RRSP When:</h3>
-          <ul>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+            Choose RRSP When:
+          </h3>
+          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8 text-lg">
             <li>You're in a high tax bracket now</li>
             <li>You expect lower income in retirement</li>
             <li>You want to reduce this year's tax bill</li>
             <li>You're saving for a first home (Home Buyers' Plan)</li>
           </ul>
 
-          <h3>Choose TFSA When:</h3>
-          <ul>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+            Choose TFSA When:
+          </h3>
+          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8 text-lg">
             <li>You're in a lower tax bracket now</li>
             <li>You expect similar or higher income in retirement</li>
             <li>You want flexibility to withdraw without tax consequences</li>
             <li>You want to protect government benefits like OAS and GIS</li>
           </ul>
 
-          <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mt-6">
-            <p className="text-amber-800 dark:text-amber-200 text-sm m-0">
+          <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-6 mt-10">
+            <p className="text-amber-800 dark:text-amber-200 text-base m-0 leading-relaxed">
               <strong>Disclaimer:</strong> This calculator provides estimates for illustrative purposes. Your actual results will vary based on investment returns, tax rates, and other factors. Consult a financial advisor for personalized advice.
             </p>
           </div>

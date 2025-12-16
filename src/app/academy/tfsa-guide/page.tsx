@@ -11,27 +11,27 @@ export const metadata: Metadata = {
 export default function TFSAGuidePage() {
   return (
     <article className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Back Link */}
         <Link
           href="/academy"
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-6"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Academy
         </Link>
 
         {/* Header */}
-        <header className="mb-8">
+        <header className="mb-10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-green-100 dark:bg-green-900 p-2 rounded-lg">
+            <div className="bg-green-100 dark:bg-green-900 p-2.5 rounded-xl">
               <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <span className="text-sm font-medium text-green-600 dark:text-green-400">
               Tax-Free Savings
             </span>
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-4">
             TFSA Guide: Tax-Free Savings Account Explained (2024)
           </h1>
           <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
@@ -44,9 +44,9 @@ export default function TFSAGuidePage() {
         </header>
 
         {/* Table of Contents */}
-        <nav className="bg-slate-100 dark:bg-slate-800 rounded-xl p-6 mb-8">
-          <h2 className="font-semibold text-slate-900 dark:text-white mb-3">In This Guide</h2>
-          <ol className="space-y-2 text-sm">
+        <nav className="bg-slate-100 dark:bg-slate-800 rounded-2xl p-6 sm:p-8 mb-10">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">In This Guide</h2>
+          <ol className="space-y-3 text-sm sm:text-base">
             <li><a href="#what-is-tfsa" className="text-teal-600 dark:text-teal-400 hover:underline">1. What is a TFSA?</a></li>
             <li><a href="#contribution-limits" className="text-teal-600 dark:text-teal-400 hover:underline">2. 2024 Contribution Limits</a></li>
             <li><a href="#calculating-room" className="text-teal-600 dark:text-teal-400 hover:underline">3. Calculating Your Contribution Room</a></li>
@@ -57,7 +57,7 @@ export default function TFSAGuidePage() {
         </nav>
 
         {/* Content */}
-        <div className="prose prose-slate dark:prose-invert max-w-none">
+        <div className="prose prose-lg prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4 prose-p:text-base prose-p:sm:text-lg prose-p:leading-relaxed prose-li:text-base prose-li:sm:text-lg">
           <section id="what-is-tfsa">
             <h2>What is a TFSA?</h2>
             <p>
@@ -273,16 +273,16 @@ export default function TFSAGuidePage() {
         </div>
 
         {/* Related Articles */}
-        <div className="mt-12 border-t border-slate-200 dark:border-slate-700 pt-8">
-          <h2 className="font-bold text-slate-900 dark:text-white mb-4">Related Articles</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <Link href="/academy/rrsp-complete-guide" className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-teal-300 dark:hover:border-teal-700 transition-colors">
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">RRSP Complete Guide</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Everything about Registered Retirement Savings Plans</p>
+        <div className="mt-16 border-t border-slate-200 dark:border-slate-700 pt-10">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Related Articles</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Link href="/academy/rrsp-complete-guide" className="p-5 sm:p-6 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-teal-300 dark:hover:border-teal-700 transition-colors">
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-2">RRSP Complete Guide</h3>
+              <p className="text-slate-600 dark:text-slate-400">Everything about Registered Retirement Savings Plans</p>
             </Link>
-            <Link href="/tools/rrsp-vs-tfsa" className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-teal-300 dark:hover:border-teal-700 transition-colors">
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">RRSP vs TFSA Calculator</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Compare which account is better for you</p>
+            <Link href="/tools/rrsp-vs-tfsa" className="p-5 sm:p-6 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-teal-300 dark:hover:border-teal-700 transition-colors">
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-2">RRSP vs TFSA Calculator</h3>
+              <p className="text-slate-600 dark:text-slate-400">Compare which account is better for you</p>
             </Link>
           </div>
         </div>

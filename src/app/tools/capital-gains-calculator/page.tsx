@@ -84,34 +84,34 @@ export default function CapitalGainsCalculatorPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Back Link */}
         <Link
           href="/tools"
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-6"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Tools
         </Link>
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+        <div className="mb-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
             Capital Gains Tax Calculator {TAX_YEAR}
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-lg text-slate-600 dark:text-slate-400">
             Calculate the tax on your investment gains including the 2024 inclusion rate changes.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-10">
           {/* Input Section */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">
               Your Information
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
                 <Label htmlFor="otherIncome">Other Annual Income</Label>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
@@ -166,12 +166,12 @@ export default function CapitalGainsCalculatorPage() {
             </div>
 
             {/* Info Box */}
-            <div className="mt-6 p-4 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
+            <div className="mt-8 p-5 bg-orange-50 dark:bg-orange-950 rounded-xl border border-orange-200 dark:border-orange-800">
               <div className="flex gap-3">
                 <Info className="h-5 w-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
                 <div className="text-sm text-orange-800 dark:text-orange-200">
-                  <p className="font-medium mb-1">{TAX_YEAR} Capital Gains Rules</p>
-                  <ul className="space-y-1 text-orange-700 dark:text-orange-300">
+                  <p className="font-medium mb-2">{TAX_YEAR} Capital Gains Rules</p>
+                  <ul className="space-y-2 text-orange-700 dark:text-orange-300">
                     <li>• First $250,000: 50% inclusion rate</li>
                     <li>• Above $250,000: 66.67% inclusion rate</li>
                     <li>• Changes effective June 25, 2024</li>
@@ -182,11 +182,11 @@ export default function CapitalGainsCalculatorPage() {
           </div>
 
           {/* Results Section */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:space-y-8">
             {results ? (
               <>
                 {/* Summary Card */}
-                <div className="bg-orange-50 dark:bg-orange-950 rounded-xl border border-orange-200 dark:border-orange-800 p-6">
+                <div className="bg-orange-50 dark:bg-orange-950 rounded-2xl border border-orange-200 dark:border-orange-800 p-6 sm:p-8">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                     <h3 className="font-semibold text-orange-900 dark:text-orange-100">
@@ -224,8 +224,8 @@ export default function CapitalGainsCalculatorPage() {
                 </div>
 
                 {/* Rates Card */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-                  <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Tax Rates</h3>
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">Tax Rates</h3>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
@@ -250,7 +250,7 @@ export default function CapitalGainsCalculatorPage() {
                 </div>
 
                 {/* Net Proceeds Card */}
-                <div className="bg-green-50 dark:bg-green-950 rounded-xl border border-green-200 dark:border-green-800 p-6">
+                <div className="bg-green-50 dark:bg-green-950 rounded-2xl border border-green-200 dark:border-green-800 p-6 sm:p-8">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-green-900 dark:text-green-100">
                       Net Proceeds After Tax
@@ -265,9 +265,9 @@ export default function CapitalGainsCalculatorPage() {
                 </div>
               </>
             ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 sm:p-12 text-center">
                 <TrendingUp className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-lg text-slate-500 dark:text-slate-400">
                   Enter your capital gain to calculate your tax
                 </p>
               </div>
@@ -276,46 +276,56 @@ export default function CapitalGainsCalculatorPage() {
         </div>
 
         {/* SEO Content */}
-        <div className="mt-12 prose prose-slate dark:prose-invert max-w-none">
-          <h2>Understanding Canadian Capital Gains Tax</h2>
-          <p>
+        <div className="mt-16 sm:mt-20 max-w-3xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6">
+            Understanding Canadian Capital Gains Tax
+          </h2>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
             In Canada, when you sell an investment (stocks, crypto, real estate, etc.) for more than you paid, the profit is called a capital gain. Only a portion of this gain is added to your taxable income.
           </p>
 
-          <h3>2024 Capital Gains Inclusion Rate Changes</h3>
-          <p>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+            2024 Capital Gains Inclusion Rate Changes
+          </h3>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
             As of June 25, 2024, the capital gains inclusion rate has changed:
           </p>
-          <ul>
+          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8 text-lg">
             <li><strong>First $250,000:</strong> 50% inclusion rate (unchanged)</li>
             <li><strong>Above $250,000:</strong> 66.67% inclusion rate (increased from 50%)</li>
           </ul>
-          <p>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
             This means if you have a $300,000 capital gain, the first $250,000 has 50% included ($125,000) and the remaining $50,000 has 66.67% included ($33,335), for a total taxable amount of $158,335.
           </p>
 
-          <h3>What Qualifies as a Capital Gain?</h3>
-          <ul>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+            What Qualifies as a Capital Gain?
+          </h3>
+          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8 text-lg">
             <li>Selling stocks, ETFs, or mutual funds</li>
             <li>Selling cryptocurrency</li>
             <li>Selling investment real estate</li>
             <li>Selling a business</li>
           </ul>
 
-          <h3>What Doesn't Trigger Capital Gains Tax?</h3>
-          <ul>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+            What Doesn't Trigger Capital Gains Tax?
+          </h3>
+          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8 text-lg">
             <li>Selling your principal residence (tax-exempt)</li>
             <li>Investments held in RRSP or TFSA</li>
             <li>Unrealized gains (you haven't sold yet)</li>
           </ul>
 
-          <h3>Capital Losses</h3>
-          <p>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+            Capital Losses
+          </h3>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
             Capital losses can be used to offset capital gains. If your losses exceed gains, you can carry them back 3 years or forward indefinitely to offset future gains.
           </p>
 
-          <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mt-6">
-            <p className="text-amber-800 dark:text-amber-200 text-sm m-0">
+          <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-6 mt-10">
+            <p className="text-amber-800 dark:text-amber-200 text-base m-0 leading-relaxed">
               <strong>Disclaimer:</strong> This calculator provides estimates for general guidance. Capital gains tax calculations can be complex, especially for real estate or business sales. Consult a tax professional for your specific situation.
             </p>
           </div>

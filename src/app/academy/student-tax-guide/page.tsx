@@ -11,20 +11,20 @@ export const metadata: Metadata = {
 export default function StudentTaxGuidePage() {
   return (
     <article className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <Link href="/academy" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <Link href="/academy" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-8">
           <ArrowLeft className="h-4 w-4" />
           Back to Academy
         </Link>
 
-        <header className="mb-8">
+        <header className="mb-10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg">
+            <div className="bg-blue-100 dark:bg-blue-900 p-2.5 rounded-xl">
               <GraduationCap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <span className="text-sm font-medium text-blue-600 dark:text-blue-400">Students</span>
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-4">
             Student Tax Guide: Credits and Deductions (2024)
           </h1>
           <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
@@ -33,7 +33,7 @@ export default function StudentTaxGuidePage() {
           </div>
         </header>
 
-        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-6 mb-8">
+        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-2xl p-6 sm:p-8 mb-10">
           <h2 className="font-bold text-blue-900 dark:text-blue-100 mb-2">Why Students Should File Tax Returns</h2>
           <p className="text-blue-700 dark:text-blue-300 text-sm mb-3">Even with little or no income, filing a tax return as a student:</p>
           <ul className="space-y-1 text-blue-700 dark:text-blue-300 text-sm">
@@ -44,7 +44,7 @@ export default function StudentTaxGuidePage() {
           </ul>
         </div>
 
-        <div className="prose prose-slate dark:prose-invert max-w-none">
+        <div className="prose prose-lg prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4 prose-p:text-base prose-p:sm:text-lg prose-p:leading-relaxed prose-li:text-base prose-li:sm:text-lg">
           <h2>Tuition Tax Credit</h2>
           <p>The federal tuition tax credit is 15% of eligible tuition fees. If you paid $10,000 in tuition, that's a $1,500 federal credit (plus provincial).</p>
 

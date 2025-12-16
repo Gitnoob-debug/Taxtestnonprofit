@@ -73,34 +73,34 @@ export default function RRSPCalculatorPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Back Link */}
         <Link
           href="/tools"
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-6"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Tools
         </Link>
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+        <div className="mb-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
             RRSP Contribution Calculator {TAX_YEAR}
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-lg text-slate-600 dark:text-slate-400">
             Calculate your RRSP contribution room and see your tax savings from contributing.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Input Section */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">
               Your Information
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
                 <Label htmlFor="income">Previous Year Earned Income</Label>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
@@ -173,12 +173,12 @@ export default function RRSPCalculatorPage() {
             </div>
 
             {/* Info Box */}
-            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="flex gap-3">
+            <div className="mt-8 p-5 bg-blue-50 dark:bg-blue-950 rounded-xl border border-blue-200 dark:border-blue-800">
+              <div className="flex gap-4">
                 <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-800 dark:text-blue-200">
-                  <p className="font-medium mb-1">{TAX_YEAR} RRSP Limits</p>
-                  <ul className="space-y-1 text-blue-700 dark:text-blue-300">
+                  <p className="font-semibold mb-2">{TAX_YEAR} RRSP Limits</p>
+                  <ul className="space-y-2 text-blue-700 dark:text-blue-300">
                     <li>• Maximum contribution: {formatCurrency(RRSP_LIMIT_2024)}</li>
                     <li>• Contribution rate: {formatPercent(RRSP_CONTRIBUTION_RATE)} of earned income</li>
                     <li>• Deadline: March 3, {TAX_YEAR + 1} (for {TAX_YEAR} tax year)</li>
@@ -189,16 +189,16 @@ export default function RRSPCalculatorPage() {
           </div>
 
           {/* Results Section */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             {results ? (
               <>
                 {/* Contribution Room Card */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-                  <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">
                     Your RRSP Room
                   </h3>
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex justify-between">
                       <span className="text-slate-600 dark:text-slate-400">New room from {TAX_YEAR - 1} income</span>
                       <span className="font-medium text-slate-900 dark:text-white">
@@ -299,33 +299,33 @@ export default function RRSPCalculatorPage() {
         </div>
 
         {/* SEO Content */}
-        <div className="mt-12 prose prose-slate dark:prose-invert max-w-none">
-          <h2>Understanding RRSP Contributions</h2>
-          <p>
+        <div className="mt-16 sm:mt-20 max-w-3xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6">Understanding RRSP Contributions</h2>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
             A Registered Retirement Savings Plan (RRSP) is a tax-advantaged account that helps Canadians save for retirement. Contributions are tax-deductible, meaning they reduce your taxable income for the year.
           </p>
 
-          <h3>How RRSP Contribution Room Works</h3>
-          <p>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">How RRSP Contribution Room Works</h3>
+          <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
             Your RRSP contribution room is calculated as 18% of your previous year's earned income, up to the annual maximum ({formatCurrency(RRSP_LIMIT_2024)} for {TAX_YEAR}). Unused room carries forward indefinitely.
           </p>
 
-          <h3>Why Contribute to an RRSP?</h3>
-          <ul>
-            <li><strong>Tax deduction:</strong> Contributions reduce your taxable income</li>
-            <li><strong>Tax-deferred growth:</strong> Investments grow without annual taxation</li>
-            <li><strong>Lower tax in retirement:</strong> Withdrawals are taxed at your retirement rate, which is often lower</li>
-            <li><strong>Home Buyers' Plan:</strong> Withdraw up to $35,000 tax-free for a first home</li>
-            <li><strong>Lifelong Learning Plan:</strong> Withdraw up to $10,000/year for education</li>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">Why Contribute to an RRSP?</h3>
+          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8">
+            <li className="flex gap-3"><span className="text-teal-500 font-bold">•</span><span><strong className="text-slate-900 dark:text-white">Tax deduction:</strong> Contributions reduce your taxable income</span></li>
+            <li className="flex gap-3"><span className="text-teal-500 font-bold">•</span><span><strong className="text-slate-900 dark:text-white">Tax-deferred growth:</strong> Investments grow without annual taxation</span></li>
+            <li className="flex gap-3"><span className="text-teal-500 font-bold">•</span><span><strong className="text-slate-900 dark:text-white">Lower tax in retirement:</strong> Withdrawals are taxed at your retirement rate, which is often lower</span></li>
+            <li className="flex gap-3"><span className="text-teal-500 font-bold">•</span><span><strong className="text-slate-900 dark:text-white">Home Buyers' Plan:</strong> Withdraw up to $35,000 tax-free for a first home</span></li>
+            <li className="flex gap-3"><span className="text-teal-500 font-bold">•</span><span><strong className="text-slate-900 dark:text-white">Lifelong Learning Plan:</strong> Withdraw up to $10,000/year for education</span></li>
           </ul>
 
-          <h3>RRSP vs TFSA</h3>
-          <p>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">RRSP vs TFSA</h3>
+          <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
             Both accounts offer tax advantages, but work differently. RRSPs give you a tax deduction now but withdrawals are taxed. TFSAs are funded with after-tax dollars but withdrawals are tax-free. Your choice depends on your current vs. expected retirement tax rate.
           </p>
 
-          <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mt-6">
-            <p className="text-amber-800 dark:text-amber-200 text-sm m-0">
+          <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-6 mt-10">
+            <p className="text-amber-800 dark:text-amber-200 text-sm leading-relaxed m-0">
               <strong>Disclaimer:</strong> This calculator provides estimates for general guidance only. Consult a qualified tax professional for advice specific to your situation.
             </p>
           </div>

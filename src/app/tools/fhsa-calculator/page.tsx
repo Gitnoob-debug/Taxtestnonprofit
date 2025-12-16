@@ -75,34 +75,34 @@ export default function FHSACalculatorPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Back Link */}
         <Link
           href="/tools"
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-6"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Tools
         </Link>
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+        <div className="mb-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
             FHSA Calculator (First Home Savings Account)
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-lg text-slate-600 dark:text-slate-400">
             Calculate your FHSA contribution room and tax savings for buying your first home.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-10">
           {/* Input Section */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">
               Your Information
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
                 <Label htmlFor="income">Annual Income</Label>
                 <div className="relative mt-1">
@@ -167,12 +167,12 @@ export default function FHSACalculatorPage() {
             </div>
 
             {/* Info Box */}
-            <div className="mt-6 p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
+            <div className="mt-8 p-5 bg-red-50 dark:bg-red-950 rounded-xl border border-red-200 dark:border-red-800">
               <div className="flex gap-3">
                 <Info className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                 <div className="text-sm text-red-800 dark:text-red-200">
-                  <p className="font-medium mb-1">FHSA Key Limits</p>
-                  <ul className="space-y-1 text-red-700 dark:text-red-300">
+                  <p className="font-medium mb-2">FHSA Key Limits</p>
+                  <ul className="space-y-2 text-red-700 dark:text-red-300">
                     <li>• Annual limit: {formatCurrency(FHSA_ANNUAL_LIMIT)}</li>
                     <li>• Lifetime limit: {formatCurrency(FHSA_LIFETIME_LIMIT)}</li>
                     <li>• Unused room carries forward (up to $8K/year)</li>
@@ -184,11 +184,11 @@ export default function FHSACalculatorPage() {
           </div>
 
           {/* Results Section */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:space-y-8">
             {results ? (
               <>
                 {/* Summary Card */}
-                <div className="bg-red-50 dark:bg-red-950 rounded-xl border border-red-200 dark:border-red-800 p-6">
+                <div className="bg-red-50 dark:bg-red-950 rounded-2xl border border-red-200 dark:border-red-800 p-6 sm:p-8">
                   <div className="flex items-center gap-2 mb-4">
                     <Home className="h-5 w-5 text-red-600 dark:text-red-400" />
                     <h3 className="font-semibold text-red-900 dark:text-red-100">
@@ -229,8 +229,8 @@ export default function FHSACalculatorPage() {
                 </div>
 
                 {/* Room Remaining */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-                  <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">
                     Remaining Room
                   </h3>
                   <div className="space-y-3">
@@ -253,9 +253,9 @@ export default function FHSACalculatorPage() {
                 </div>
               </>
             ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 sm:p-12 text-center">
                 <Home className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-lg text-slate-500 dark:text-slate-400">
                   Enter your information to calculate your FHSA benefits
                 </p>
               </div>
@@ -264,9 +264,9 @@ export default function FHSACalculatorPage() {
         </div>
 
         {/* FHSA vs RRSP HBP Comparison */}
-        <div className="mt-8 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-            <h3 className="font-semibold text-slate-900 dark:text-white">
+        <div className="mt-10 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
               FHSA vs RRSP Home Buyers' Plan
             </h3>
           </div>
@@ -310,35 +310,43 @@ export default function FHSACalculatorPage() {
         </div>
 
         {/* SEO Content */}
-        <div className="mt-12 prose prose-slate dark:prose-invert max-w-none">
-          <h2>What is the FHSA (First Home Savings Account)?</h2>
-          <p>
+        <div className="mt-16 sm:mt-20 max-w-3xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6">
+            What is the FHSA (First Home Savings Account)?
+          </h2>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
             The First Home Savings Account (FHSA) is a registered account introduced in 2023 that combines the best features of an RRSP and TFSA for first-time home buyers. Contributions are tax-deductible like an RRSP, and withdrawals for a qualifying home purchase are tax-free like a TFSA.
           </p>
 
-          <h3>FHSA Eligibility Requirements</h3>
-          <ul>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+            FHSA Eligibility Requirements
+          </h3>
+          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8 text-lg">
             <li>Must be a Canadian resident</li>
             <li>Must be at least 18 years old</li>
             <li>Must be a first-time home buyer (haven't owned a home in the past 4 years)</li>
             <li>Must have a valid Social Insurance Number (SIN)</li>
           </ul>
 
-          <h3>How FHSA Contribution Room Works</h3>
-          <ul>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+            How FHSA Contribution Room Works
+          </h3>
+          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8 text-lg">
             <li><strong>Annual limit:</strong> $8,000 per year</li>
             <li><strong>Lifetime limit:</strong> $40,000 total</li>
             <li><strong>Carry forward:</strong> Unused room carries forward up to $8,000 per year</li>
             <li><strong>Maximum single year:</strong> $16,000 if you have carry-forward room</li>
           </ul>
 
-          <h3>Combining FHSA with RRSP HBP</h3>
-          <p>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+            Combining FHSA with RRSP HBP
+          </h3>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
             You can use both the FHSA and the RRSP Home Buyers' Plan together! This allows you to withdraw up to $75,000 tax-free for your first home ($40,000 from FHSA + $35,000 from RRSP HBP). The key difference is that FHSA withdrawals never need to be repaid, while RRSP HBP withdrawals must be repaid over 15 years.
           </p>
 
-          <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mt-6">
-            <p className="text-amber-800 dark:text-amber-200 text-sm m-0">
+          <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-6 mt-10">
+            <p className="text-amber-800 dark:text-amber-200 text-base m-0 leading-relaxed">
               <strong>Disclaimer:</strong> This calculator provides estimates for general guidance. FHSA rules can be complex and individual situations vary. Consult a qualified tax professional for advice specific to your situation.
             </p>
           </div>
