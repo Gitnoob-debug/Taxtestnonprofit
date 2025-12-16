@@ -171,7 +171,7 @@ export function ConversationSidebar({
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className={cn(
                 'fixed md:relative left-0 top-0 z-50 md:z-auto',
-                'h-full w-[280px] bg-card border-r border-border',
+                'h-full w-[300px] bg-card border-r border-border',
                 'flex flex-col shadow-xl md:shadow-none'
               )}
             >
@@ -365,16 +365,16 @@ function ConversationItem({
           <>
             <p
               className={cn(
-                'text-sm font-medium truncate',
+                'text-sm font-medium line-clamp-1',
                 isActive ? 'text-primary' : 'text-foreground'
               )}
             >
               {conversation.title || 'New conversation'}
             </p>
-            <p className="text-xs text-muted-foreground truncate mt-0.5">
-              {conversation.preview || 'No messages'}
+            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
+              {conversation.preview || 'Start a conversation...'}
             </p>
-            <p className="text-xs text-muted-foreground/70 mt-1">
+            <p className="text-[10px] text-muted-foreground/60 mt-1.5 font-medium">
               {formatDate(conversation.updatedAt)}
             </p>
           </>
@@ -382,10 +382,20 @@ function ConversationItem({
       </div>
 
       {!isEditing && (
-        <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="shrink-0 flex items-center gap-1">
+          {/* Always visible delete button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+          {/* More options dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
