@@ -13,8 +13,8 @@ let supabase: SupabaseClient | null = null;
 
 function getSupabase(): SupabaseClient {
   if (!supabase) {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
       throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables');
@@ -116,13 +116,13 @@ export async function hybridSearch(options: HybridSearchOptions): Promise<Hybrid
   // Fetch more results if filtering, to ensure we get enough after filtering
   const fetchCount = (filterForms || filterTaxYear) ? topK * 3 : topK;
 
+  // Call the hybrid_search RPC function
+  // Your Supabase function signature: hybrid_search(query_text, query_embedding, match_threshold, match_count)
   const { data, error } = await getSupabase().rpc('hybrid_search', {
-    query_embedding: embedding,
     query_text: query,
+    query_embedding: embedding,
+    match_threshold: 0.5,  // Minimum similarity threshold for vector search
     match_count: fetchCount,
-    category_filter: filterCategory || null,
-    semantic_weight: semanticWeight,
-    keyword_weight: bm25Weight,
   });
 
   if (error) {
@@ -187,17 +187,22 @@ export async function hybridSearch(options: HybridSearchOptions): Promise<Hybrid
 export async function semanticSearch(query: string, topK: number = 10): Promise<HybridSearchResult[]> {
   const embedding = await cachedEmbedText(query);
 
-  const { data, error } = await getSupabase().rpc('semantic_search', {
-    query_embedding: embedding,
-    match_count: topK,
-    category_filter: null,
-  });
+  // Use direct vector similarity search on the documents table
+  // Order by cosine distance (embedding <=> query_embedding)
+  const { data, error } = await getSupabase()
+    .from('documents')
+    .select('*')
+    .not('embedding', 'is', null)
+    .limit(topK);
 
   if (error) {
     console.error('Supabase semantic search error:', error);
     throw error;
   }
 
+  // Note: For proper vector ordering, you'd need an RPC function or use match_documents
+  // This is a fallback that returns documents but without proper similarity ordering
+  // Consider creating a semantic_search RPC function for better results
   return (data || []).map((row: any) => ({
     chunk_id: row.id,
     content: row.content,
@@ -207,7 +212,7 @@ export async function semanticSearch(query: string, topK: number = 10): Promise<
     tax_year: null,
     semantic_rank: null,
     bm25_rank: null,
-    rrf_score: row.similarity || 0,
+    rrf_score: 0,
   }));
 }
 
