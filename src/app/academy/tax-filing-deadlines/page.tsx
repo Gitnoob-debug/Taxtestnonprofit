@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { ArrowLeft, Clock, Calendar, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Canadian Tax Filing Deadlines 2025 | Important Dates & Penalties',
-  description: 'Complete guide to Canadian tax deadlines for 2025. Learn filing due dates for individuals, self-employed, corporations, RRSP deadlines, and penalties for late filing.',
-  keywords: 'tax deadline Canada 2025, CRA filing deadline, when are taxes due Canada, late filing penalty CRA, RRSP deadline 2025',
+  title: 'Canadian Tax Filing Deadlines 2026 | Important Dates & Penalties',
+  description: 'Complete guide to Canadian tax deadlines for 2026 (2025 tax year). Learn filing due dates for individuals, self-employed, corporations, RRSP deadlines, and penalties for late filing.',
+  keywords: 'tax deadline Canada 2026, CRA filing deadline, when are taxes due Canada, late filing penalty CRA, RRSP deadline 2026, 2025 tax year',
 }
 
 export default function TaxFilingDeadlinesPage() {
@@ -25,24 +25,24 @@ export default function TaxFilingDeadlinesPage() {
             <span className="text-sm font-medium text-red-600 dark:text-red-400">Tax Filing</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-            Canadian Tax Filing Deadlines 2025
+            Canadian Tax Filing Deadlines 2026
           </h1>
           <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1"><Clock className="h-4 w-4" />8 min read</span>
-            <span>Updated December 2024</span>
+            <span>Updated for 2025 Tax Year</span>
           </div>
         </header>
 
         <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-2xl p-6 sm:p-8 mb-10">
-          <h2 className="font-bold text-red-900 dark:text-red-100 mb-3">Key 2025 Deadline</h2>
+          <h2 className="font-bold text-red-900 dark:text-red-100 mb-3">Key 2026 Deadline</h2>
           <p className="text-red-700 dark:text-red-300 text-sm">
-            For most Canadians, the 2025 tax return (for 2024 income) is due <strong>April 30, 2025</strong>. Self-employed individuals have until June 16, 2025 (June 15 falls on a Sunday), but any balance owing is still due April 30.
+            For most Canadians, the 2026 tax return (for 2025 income) is due <strong>April 30, 2026</strong>. Self-employed individuals have until June 15, 2026, but any balance owing is still due April 30.
           </p>
         </div>
 
         <div className="prose prose-lg prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4 prose-p:text-base prose-p:sm:text-lg prose-p:leading-relaxed prose-li:text-base prose-li:sm:text-lg">
 
-          <h2>Key Tax Deadlines for 2025</h2>
+          <h2>Key Tax Deadlines for 2026 (Filing 2025 Tax Year)</h2>
 
           <h3>Personal Tax Return Deadlines</h3>
           <table className="text-sm">
@@ -56,13 +56,13 @@ export default function TaxFilingDeadlinesPage() {
             <tbody>
               <tr>
                 <td>Employees</td>
-                <td>April 30, 2025</td>
-                <td>April 30, 2025</td>
+                <td>April 30, 2026</td>
+                <td>April 30, 2026</td>
               </tr>
               <tr>
                 <td>Self-employed</td>
-                <td>June 16, 2025*</td>
-                <td>April 30, 2025</td>
+                <td>June 15, 2026</td>
+                <td>April 30, 2026</td>
               </tr>
               <tr>
                 <td>Deceased (Jan-Oct death)</td>
@@ -76,12 +76,11 @@ export default function TaxFilingDeadlinesPage() {
               </tr>
             </tbody>
           </table>
-          <p className="text-sm text-slate-500">*June 15 falls on a Sunday in 2025, so deadline extends to Monday June 16.</p>
 
           <h3>RRSP Contribution Deadline</h3>
           <ul>
-            <li><strong>For 2024 tax year:</strong> March 3, 2025</li>
             <li><strong>For 2025 tax year:</strong> March 2, 2026</li>
+            <li><strong>For 2026 tax year:</strong> March 1, 2027</li>
             <li>First 60 days of the year count for prior year</li>
           </ul>
 
@@ -89,7 +88,7 @@ export default function TaxFilingDeadlinesPage() {
           <ul>
             <li>No deadline—contribute anytime during the year</li>
             <li>New room available January 1 each year</li>
-            <li>2025 limit: $7,000</li>
+            <li>2025 limit: $7,000 (2026 TBD)</li>
           </ul>
 
           <h2>Quarterly Instalment Deadlines</h2>
@@ -158,7 +157,7 @@ export default function TaxFilingDeadlinesPage() {
             <li>CRA delays or errors</li>
           </ul>
 
-          <h2>Important 2025 Dates Calendar</h2>
+          <h2>Important 2026 Dates Calendar (2025 Tax Year)</h2>
           <table className="text-sm">
             <thead>
               <tr>
@@ -168,27 +167,27 @@ export default function TaxFilingDeadlinesPage() {
             </thead>
             <tbody>
               <tr>
-                <td>January 1, 2025</td>
-                <td>New TFSA room available ($7,000)</td>
+                <td>January 1, 2026</td>
+                <td>New TFSA room available</td>
               </tr>
               <tr>
-                <td>February 28, 2025</td>
+                <td>February 28, 2026</td>
                 <td>T4, T5, T3 slips issued to you</td>
               </tr>
               <tr>
-                <td>March 3, 2025</td>
-                <td>RRSP deadline for 2024 tax year</td>
+                <td>March 2, 2026</td>
+                <td>RRSP deadline for 2025 tax year</td>
               </tr>
               <tr>
-                <td>March 15, 2025</td>
+                <td>March 15, 2026</td>
                 <td>First instalment payment</td>
               </tr>
               <tr>
-                <td>April 30, 2025</td>
+                <td>April 30, 2026</td>
                 <td>Tax return & payment due (most filers)</td>
               </tr>
               <tr>
-                <td>June 16, 2025</td>
+                <td>June 15, 2026</td>
                 <td>Self-employed filing deadline</td>
               </tr>
             </tbody>

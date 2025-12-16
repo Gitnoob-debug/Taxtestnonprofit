@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { ArrowLeft, Clock, Percent, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'GST/HST Guide Canada 2024 | Registration, Filing & ITCs',
-  description: 'Complete guide to GST/HST for Canadian businesses. Learn about registration, filing, input tax credits, quick method, and compliance requirements.',
-  keywords: 'GST HST Canada, GST registration, input tax credits, HST filing, GST quick method, small supplier exemption',
+  title: 'GST/HST Guide Canada 2025 | Registration, Filing & ITCs',
+  description: 'Complete guide to GST/HST for Canadian businesses in 2025. Learn about registration, filing, input tax credits, quick method, and compliance requirements.',
+  keywords: 'GST HST Canada 2025, GST registration, input tax credits, HST filing, GST quick method, small supplier exemption',
 }
 
 export default function GSTHSTGuidePage() {

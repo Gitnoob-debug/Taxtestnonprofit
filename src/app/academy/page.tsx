@@ -10,7 +10,7 @@ import {
 
 export const metadata: Metadata = {
   title: 'Canadian Tax Guide & Academy | Learn About Canadian Taxes',
-  description: 'Free Canadian tax education and guides. Learn about RRSP, TFSA, tax deductions, credits, and strategies to minimize your taxes legally. Updated for 2025 tax season.',
+  description: 'Free Canadian tax education and guides. Learn about RRSP, TFSA, tax deductions, credits, and strategies to minimize your taxes legally. Updated for 2025 tax year.',
   keywords: 'Canadian tax guide, RRSP guide, TFSA guide, tax deductions Canada, tax credits Canada, how to file taxes Canada 2025',
 }
 
@@ -33,7 +33,7 @@ const categories = [
     description: 'When and how to file your taxes',
     color: 'indigo',
     articles: [
-      { slug: 'tax-deadlines-canada', title: 'Tax Deadlines Canada 2024', readTime: '8 min', icon: Calendar },
+      { slug: 'tax-filing-deadlines', title: 'Tax Deadlines Canada 2026', readTime: '8 min', icon: Calendar },
       { slug: 'tax-installments-guide', title: 'Quarterly Tax Installments', readTime: '9 min', icon: Calculator },
       { slug: 'notice-of-assessment', title: 'Notice of Assessment Explained', readTime: '7 min', icon: FileText },
       { slug: 'cra-my-account-guide', title: 'CRA My Account Guide', readTime: '8 min', icon: Globe },
@@ -382,7 +382,7 @@ export default function AcademyPage() {
         <div className="mt-16 prose prose-slate dark:prose-invert max-w-none">
           <h2>About Our Canadian Tax Academy</h2>
           <p>
-            Understanding Canadian taxes doesn't have to be complicated. Our Tax Academy provides free, comprehensive guides on everything from basic tax concepts to advanced planning strategies. All content is grounded in official CRA guidelines and updated for the 2024 tax year.
+            Understanding Canadian taxes doesn't have to be complicated. Our Tax Academy provides free, comprehensive guides on everything from basic tax concepts to advanced planning strategies. All content is grounded in official CRA guidelines and updated for the 2025 tax year.
           </p>
 
           <h3>What You'll Learn</h3>

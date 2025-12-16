@@ -29,7 +29,7 @@ export default function RRSPGuidePage() {
           </h1>
           <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1"><Clock className="h-4 w-4" />12 min read</span>
-            <span>Updated December 2024</span>
+            <span>Updated for 2025 Tax Year</span>
           </div>
         </header>
 
@@ -60,10 +60,10 @@ export default function RRSPGuidePage() {
             <li>Plus pension adjustment reversal (PAR)</li>
           </ul>
 
-          <h3>2024 Deadline</h3>
-          <p>For the 2024 tax year:</p>
+          <h3>2025 Tax Year Deadline</h3>
+          <p>For the 2025 tax year:</p>
           <ul>
-            <li><strong>Deadline:</strong> March 3, 2025 (first 60 days of 2025)</li>
+            <li><strong>Deadline:</strong> March 2, 2026 (first 60 days of 2026)</li>
             <li>Contributions in first 60 days can apply to previous year</li>
             <li>Or current year—your choice</li>
           </ul>

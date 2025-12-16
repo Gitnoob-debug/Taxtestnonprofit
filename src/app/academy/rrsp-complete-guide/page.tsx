@@ -39,7 +39,7 @@ export default function RRSPGuidePage() {
               <Clock className="h-4 w-4" />
               12 min read
             </span>
-            <span>Updated December 2024</span>
+            <span>Updated for 2025 Tax Year</span>
           </div>
         </header>
 
@@ -83,7 +83,7 @@ export default function RRSPGuidePage() {
             </div>
 
             <p>
-              <strong>Note:</strong> For the 2024 tax year (filing in early 2025), the limit is $31,560. The deadline to contribute for the 2024 tax year is March 3, 2025.
+              <strong>Deadline:</strong> The deadline to contribute for the 2025 tax year is March 2, 2026.
             </p>
 
             <p>

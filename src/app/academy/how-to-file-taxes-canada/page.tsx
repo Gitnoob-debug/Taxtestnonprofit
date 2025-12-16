@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { ArrowLeft, Clock, FileText, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'How to File Taxes in Canada 2024 | Step-by-Step Guide',
-  description: 'Complete beginner guide to filing taxes in Canada. Learn what documents you need, free filing options, NETFILE, and step-by-step instructions for your tax return.',
-  keywords: 'how to file taxes Canada, file tax return online Canada, NETFILE, free tax software Canada, CRA tax filing',
+  title: 'How to File Taxes in Canada 2025 | Step-by-Step Guide',
+  description: 'Complete beginner guide to filing taxes in Canada for 2025. Learn what documents you need, free filing options, NETFILE, and step-by-step instructions for your tax return.',
+  keywords: 'how to file taxes Canada 2025, file tax return online Canada, NETFILE, free tax software Canada, CRA tax filing',
 }
 
 export default function HowToFileTaxesCanadaPage() {

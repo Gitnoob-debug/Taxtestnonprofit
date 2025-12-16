@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { ArrowLeft, Clock, TrendingUp, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Capital Gains Tax Canada 2024 | Complete Guide & Rates',
-  description: 'Complete guide to capital gains tax in Canada. Learn about inclusion rates, calculating gains and losses, adjusted cost base, and strategies to minimize capital gains tax.',
-  keywords: 'capital gains tax Canada, capital gains inclusion rate, ACB adjusted cost base, capital gains exemption Canada',
+  title: 'Capital Gains Tax Canada 2025 | Complete Guide & Rates',
+  description: 'Complete guide to capital gains tax in Canada for 2025. Learn about inclusion rates, calculating gains and losses, adjusted cost base, and strategies to minimize capital gains tax.',
+  keywords: 'capital gains tax Canada 2025, capital gains inclusion rate, ACB adjusted cost base, capital gains exemption Canada',
 }
 
 export default function CapitalGainsTaxCanadaPage() {

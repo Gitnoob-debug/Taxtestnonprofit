@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { ArrowLeft, Clock, Briefcase, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Self-Employment Tax Canada 2024 | Freelance & Sole Proprietor Guide',
-  description: 'Complete guide to self-employment taxes in Canada. Learn about business income, deductions, CPP contributions, GST/HST, and quarterly tax installments.',
-  keywords: 'self-employment tax Canada, freelance taxes, sole proprietor tax, business income tax, T2125 guide',
+  title: 'Self-Employment Tax Canada 2025 | Freelance & Sole Proprietor Guide',
+  description: 'Complete guide to self-employment taxes in Canada for 2025. Learn about business income, deductions, CPP contributions, GST/HST, and quarterly tax installments.',
+  keywords: 'self-employment tax Canada 2025, freelance taxes, sole proprietor tax, business income tax, T2125 guide',
 }
 
 export default function SelfEmploymentTaxPage() {

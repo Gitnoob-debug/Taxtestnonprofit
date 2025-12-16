@@ -32,14 +32,14 @@ export default function TFSAGuidePage() {
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-            TFSA Guide: Tax-Free Savings Account Explained (2024)
+            TFSA Guide: Tax-Free Savings Account Explained (2025)
           </h1>
           <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
               10 min read
             </span>
-            <span>Updated December 2024</span>
+            <span>Updated for 2025 Tax Year</span>
           </div>
         </header>
 
