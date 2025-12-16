@@ -65,35 +65,35 @@ const articles = [
 export default function AcademyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="inline-flex items-center gap-2 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4">
             <BookOpen className="h-4 w-4" />
             Free Tax Education
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
             Canadian Tax Academy
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto px-2">
             Learn how Canadian taxes work with our free guides and articles.
             From RRSP basics to advanced tax planning, we've got you covered.
           </p>
         </div>
 
         {/* Featured Articles */}
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+        <div className="mb-10 sm:mb-16">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-4 sm:mb-6">
             Featured Guides
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {featuredArticles.map((article) => {
               const Icon = article.icon
               return (
                 <Link
                   key={article.slug}
                   href={`/academy/${article.slug}`}
-                  className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 hover:shadow-lg hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-200"
+                  className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 sm:p-6 hover:shadow-lg hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-200 active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="bg-teal-100 dark:bg-teal-900 p-2 rounded-lg">
@@ -126,18 +126,18 @@ export default function AcademyPage() {
         </div>
 
         {/* All Articles */}
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+        <div className="mb-10 sm:mb-16">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-4 sm:mb-6">
             More Articles
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {articles.map((article) => {
               const Icon = article.icon
               return (
                 <Link
                   key={article.slug}
                   href={`/academy/${article.slug}`}
-                  className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-200"
+                  className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-5 hover:shadow-md hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-200 active:scale-[0.98]"
                 >
                   <div className="flex items-start gap-4">
                     <div className="bg-slate-100 dark:bg-slate-700 p-2 rounded-lg shrink-0">
@@ -166,16 +166,16 @@ export default function AcademyPage() {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-teal-50 dark:bg-teal-950 rounded-2xl border border-teal-200 dark:border-teal-800 p-8 text-center">
-          <h2 className="text-2xl font-bold text-teal-900 dark:text-teal-100 mb-3">
+        <div className="bg-teal-50 dark:bg-teal-950 rounded-xl sm:rounded-2xl border border-teal-200 dark:border-teal-800 p-6 sm:p-8 text-center">
+          <h2 className="text-xl sm:text-2xl font-bold text-teal-900 dark:text-teal-100 mb-2 sm:mb-3">
             Have a Tax Question?
           </h2>
-          <p className="text-teal-700 dark:text-teal-300 mb-6 max-w-xl mx-auto">
+          <p className="text-sm sm:text-base text-teal-700 dark:text-teal-300 mb-4 sm:mb-6 max-w-xl mx-auto">
             Our AI-powered tax assistant can answer your specific questions using official CRA sources.
           </p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 active:scale-[0.98] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all"
           >
             Ask the Tax Assistant
             <ArrowRight className="h-4 w-4" />

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChatInterface } from '@/components/tax/ChatInterface'
 import { ConversationSidebar } from '@/components/ConversationSidebar'
-import { Header } from '@/components/Header'
 import { fetchConversation } from '@/lib/conversationApi'
 import { Message } from '@/types/tax'
 import { ConversationMessage } from '@/types/conversation'
@@ -88,8 +87,7 @@ export function TaxAssistantPage() {
   }
 
   return (
-    <div className="h-screen w-full bg-background flex flex-col">
-      <Header />
+    <div className="h-[calc(100vh-3.5rem)] w-full bg-background flex flex-col">
       <div className="flex-1 flex overflow-hidden">
         <ConversationSidebar
           isOpen={sidebarOpen}
