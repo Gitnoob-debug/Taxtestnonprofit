@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { ArrowLeft, Clock, TrendingUp, Calculator, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'TFSA Guide 2024 | Tax-Free Savings Account Explained',
-  description: 'Complete guide to TFSAs in Canada for 2024. Learn about the $7,000 contribution limit, how to calculate your room, investment options, and strategies for tax-free growth.',
-  keywords: 'TFSA guide, TFSA contribution limit 2024, TFSA room, how TFSA works, TFSA vs RRSP, TFSA withdrawal',
+  title: 'TFSA Guide 2025 | Tax-Free Savings Account Explained',
+  description: 'Complete guide to TFSAs in Canada for 2025. Learn about the $7,000 contribution limit, how to calculate your room, investment options, and strategies for tax-free growth.',
+  keywords: 'TFSA guide, TFSA contribution limit 2025, TFSA room, how TFSA works, TFSA vs RRSP, TFSA withdrawal',
 }
 
 export default function TFSAGuidePage() {
@@ -257,7 +257,7 @@ export default function TFSAGuidePage() {
             <h2>Key Takeaways</h2>
             <ul>
               <li>TFSA contributions are not tax-deductible, but all growth and withdrawals are tax-free</li>
-              <li>2024 limit is $7,000; maximum cumulative room is $95,000 (since 2009)</li>
+              <li>2025 limit is $7,000; maximum cumulative room is $102,000 (since 2009)</li>
               <li>Withdrawals restore contribution room on January 1 of the following year</li>
               <li>TFSAs are ideal for high-growth investments and emergency funds</li>
               <li>Withdrawals don't affect government benefits like OAS and GIS</li>

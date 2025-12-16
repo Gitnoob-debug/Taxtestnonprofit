@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { ArrowLeft, Clock, Landmark, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'RRSP Guide Canada 2024 | Contribution Limits, Rules & Strategies',
-  description: 'Complete RRSP guide for Canadians. Learn about contribution limits, deadline, deduction rules, withdrawal options, and strategies to maximize your retirement savings.',
-  keywords: 'RRSP contribution limit 2024, RRSP deadline, RRSP deduction, Home Buyers Plan, RRSP withdrawal rules',
+  title: 'RRSP Guide Canada 2025 | Contribution Limits, Rules & Strategies',
+  description: 'Complete RRSP guide for Canadians. Learn about contribution limits ($32,490 for 2025), deadline, deduction rules, withdrawal options, and strategies to maximize your retirement savings.',
+  keywords: 'RRSP contribution limit 2025, RRSP deadline, RRSP deduction, Home Buyers Plan, RRSP withdrawal rules',
 }
 
 export default function RRSPGuidePage() {
@@ -44,9 +44,9 @@ export default function RRSPGuidePage() {
 
           <h2>RRSP Contribution Limits</h2>
 
-          <h3>2024 Limits</h3>
+          <h3>2025 Limits</h3>
           <ul>
-            <li><strong>Maximum:</strong> $31,560</li>
+            <li><strong>Maximum:</strong> $32,490 (2024: $31,560)</li>
             <li><strong>Or:</strong> 18% of previous year's earned income</li>
             <li>Whichever is less</li>
           </ul>

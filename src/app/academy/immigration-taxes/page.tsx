@@ -196,7 +196,7 @@ export default function ImmigrationTaxesPage() {
           <ul>
             <li>Room accumulates only while you're resident AND 18+</li>
             <li>No room for years before immigration</li>
-            <li>2024 limit: $7,000</li>
+            <li>2025 limit: $7,000</li>
             <li>Partial year: Full year's room applies</li>
           </ul>
 

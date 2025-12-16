@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { ArrowLeft, Clock, PiggyBank, Calculator, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Complete RRSP Guide 2024 | How RRSPs Work in Canada',
-  description: 'The complete guide to RRSPs in Canada for 2024. Learn about contribution limits ($31,560), tax deductions, withdrawal rules, and strategies to maximize your retirement savings.',
-  keywords: 'RRSP guide, RRSP contribution limit 2024, how RRSP works, RRSP tax deduction, RRSP withdrawal rules, RRSP vs TFSA',
+  title: 'Complete RRSP Guide 2025 | How RRSPs Work in Canada',
+  description: 'The complete guide to RRSPs in Canada for 2025. Learn about contribution limits ($32,490 for 2025), tax deductions, withdrawal rules, and strategies to maximize your retirement savings.',
+  keywords: 'RRSP guide, RRSP contribution limit 2025, how RRSP works, RRSP tax deduction, RRSP withdrawal rules, RRSP vs TFSA',
 }
 
 export default function RRSPGuidePage() {
@@ -32,7 +32,7 @@ export default function RRSPGuidePage() {
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-            The Complete Guide to RRSPs in Canada (2024)
+            The Complete Guide to RRSPs in Canada (2025)
           </h1>
           <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1">
@@ -48,7 +48,7 @@ export default function RRSPGuidePage() {
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">In This Guide</h2>
           <ol className="space-y-3 text-sm sm:text-base">
             <li><a href="#what-is-rrsp" className="text-teal-600 dark:text-teal-400 hover:underline">1. What is an RRSP?</a></li>
-            <li><a href="#contribution-limits" className="text-teal-600 dark:text-teal-400 hover:underline">2. 2024 Contribution Limits</a></li>
+            <li><a href="#contribution-limits" className="text-teal-600 dark:text-teal-400 hover:underline">2. 2025 Contribution Limits</a></li>
             <li><a href="#tax-benefits" className="text-teal-600 dark:text-teal-400 hover:underline">3. Tax Benefits Explained</a></li>
             <li><a href="#contribution-room" className="text-teal-600 dark:text-teal-400 hover:underline">4. How Contribution Room Works</a></li>
             <li><a href="#withdrawals" className="text-teal-600 dark:text-teal-400 hover:underline">5. Withdrawal Rules</a></li>
@@ -74,24 +74,28 @@ export default function RRSPGuidePage() {
           </section>
 
           <section id="contribution-limits">
-            <h2>2024 RRSP Contribution Limits</h2>
-            <p>For the 2024 tax year, the RRSP contribution limit is:</p>
+            <h2>2025 RRSP Contribution Limits</h2>
+            <p>For the 2025 tax year, the RRSP contribution limit is:</p>
 
             <div className="bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 rounded-lg p-4 my-6 not-prose">
-              <p className="text-3xl font-bold text-teal-600 dark:text-teal-400 mb-1">$31,560</p>
+              <p className="text-3xl font-bold text-teal-600 dark:text-teal-400 mb-1">$32,490</p>
               <p className="text-teal-700 dark:text-teal-300 text-sm">or 18% of your previous year's earned income (whichever is less)</p>
             </div>
+
+            <p>
+              <strong>Note:</strong> For the 2024 tax year (filing in early 2025), the limit is $31,560. The deadline to contribute for the 2024 tax year is March 3, 2025.
+            </p>
 
             <p>
               <strong>Earned income</strong> includes employment income, self-employment income, and rental income. It does not include investment income, pension income, or RRSP withdrawals.
             </p>
 
             <h3>Example Calculation</h3>
-            <p>If your 2023 earned income was $100,000:</p>
+            <p>If your 2024 earned income was $100,000:</p>
             <ul>
               <li>18% of $100,000 = $18,000</li>
-              <li>This is less than the $31,560 maximum</li>
-              <li>Your 2024 contribution room = $18,000 (plus any unused room from previous years)</li>
+              <li>This is less than the $32,490 maximum</li>
+              <li>Your 2025 contribution room = $18,000 (plus any unused room from previous years)</li>
             </ul>
           </section>
 
@@ -256,7 +260,7 @@ export default function RRSPGuidePage() {
             <h2>Key Takeaways</h2>
             <ul>
               <li>RRSPs let you deduct contributions from your taxable income</li>
-              <li>2024 contribution limit is $31,560 or 18% of earned income</li>
+              <li>2025 contribution limit is $32,490 or 18% of earned income (2024: $31,560)</li>
               <li>Unused room carries forward indefinitely</li>
               <li>Withdrawals are taxed as income—ideally in retirement when you're in a lower bracket</li>
               <li>HBP and LLP allow tax-free withdrawals for specific purposes</li>

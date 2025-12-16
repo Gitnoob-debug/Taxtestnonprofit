@@ -10,8 +10,8 @@ import {
 
 export const metadata: Metadata = {
   title: 'Canadian Tax Guide & Academy | Learn About Canadian Taxes',
-  description: 'Free Canadian tax education and guides. Learn about RRSP, TFSA, tax deductions, credits, and strategies to minimize your taxes legally. Updated for 2024.',
-  keywords: 'Canadian tax guide, RRSP guide, TFSA guide, tax deductions Canada, tax credits Canada, how to file taxes Canada',
+  description: 'Free Canadian tax education and guides. Learn about RRSP, TFSA, tax deductions, credits, and strategies to minimize your taxes legally. Updated for 2025 tax season.',
+  keywords: 'Canadian tax guide, RRSP guide, TFSA guide, tax deductions Canada, tax credits Canada, how to file taxes Canada 2025',
 }
 
 const categories = [
