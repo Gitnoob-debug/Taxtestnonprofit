@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, PiggyBank, Info } from 'lucide-react'
+import { ArrowLeft, PiggyBank, Info, User } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -11,10 +11,39 @@ import {
   TFSA_LIMIT_2024,
   TAX_YEAR,
 } from '@/lib/canadianTaxData'
+import { useProfile } from '@/hooks/useProfile'
+
+// Helper to estimate birth year from age range
+function estimateBirthYearFromAgeRange(ageRange: string): number | null {
+  const currentYear = TAX_YEAR
+  const midpoints: Record<string, number> = {
+    '18-24': 21,
+    '25-34': 30,
+    '35-44': 40,
+    '45-54': 50,
+    '55-64': 60,
+    '65+': 70,
+  }
+  const midAge = midpoints[ageRange]
+  return midAge ? currentYear - midAge : null
+}
 
 export default function TFSARoomCalculatorPage() {
+  const { profile, loading: profileLoading, isLoggedIn } = useProfile()
   const [birthYear, setBirthYear] = useState<string>('')
   const [previousContributions, setPreviousContributions] = useState<string>('')
+  const [profileApplied, setProfileApplied] = useState(false)
+
+  // Auto-populate birth year from profile age range
+  useEffect(() => {
+    if (!profileLoading && profile?.age_range && !profileApplied && !birthYear) {
+      const estimatedYear = estimateBirthYearFromAgeRange(profile.age_range)
+      if (estimatedYear) {
+        setBirthYear(estimatedYear.toString())
+        setProfileApplied(true)
+      }
+    }
+  }, [profile, profileLoading, profileApplied, birthYear])
 
   const results = useMemo(() => {
     const birthYearNum = parseInt(birthYear) || 0
@@ -104,9 +133,16 @@ export default function TFSARoomCalculatorPage() {
                   min="1900"
                   max={TAX_YEAR - 18}
                 />
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Must have been 18+ and a Canadian resident to accumulate room
-                </p>
+                {isLoggedIn && profileApplied && profile?.age_range ? (
+                  <p className="text-xs text-teal-600 dark:text-teal-400 mt-1 flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    Estimated from your age range ({profile.age_range}) - adjust if needed
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Must have been 18+ and a Canadian resident to accumulate room
+                  </p>
+                )}
               </div>
 
               <div>

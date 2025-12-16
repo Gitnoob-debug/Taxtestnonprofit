@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, TrendingUp, Info } from 'lucide-react'
+import { ArrowLeft, TrendingUp, Info, User } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -19,11 +19,22 @@ import {
   CAPITAL_GAINS_INCLUSION_RATE_HIGH,
   TAX_YEAR,
 } from '@/lib/canadianTaxData'
+import { useProfile } from '@/hooks/useProfile'
 
 export default function CapitalGainsCalculatorPage() {
+  const { profile, loading: profileLoading, isLoggedIn } = useProfile()
   const [otherIncome, setOtherIncome] = useState<string>('')
   const [capitalGain, setCapitalGain] = useState<string>('')
   const [province, setProvince] = useState<string>('ON')
+  const [profileApplied, setProfileApplied] = useState(false)
+
+  // Auto-populate province from profile
+  useEffect(() => {
+    if (!profileLoading && profile?.province && !profileApplied) {
+      setProvince(profile.province)
+      setProfileApplied(true)
+    }
+  }, [profile, profileLoading, profileApplied])
 
   const results = useMemo(() => {
     const otherIncomeNum = parseFloat(otherIncome) || 0
@@ -162,6 +173,12 @@ export default function CapitalGainsCalculatorPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {isLoggedIn && profileApplied && profile?.province && (
+                  <p className="text-xs text-teal-600 dark:text-teal-400 mt-1 flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    Auto-filled from your profile
+                  </p>
+                )}
               </div>
             </div>
 

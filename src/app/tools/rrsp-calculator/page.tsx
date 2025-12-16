@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Info, TrendingUp } from 'lucide-react'
+import { ArrowLeft, Info, TrendingUp, User } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -21,12 +21,23 @@ import {
   RRSP_CONTRIBUTION_RATE,
   TAX_YEAR,
 } from '@/lib/canadianTaxData'
+import { useProfile } from '@/hooks/useProfile'
 
 export default function RRSPCalculatorPage() {
+  const { profile, loading: profileLoading, isLoggedIn } = useProfile()
   const [income, setIncome] = useState<string>('')
   const [contribution, setContribution] = useState<string>('')
   const [unusedRoom, setUnusedRoom] = useState<string>('')
   const [province, setProvince] = useState<string>('ON')
+  const [profileApplied, setProfileApplied] = useState(false)
+
+  // Auto-populate province from profile
+  useEffect(() => {
+    if (!profileLoading && profile?.province && !profileApplied) {
+      setProvince(profile.province)
+      setProfileApplied(true)
+    }
+  }, [profile, profileLoading, profileApplied])
 
   const results = useMemo(() => {
     const incomeNum = parseFloat(income) || 0
@@ -169,6 +180,12 @@ export default function RRSPCalculatorPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {isLoggedIn && profileApplied && profile?.province && (
+                  <p className="text-xs text-teal-600 dark:text-teal-400 mt-1 flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    Auto-filled from your profile
+                  </p>
+                )}
               </div>
             </div>
 
