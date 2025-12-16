@@ -3,7 +3,9 @@ import Link from 'next/link'
 import {
   BookOpen, Clock, ArrowRight, TrendingUp, PiggyBank, Receipt, Home, Briefcase,
   GraduationCap, DollarSign, Heart, Gift, Truck, Users, Baby, Accessibility,
-  Leaf, Scale, FileText, Plane, Globe, LineChart, Percent, Building2
+  Leaf, Scale, FileText, Plane, Globe, LineChart, Percent, Building2,
+  Calendar, MapPin, Calculator, Wallet, Lock, Target, RefreshCw, Split,
+  UserCheck, HeartHandshake, Laptop, UserCog
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -27,6 +29,34 @@ const categories = [
     ]
   },
   {
+    name: 'Tax Filing & Deadlines',
+    description: 'When and how to file your taxes',
+    color: 'indigo',
+    articles: [
+      { slug: 'tax-deadlines-canada', title: 'Tax Deadlines Canada 2024', readTime: '8 min', icon: Calendar },
+      { slug: 'tax-installments-guide', title: 'Quarterly Tax Installments', readTime: '9 min', icon: Calculator },
+      { slug: 'notice-of-assessment', title: 'Notice of Assessment Explained', readTime: '7 min', icon: FileText },
+      { slug: 'cra-my-account-guide', title: 'CRA My Account Guide', readTime: '8 min', icon: Globe },
+      { slug: 'tax-audit-guide', title: 'What to Do If CRA Audits You', readTime: '10 min', icon: FileText },
+      { slug: 'amended-tax-return', title: 'How to Amend a Tax Return', readTime: '7 min', icon: FileText },
+      { slug: 'tax-penalties-interest', title: 'Tax Penalties & Interest', readTime: '8 min', icon: Receipt },
+      { slug: 'voluntary-disclosure-program', title: 'Voluntary Disclosure Program', readTime: '9 min', icon: FileText },
+    ]
+  },
+  {
+    name: 'Provincial Taxes',
+    description: 'Province-specific tax information',
+    color: 'cyan',
+    articles: [
+      { slug: 'ontario-tax-guide', title: 'Ontario Tax Guide', readTime: '10 min', icon: MapPin },
+      { slug: 'bc-tax-guide', title: 'British Columbia Tax Guide', readTime: '10 min', icon: MapPin },
+      { slug: 'alberta-tax-guide', title: 'Alberta Tax Guide', readTime: '9 min', icon: MapPin },
+      { slug: 'quebec-tax-guide', title: 'Quebec Tax Guide', readTime: '11 min', icon: MapPin },
+      { slug: 'provincial-tax-credits-comparison', title: 'Provincial Tax Credits Comparison', readTime: '12 min', icon: Calculator },
+      { slug: 'provincial-tax-rates-comparison', title: 'Provincial Tax Rates 2024', readTime: '8 min', icon: Percent },
+    ]
+  },
+  {
     name: 'Income Types',
     description: 'How different types of income are taxed',
     color: 'blue',
@@ -37,6 +67,76 @@ const categories = [
       { slug: 'cryptocurrency-tax-guide', title: 'Cryptocurrency Tax Guide', readTime: '12 min', icon: DollarSign },
       { slug: 'foreign-income-guide', title: 'Foreign Income & T1135', readTime: '11 min', icon: Globe },
       { slug: 'gig-economy-taxes', title: 'Gig Economy: Uber, DoorDash, Airbnb', readTime: '12 min', icon: Briefcase },
+    ]
+  },
+  {
+    name: 'Investments & Capital Gains',
+    description: 'Investment income and capital gains taxation',
+    color: 'emerald',
+    articles: [
+      { slug: 'capital-gains-tax-canada', title: 'Capital Gains Tax Guide', readTime: '11 min', icon: TrendingUp },
+      { slug: 'rrsp-guide', title: 'RRSP Complete Guide', readTime: '12 min', icon: PiggyBank },
+      { slug: 'dividend-tax-credit', title: 'Dividend Tax Credit Explained', readTime: '9 min', icon: DollarSign },
+      { slug: 'stock-options-tax', title: 'Stock Options Taxation', readTime: '10 min', icon: LineChart },
+      { slug: 'interest-income-tax', title: 'Interest Income Taxation', readTime: '7 min', icon: Wallet },
+      { slug: 'foreign-investment-reporting', title: 'Foreign Investment Reporting', readTime: '10 min', icon: Globe },
+      { slug: 'mutual-funds-etf-tax', title: 'Mutual Fund & ETF Taxes', readTime: '9 min', icon: TrendingUp },
+    ]
+  },
+  {
+    name: 'Employment & Benefits',
+    description: 'Employment income and workplace benefits',
+    color: 'violet',
+    articles: [
+      { slug: 'employment-expenses-deductions', title: 'Employment Expense Deductions', readTime: '10 min', icon: Receipt },
+      { slug: 'ei-benefits-tax', title: 'EI Benefits & Taxation', readTime: '8 min', icon: Wallet },
+      { slug: 'cpp-benefits-tax', title: 'CPP Benefits & Taxation', readTime: '9 min', icon: PiggyBank },
+      { slug: 'severance-pay-tax', title: 'Severance Pay Taxation', readTime: '8 min', icon: DollarSign },
+      { slug: 'taxable-benefits-guide', title: 'Taxable Benefits Guide', readTime: '10 min', icon: Gift },
+      { slug: 'remote-work-tax', title: 'Remote Work Tax Deductions', readTime: '9 min', icon: Home },
+      { slug: 'maternity-parental-leave-tax', title: 'Maternity & Parental Leave', readTime: '8 min', icon: Baby },
+    ]
+  },
+  {
+    name: 'Retirement Planning',
+    description: 'Retirement income and pension taxation',
+    color: 'sky',
+    articles: [
+      { slug: 'oas-benefits-tax', title: 'OAS Benefits & Clawback', readTime: '10 min', icon: Wallet },
+      { slug: 'rrif-guide', title: 'RRIF Complete Guide', readTime: '10 min', icon: PiggyBank },
+      { slug: 'pension-income-splitting', title: 'Pension Income Splitting', readTime: '9 min', icon: Users },
+      { slug: 'retirement-income-planning', title: 'Retirement Income Planning', readTime: '12 min', icon: Target },
+      { slug: 'annuity-tax-guide', title: 'Annuity Tax Guide', readTime: '9 min', icon: RefreshCw },
+      { slug: 'defined-benefit-pension-tax', title: 'DB Pension Taxation', readTime: '10 min', icon: Building2 },
+      { slug: 'lif-lira-guide', title: 'LIRA & LIF Guide', readTime: '10 min', icon: Lock },
+    ]
+  },
+  {
+    name: 'Family & Dependants',
+    description: 'Tax credits and benefits for families',
+    color: 'pink',
+    articles: [
+      { slug: 'canada-child-benefit', title: 'Canada Child Benefit (CCB)', readTime: '10 min', icon: Baby },
+      { slug: 'spousal-support-tax', title: 'Spousal Support Taxation', readTime: '9 min', icon: Heart },
+      { slug: 'child-support-tax', title: 'Child Support Tax Rules', readTime: '7 min', icon: Users },
+      { slug: 'caregiver-tax-credits', title: 'Caregiver Tax Credits', readTime: '9 min', icon: HeartHandshake },
+      { slug: 'education-tax-credits', title: 'Education Tax Credits', readTime: '10 min', icon: GraduationCap },
+      { slug: 'eligible-dependant-credit', title: 'Eligible Dependant Credit', readTime: '8 min', icon: UserCheck },
+      { slug: 'family-income-splitting', title: 'Family Income Splitting', readTime: '11 min', icon: Split },
+    ]
+  },
+  {
+    name: 'Business & Self-Employed',
+    description: 'Tax guides for business owners',
+    color: 'orange',
+    articles: [
+      { slug: 'self-employment-tax', title: 'Self-Employment Tax Guide', readTime: '12 min', icon: Briefcase },
+      { slug: 'small-business-deductions', title: 'Small Business Deductions', readTime: '11 min', icon: Receipt },
+      { slug: 'gst-hst-guide', title: 'GST/HST Complete Guide', readTime: '12 min', icon: Percent },
+      { slug: 'incorporation-vs-sole-proprietor', title: 'Incorporate vs Sole Proprietor', readTime: '11 min', icon: Building2 },
+      { slug: 'rental-income-tax', title: 'Rental Income Taxation', readTime: '11 min', icon: Home },
+      { slug: 'home-office-deduction', title: 'Home Office Deduction', readTime: '10 min', icon: Laptop },
+      { slug: 'contractor-vs-employee', title: 'Contractor vs Employee', readTime: '10 min', icon: UserCog },
     ]
   },
   {
@@ -61,8 +161,6 @@ const categories = [
       { slug: 'canada-workers-benefit', title: 'Canada Workers Benefit (CWB)', readTime: '8 min', icon: Briefcase },
       { slug: 'climate-action-incentive', title: 'Climate Action Incentive', readTime: '6 min', icon: Leaf },
       { slug: 'gst-hst-credit', title: 'GST/HST Credit', readTime: '7 min', icon: Receipt },
-      { slug: 'canada-child-benefit', title: 'Canada Child Benefit (CCB)', readTime: '10 min', icon: Heart },
-      { slug: 'pension-income-splitting', title: 'Pension Income Splitting', readTime: '9 min', icon: Users },
     ]
   },
   {
@@ -102,6 +200,22 @@ const colorClasses = {
     icon: 'bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-400',
     badge: 'bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300',
   },
+  indigo: {
+    bg: 'bg-indigo-50 dark:bg-indigo-950',
+    border: 'border-indigo-200 dark:border-indigo-800',
+    text: 'text-indigo-700 dark:text-indigo-300',
+    heading: 'text-indigo-900 dark:text-indigo-100',
+    icon: 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400',
+    badge: 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300',
+  },
+  cyan: {
+    bg: 'bg-cyan-50 dark:bg-cyan-950',
+    border: 'border-cyan-200 dark:border-cyan-800',
+    text: 'text-cyan-700 dark:text-cyan-300',
+    heading: 'text-cyan-900 dark:text-cyan-100',
+    icon: 'bg-cyan-100 dark:bg-cyan-900 text-cyan-600 dark:text-cyan-400',
+    badge: 'bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-300',
+  },
   blue: {
     bg: 'bg-blue-50 dark:bg-blue-950',
     border: 'border-blue-200 dark:border-blue-800',
@@ -109,6 +223,46 @@ const colorClasses = {
     heading: 'text-blue-900 dark:text-blue-100',
     icon: 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400',
     badge: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300',
+  },
+  emerald: {
+    bg: 'bg-emerald-50 dark:bg-emerald-950',
+    border: 'border-emerald-200 dark:border-emerald-800',
+    text: 'text-emerald-700 dark:text-emerald-300',
+    heading: 'text-emerald-900 dark:text-emerald-100',
+    icon: 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400',
+    badge: 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300',
+  },
+  violet: {
+    bg: 'bg-violet-50 dark:bg-violet-950',
+    border: 'border-violet-200 dark:border-violet-800',
+    text: 'text-violet-700 dark:text-violet-300',
+    heading: 'text-violet-900 dark:text-violet-100',
+    icon: 'bg-violet-100 dark:bg-violet-900 text-violet-600 dark:text-violet-400',
+    badge: 'bg-violet-100 dark:bg-violet-900 text-violet-700 dark:text-violet-300',
+  },
+  sky: {
+    bg: 'bg-sky-50 dark:bg-sky-950',
+    border: 'border-sky-200 dark:border-sky-800',
+    text: 'text-sky-700 dark:text-sky-300',
+    heading: 'text-sky-900 dark:text-sky-100',
+    icon: 'bg-sky-100 dark:bg-sky-900 text-sky-600 dark:text-sky-400',
+    badge: 'bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300',
+  },
+  pink: {
+    bg: 'bg-pink-50 dark:bg-pink-950',
+    border: 'border-pink-200 dark:border-pink-800',
+    text: 'text-pink-700 dark:text-pink-300',
+    heading: 'text-pink-900 dark:text-pink-100',
+    icon: 'bg-pink-100 dark:bg-pink-900 text-pink-600 dark:text-pink-400',
+    badge: 'bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300',
+  },
+  orange: {
+    bg: 'bg-orange-50 dark:bg-orange-950',
+    border: 'border-orange-200 dark:border-orange-800',
+    text: 'text-orange-700 dark:text-orange-300',
+    heading: 'text-orange-900 dark:text-orange-100',
+    icon: 'bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400',
+    badge: 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300',
   },
   green: {
     bg: 'bg-green-50 dark:bg-green-950',
@@ -152,7 +306,7 @@ export default function AcademyPage() {
         <div className="text-center mb-10 sm:mb-14">
           <div className="inline-flex items-center gap-2 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4">
             <BookOpen className="h-4 w-4" />
-            36+ Free Tax Guides
+            80+ Free Tax Guides
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
             Canadian Tax Academy
