@@ -31,11 +31,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} gradient-mesh min-h-screen`}>
         <Providers>
           <Header />
-          <main>{children}</main>
-          <Toaster position="top-center" />
+          <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+          <Toaster position="top-center" richColors />
         </Providers>
       </body>
     </html>

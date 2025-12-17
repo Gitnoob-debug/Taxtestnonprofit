@@ -5,7 +5,7 @@ import { Message, Citation, UsageInfo, ConversationMessage, StreamStatus } from 
 import { askTaxAssistantStream } from '@/lib/taxApi'
 import { createConversation, addMessage } from '@/lib/conversationApi'
 import { MessageBubble } from './MessageBubble'
-import { Send, Eraser, Sparkles, ArrowUp, Bot, Search, Brain, FileText, Database, Zap } from 'lucide-react'
+import { Send, Eraser, Sparkles, ArrowUp, Bot, Search, Brain, FileText, Database, Zap, Leaf } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -237,18 +237,22 @@ export function ChatInterface({
     : Search
 
   return (
-    <div className="flex flex-col h-full bg-background relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
-      <div className="absolute -top-20 -right-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="flex flex-col h-full relative overflow-hidden">
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
+      </div>
 
-      <header className="flex items-center justify-between px-6 py-4 border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+      {/* Header */}
+      <header className="relative flex items-center justify-between px-6 py-4 border-b border-slate-200/60 bg-white/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-2 rounded-lg border border-primary/20">
-            <Sparkles className="h-5 w-5 text-primary" />
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+            <Leaf className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="font-display font-bold text-lg leading-none">Tax Assistant</h1>
-            <p className="text-xs text-muted-foreground mt-1 font-medium">Powered by CRA Documents</p>
+            <h1 className="font-bold text-slate-900 text-lg">Tax Assistant</h1>
+            <p className="text-xs text-slate-500 font-medium">Powered by CRA Documents</p>
           </div>
         </div>
         {messages.length > 0 && (
@@ -256,32 +260,38 @@ export function ChatInterface({
             variant="ghost"
             size="sm"
             onClick={clearChat}
-            className="text-muted-foreground hover:text-destructive transition-colors"
+            className="text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >
             <Eraser className="h-4 w-4 mr-2" />
-            Clear Chat
+            Clear
           </Button>
         )}
       </header>
 
+      {/* Messages */}
       <div className="flex-1 overflow-hidden relative">
         <ScrollArea className="h-full px-4 sm:px-8" ref={scrollRef}>
-          <div className="max-w-3xl mx-auto py-8 min-h-[calc(100vh-12rem)]">
+          <div className="max-w-3xl mx-auto py-8 min-h-[calc(100vh-16rem)]">
             {messages.length === 0 && !isLoading ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="h-full flex flex-col items-center justify-center text-center space-y-8 mt-20"
+                className="h-full flex flex-col items-center justify-center text-center space-y-8 mt-16"
               >
-                <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center border border-primary/10 shadow-xl shadow-primary/5">
-                  <Sparkles className="h-10 w-10 text-primary" />
+                <div className="relative">
+                  <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/25">
+                    <Sparkles className="h-10 w-10 text-white" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-amber-400 rounded-lg flex items-center justify-center shadow-lg">
+                    <span className="text-xs font-bold text-amber-900">CA</span>
+                  </div>
                 </div>
-                <div className="max-w-md space-y-2">
-                  <h2 className="text-2xl font-display font-bold tracking-tight">
+                <div className="max-w-md space-y-3">
+                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
                     How can I help with your taxes?
                   </h2>
-                  <p className="text-muted-foreground">
+                  <p className="text-slate-500 leading-relaxed">
                     I&apos;m trained on official Canada Revenue Agency documents. Ask me about
                     deductions, credits, forms, or filing requirements.
                   </p>
@@ -299,10 +309,10 @@ export function ChatInterface({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 + i * 0.1 }}
                       onClick={() => setInput(q)}
-                      className="p-3 rounded-xl border border-border/60 bg-card hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm transition-all duration-200 text-sm font-medium text-foreground flex items-center justify-between group"
+                      className="card-premium p-4 text-sm font-medium text-slate-700 flex items-center justify-between group"
                     >
                       {q}
-                      <ArrowUp className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-primary rotate-45" />
+                      <ArrowUp className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-emerald-600 rotate-45" />
                     </motion.button>
                   ))}
                 </div>
@@ -321,11 +331,11 @@ export function ChatInterface({
                       exit={{ opacity: 0, y: -10 }}
                       className="flex gap-4 max-w-3xl mx-auto mb-8"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-white dark:bg-zinc-800 border border-border flex items-center justify-center shrink-0 mt-1 shadow-sm">
-                        <Bot className="h-5 w-5 text-primary" />
+                      <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 mt-1 shadow-lg shadow-emerald-500/20">
+                        <Bot className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1">
-                        <div className="p-4 rounded-2xl rounded-tl-none bg-white dark:bg-zinc-800 border border-border shadow-sm">
+                        <div className="card-premium p-4 rounded-2xl rounded-tl-md">
                           {currentStatus && !streamingContent && (
                             <div className="mb-3">
                               <div className="flex items-center gap-3 mb-2">
@@ -333,16 +343,16 @@ export function ChatInterface({
                                   key={currentStatus.step}
                                   initial={{ scale: 0.8, opacity: 0 }}
                                   animate={{ scale: 1, opacity: 1 }}
-                                  className="p-2 rounded-lg bg-primary/10"
+                                  className="p-2 rounded-lg bg-emerald-50"
                                 >
-                                  <CurrentIcon className="h-4 w-4 text-primary animate-pulse" />
+                                  <CurrentIcon className="h-4 w-4 text-emerald-600 animate-pulse" />
                                 </motion.div>
                                 <div className="flex-1">
                                   <motion.p
                                     key={currentStatus.message}
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    className="text-sm font-medium text-foreground"
+                                    className="text-sm font-medium text-slate-700"
                                   >
                                     {currentStatus.message}
                                   </motion.p>
@@ -355,7 +365,7 @@ export function ChatInterface({
                                       {currentStatus.sources.map((source, i) => (
                                         <span
                                           key={i}
-                                          className="text-xs px-2 py-0.5 bg-primary/5 text-primary/80 rounded-full border border-primary/10"
+                                          className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100"
                                         >
                                           {source.length > 30 ? source.slice(0, 30) + '...' : source}
                                         </span>
@@ -369,7 +379,7 @@ export function ChatInterface({
                                 {[0, 1, 2].map((i) => (
                                   <motion.div
                                     key={i}
-                                    className="h-1.5 w-1.5 rounded-full bg-primary"
+                                    className="h-1.5 w-1.5 rounded-full bg-emerald-500"
                                     animate={{
                                       opacity: [0.3, 1, 0.3],
                                       scale: [0.8, 1, 0.8],
@@ -386,9 +396,9 @@ export function ChatInterface({
                           )}
 
                           {streamingContent && (
-                            <div className="prose prose-sm dark:prose-invert max-w-none">
+                            <div className="prose prose-sm prose-slate max-w-none">
                               <div
-                                className="whitespace-pre-wrap"
+                                className="whitespace-pre-wrap text-slate-700"
                                 dangerouslySetInnerHTML={{
                                   __html: streamingContent
                                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -396,7 +406,7 @@ export function ChatInterface({
                                 }}
                               />
                               <motion.span
-                                className="inline-block w-2 h-4 bg-primary ml-0.5"
+                                className="inline-block w-2 h-4 bg-emerald-500 ml-0.5 rounded-sm"
                                 animate={{ opacity: [1, 0] }}
                                 transition={{ duration: 0.5, repeat: Infinity }}
                               />
@@ -414,32 +424,34 @@ export function ChatInterface({
         </ScrollArea>
       </div>
 
-      <div className="p-4 sm:p-6 bg-background border-t sticky bottom-0 z-20">
-        <div className="max-w-3xl mx-auto relative">
-          <div className="relative rounded-2xl shadow-lg bg-card border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all duration-200">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask a question about your taxes..."
-              className="min-h-[60px] max-h-[200px] w-full resize-none border-0 bg-transparent focus-visible:ring-0 py-4 pl-4 pr-14 text-base"
-              disabled={isLoading}
-            />
-            <Button
-              size="icon"
-              onClick={handleSend}
-              disabled={!input.trim() || isLoading}
-              className={cn(
-                'absolute right-2 bottom-2 h-9 w-9 transition-all duration-200',
-                input.trim() ? 'opacity-100 scale-100' : 'opacity-50 scale-90'
-              )}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+      {/* Input */}
+      <div className="relative p-4 sm:p-6 border-t border-slate-200/60 bg-white/50 backdrop-blur-sm">
+        <div className="max-w-3xl mx-auto">
+          <div className="card-premium p-1 focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-300 transition-all duration-200">
+            <div className="relative">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask a question about your taxes..."
+                className="min-h-[56px] max-h-[200px] w-full resize-none border-0 bg-transparent focus-visible:ring-0 py-4 pl-4 pr-14 text-base text-slate-700 placeholder:text-slate-400"
+                disabled={isLoading}
+              />
+              <Button
+                size="icon"
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                className={cn(
+                  'absolute right-2 bottom-2 h-10 w-10 rounded-xl transition-all duration-200 btn-premium',
+                  input.trim() ? 'opacity-100 scale-100' : 'opacity-50 scale-90'
+                )}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <p className="text-center text-[10px] text-muted-foreground mt-3">
-            AI can make mistakes. Always verify important information with official CRA sources or a
-            tax professional.
+          <p className="text-center text-xs text-slate-400 mt-3">
+            AI can make mistakes. Verify important information with official CRA sources.
           </p>
         </div>
       </div>

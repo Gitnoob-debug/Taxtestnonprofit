@@ -87,7 +87,7 @@ export function TaxAssistantPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] w-full bg-white flex flex-col">
+    <div className="h-[calc(100vh-4rem)] w-full flex flex-col">
       <div className="flex-1 flex overflow-hidden">
         <ConversationSidebar
           isOpen={sidebarOpen}

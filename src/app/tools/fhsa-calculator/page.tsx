@@ -213,23 +213,27 @@ export default function FHSACalculatorPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Back Link */}
         <Link
           href="/tools"
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-8"
+          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-emerald-600 transition-colors mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Tools
+          Back to Calculators
         </Link>
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pink-50 text-pink-700 text-sm font-medium mb-4">
+            <Home className="h-4 w-4" />
+            <span>First Home Savings Account</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3 tracking-tight">
             FHSA Calculator
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400">
+          <p className="text-lg text-slate-500">
             Tell me about your situation and I'll calculate your tax savings instantly.
           </p>
         </div>
@@ -237,10 +241,10 @@ export default function FHSACalculatorPage() {
         {/* Main Layout - Chat takes prominence */}
         <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
           {/* AI Chat Interface - PRIMARY (takes 3/5 of space) */}
-          <div className="lg:col-span-3 bg-white dark:bg-slate-800 rounded-3xl border-2 border-red-200 dark:border-red-800 shadow-xl shadow-red-100 dark:shadow-red-950/50 overflow-hidden flex flex-col" style={{ minHeight: '600px' }}>
-            {/* Chat Header - More prominent */}
-            <div className="flex items-center gap-4 p-5 border-b border-red-100 dark:border-red-900 bg-gradient-to-r from-red-500 to-orange-500">
-              <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
+          <div className="lg:col-span-3 card-premium overflow-hidden flex flex-col" style={{ minHeight: '600px' }}>
+            {/* Chat Header */}
+            <div className="flex items-center gap-4 p-5 border-b border-slate-200/60 bg-gradient-to-r from-pink-500 to-rose-500">
+              <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shadow-lg">
                 <MessageCircle className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -253,28 +257,28 @@ export default function FHSACalculatorPage() {
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center px-4">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900 dark:to-orange-900 flex items-center justify-center mb-6">
-                    <Home className="h-10 w-10 text-red-500 dark:text-red-400" />
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center mb-6 shadow-xl shadow-pink-500/25">
+                    <Home className="h-10 w-10 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-2">
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">
                     How can I help with your FHSA?
                   </h3>
-                  <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md">
+                  <p className="text-slate-500 mb-8 max-w-md">
                     Tell me your income, where you live, and how much you want to contribute. I'll calculate your tax savings right away.
                   </p>
 
                   {/* Example buttons - clickable and auto-send */}
                   <div className="w-full max-w-md space-y-3">
-                    <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Click an example to try:</p>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Click an example to try:</p>
                     {examplePrompts.map((prompt, i) => (
                       <button
                         key={i}
                         onClick={() => handleSend(prompt)}
-                        className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/50 dark:to-orange-950/50 border-2 border-red-100 dark:border-red-800 hover:border-red-300 dark:hover:border-red-600 hover:shadow-md transition-all text-base text-slate-700 dark:text-slate-300"
+                        className="w-full text-left p-4 rounded-xl card-premium text-sm text-slate-700 hover:border-pink-200 transition-all"
                       >
-                        <span className="text-red-500 dark:text-red-400 font-medium">"</span>
+                        <span className="text-pink-500 font-medium">"</span>
                         {prompt}
-                        <span className="text-red-500 dark:text-red-400 font-medium">"</span>
+                        <span className="text-pink-500 font-medium">"</span>
                       </button>
                     ))}
                   </div>
@@ -290,21 +294,21 @@ export default function FHSACalculatorPage() {
                       )}
                     >
                       {msg.role === 'assistant' && (
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900 dark:to-orange-900 flex items-center justify-center shrink-0">
-                          <Bot className="h-5 w-5 text-red-600 dark:text-red-400" />
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shrink-0 shadow-lg shadow-pink-500/20">
+                          <Bot className="h-5 w-5 text-white" />
                         </div>
                       )}
                       <div
                         className={cn(
                           "max-w-[80%] rounded-2xl px-5 py-3",
                           msg.role === 'user'
-                            ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-br-md shadow-lg'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-bl-md'
+                            ? 'bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-br-md shadow-lg'
+                            : 'card-premium rounded-bl-md text-slate-700'
                         )}
                       >
                         <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{msg.content}</p>
                         {msg.fieldUpdates && Object.keys(msg.fieldUpdates).length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-slate-200/50 dark:border-slate-600/50">
+                          <div className="mt-3 pt-3 border-t border-slate-200/50">
                             <p className="text-xs opacity-70 mb-2">Updated:</p>
                             <div className="flex flex-wrap gap-2">
                               {Object.entries(msg.fieldUpdates).map(([field, value]) => {
@@ -322,7 +326,7 @@ export default function FHSACalculatorPage() {
                                       "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
                                       msg.role === 'user'
                                         ? "bg-white/20 text-white"
-                                        : "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300"
+                                        : "bg-pink-50 text-pink-700"
                                     )}
                                   >
                                     {fieldLabel}: {displayValue}
@@ -338,15 +342,15 @@ export default function FHSACalculatorPage() {
 
                   {isLoading && (
                     <div className="flex gap-3 justify-start">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900 dark:to-orange-900 flex items-center justify-center shrink-0">
-                        <Loader2 className="h-5 w-5 text-red-600 dark:text-red-400 animate-spin" />
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shrink-0 shadow-lg shadow-pink-500/20">
+                        <Loader2 className="h-5 w-5 text-white animate-spin" />
                       </div>
-                      <div className="bg-slate-100 dark:bg-slate-700 rounded-2xl rounded-bl-md px-5 py-3">
+                      <div className="card-premium rounded-2xl rounded-bl-md px-5 py-3">
                         <div className="flex gap-1.5">
                           {[0, 1, 2].map((i) => (
                             <motion.div
                               key={i}
-                              className="h-2.5 w-2.5 rounded-full bg-red-400"
+                              className="h-2.5 w-2.5 rounded-full bg-pink-500"
                               animate={{ opacity: [0.3, 1, 0.3] }}
                               transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
                             />
@@ -360,8 +364,8 @@ export default function FHSACalculatorPage() {
               )}
             </div>
 
-            {/* Input Area - Larger and more prominent */}
-            <div className="p-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+            {/* Input Area */}
+            <div className="p-5 border-t border-slate-200/60 bg-slate-50/50">
               <div className="relative">
                 <Textarea
                   ref={inputRef}
@@ -369,14 +373,14 @@ export default function FHSACalculatorPage() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Type your situation here... (e.g., I make $80,000 in BC)"
-                  className="min-h-[80px] max-h-[150px] pr-14 resize-none text-base bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 focus:border-red-400 dark:focus:border-red-500 rounded-xl"
+                  className="min-h-[80px] max-h-[150px] pr-14 resize-none text-base bg-white border border-slate-200 focus:border-pink-300 focus:ring-2 focus:ring-pink-500/20 rounded-xl"
                   disabled={isLoading}
                 />
                 <Button
                   size="icon"
                   onClick={() => handleSend()}
                   disabled={!input.trim() || isLoading}
-                  className="absolute right-3 bottom-3 h-10 w-10 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 shadow-lg"
+                  className="absolute right-3 bottom-3 h-10 w-10 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg shadow-pink-500/25"
                 >
                   <Send className="h-5 w-5" />
                 </Button>
@@ -386,7 +390,7 @@ export default function FHSACalculatorPage() {
             {/* Manual Input Toggle */}
             <button
               onClick={() => setShowManualInputs(!showManualInputs)}
-              className="w-full p-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 border-t border-slate-200 dark:border-slate-700"
+              className="w-full p-3 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 border-t border-slate-200/60"
             >
               {showManualInputs ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               {showManualInputs ? 'Hide manual inputs' : 'Or enter values manually'}
@@ -399,9 +403,9 @@ export default function FHSACalculatorPage() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden border-t border-slate-200 dark:border-slate-700"
+                  className="overflow-hidden border-t border-slate-200/60"
                 >
-                  <div className="p-4 space-y-4 bg-slate-50 dark:bg-slate-900">
+                  <div className="p-4 space-y-4 bg-slate-50">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="income" className="text-xs">Annual Income</Label>
@@ -476,7 +480,7 @@ export default function FHSACalculatorPage() {
             {results ? (
               <>
                 {/* Summary Card */}
-                <div className="bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl p-6 text-white shadow-xl">
+                <div className="bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl p-6 text-white shadow-xl shadow-pink-500/20">
                   <div className="flex items-center gap-2 mb-4">
                     <Home className="h-5 w-5" />
                     <h3 className="font-semibold">Your Tax Savings</h3>
@@ -490,33 +494,33 @@ export default function FHSACalculatorPage() {
                 </div>
 
                 {/* Details Card */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                <div className="card-premium p-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">
                     Breakdown
                   </h3>
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">Contribution room available</span>
-                      <span className="font-medium text-slate-900 dark:text-white">
+                      <span className="text-slate-500">Contribution room available</span>
+                      <span className="font-semibold text-slate-900">
                         {formatCurrency(results.totalAvailableRoom)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">Your contribution</span>
-                      <span className="font-medium text-slate-900 dark:text-white">
+                      <span className="text-slate-500">Your contribution</span>
+                      <span className="font-semibold text-slate-900">
                         {formatCurrency(results.actualContribution)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">Marginal tax rate</span>
-                      <span className="font-medium text-slate-900 dark:text-white">
+                      <span className="text-slate-500">Marginal tax rate</span>
+                      <span className="font-semibold text-slate-900">
                         {formatPercent(results.marginalRate)}
                       </span>
                     </div>
-                    <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
+                    <div className="border-t border-slate-200/60 pt-3">
                       <div className="flex justify-between">
-                        <span className="text-slate-600 dark:text-slate-400">Lifetime room remaining</span>
-                        <span className="font-medium text-slate-900 dark:text-white">
+                        <span className="text-slate-500">Lifetime room remaining</span>
+                        <span className="font-semibold text-slate-900">
                           {formatCurrency(results.lifetimeRemaining)}
                         </span>
                       </div>
@@ -525,25 +529,25 @@ export default function FHSACalculatorPage() {
 
                   {/* Progress bar */}
                   <div className="mt-4">
-                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                    <div className="w-full bg-slate-100 rounded-full h-2">
                       <div
-                        className="bg-gradient-to-r from-red-500 to-orange-500 h-2 rounded-full"
+                        className="bg-gradient-to-r from-pink-500 to-rose-500 h-2 rounded-full"
                         style={{ width: `${(results.actualContribution / FHSA_LIFETIME_LIMIT) * 100}%` }}
                       />
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                    <p className="text-xs text-slate-400 mt-2">
                       {formatCurrency(results.actualContribution)} of {formatCurrency(FHSA_LIFETIME_LIMIT)} lifetime limit
                     </p>
                   </div>
                 </div>
 
                 {/* Info Box */}
-                <div className="p-4 bg-amber-50 dark:bg-amber-950 rounded-xl border border-amber-200 dark:border-amber-800">
+                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200/60">
                   <div className="flex gap-3">
-                    <Info className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                    <div className="text-sm text-amber-800 dark:text-amber-200">
-                      <p className="font-medium mb-1">FHSA Limits</p>
-                      <p className="text-amber-700 dark:text-amber-300 text-xs">
+                    <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="text-sm text-amber-800">
+                      <p className="font-semibold mb-1">FHSA Limits</p>
+                      <p className="text-amber-700 text-xs">
                         Annual: {formatCurrency(FHSA_ANNUAL_LIMIT)} | Lifetime: {formatCurrency(FHSA_LIFETIME_LIMIT)}
                       </p>
                     </div>
@@ -551,14 +555,14 @@ export default function FHSACalculatorPage() {
                 </div>
               </>
             ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
-                  <Home className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+              <div className="card-premium p-8 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                  <Home className="h-8 w-8 text-slate-400" />
                 </div>
-                <p className="text-lg font-medium text-slate-600 dark:text-slate-400 mb-2">
+                <p className="text-lg font-semibold text-slate-700 mb-2">
                   Your results will appear here
                 </p>
-                <p className="text-sm text-slate-400 dark:text-slate-500">
+                <p className="text-sm text-slate-400">
                   Chat with the assistant to calculate your FHSA tax savings
                 </p>
               </div>
@@ -567,45 +571,45 @@ export default function FHSACalculatorPage() {
         </div>
 
         {/* FHSA vs RRSP HBP Comparison */}
-        <div className="mt-10 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+        <div className="mt-10 card-premium overflow-hidden">
+          <div className="p-6 border-b border-slate-200/60">
+            <h3 className="text-lg font-bold text-slate-900">
               FHSA vs RRSP Home Buyers' Plan
             </h3>
           </div>
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-700">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="text-left p-4 font-semibold text-slate-900 dark:text-white">Feature</th>
-                <th className="text-center p-4 font-semibold text-red-600 dark:text-red-400">FHSA</th>
-                <th className="text-center p-4 font-semibold text-blue-600 dark:text-blue-400">RRSP HBP</th>
+                <th className="text-left p-4 font-semibold text-slate-900">Feature</th>
+                <th className="text-center p-4 font-semibold text-pink-600">FHSA</th>
+                <th className="text-center p-4 font-semibold text-blue-600">RRSP HBP</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-slate-100">
               <tr>
-                <td className="p-4 text-slate-600 dark:text-slate-400">Maximum for home purchase</td>
-                <td className="p-4 text-center font-medium">{formatCurrency(FHSA_LIFETIME_LIMIT)}</td>
-                <td className="p-4 text-center font-medium">$35,000</td>
+                <td className="p-4 text-slate-600">Maximum for home purchase</td>
+                <td className="p-4 text-center font-semibold text-slate-900">{formatCurrency(FHSA_LIFETIME_LIMIT)}</td>
+                <td className="p-4 text-center font-semibold text-slate-900">$35,000</td>
               </tr>
               <tr>
-                <td className="p-4 text-slate-600 dark:text-slate-400">Tax deduction on contribution</td>
-                <td className="p-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
-                <td className="p-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                <td className="p-4 text-slate-600">Tax deduction on contribution</td>
+                <td className="p-4 text-center"><Check className="h-5 w-5 text-emerald-500 mx-auto" /></td>
+                <td className="p-4 text-center"><Check className="h-5 w-5 text-emerald-500 mx-auto" /></td>
               </tr>
               <tr>
-                <td className="p-4 text-slate-600 dark:text-slate-400">Tax-free withdrawal</td>
-                <td className="p-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                <td className="p-4 text-slate-600">Tax-free withdrawal</td>
+                <td className="p-4 text-center"><Check className="h-5 w-5 text-emerald-500 mx-auto" /></td>
                 <td className="p-4 text-center"><X className="h-5 w-5 text-red-400 mx-auto" /></td>
               </tr>
               <tr>
-                <td className="p-4 text-slate-600 dark:text-slate-400">Must repay to account</td>
-                <td className="p-4 text-center"><X className="h-5 w-5 text-green-500 mx-auto" /> No</td>
+                <td className="p-4 text-slate-600">Must repay to account</td>
+                <td className="p-4 text-center"><X className="h-5 w-5 text-emerald-500 mx-auto" /> No</td>
                 <td className="p-4 text-center"><Check className="h-5 w-5 text-red-400 mx-auto" /> Yes, over 15 years</td>
               </tr>
               <tr>
-                <td className="p-4 text-slate-600 dark:text-slate-400">Can combine with each other</td>
+                <td className="p-4 text-slate-600">Can combine with each other</td>
                 <td className="p-4 text-center" colSpan={2}>
-                  <Check className="h-5 w-5 text-green-500 mx-auto" /> Yes! Up to $75,000 total
+                  <Check className="h-5 w-5 text-emerald-500 mx-auto" /> Yes! Up to $75,000 total
                 </td>
               </tr>
             </tbody>
@@ -614,42 +618,42 @@ export default function FHSACalculatorPage() {
 
         {/* SEO Content */}
         <div className="mt-16 sm:mt-20 max-w-3xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-6">
             What is the FHSA (First Home Savings Account)?
           </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+          <p className="text-lg text-slate-600 mb-8 leading-relaxed">
             The First Home Savings Account (FHSA) is a registered account introduced in 2023 that combines the best features of an RRSP and TFSA for first-time home buyers. Contributions are tax-deductible like an RRSP, and withdrawals for a qualifying home purchase are tax-free like a TFSA.
           </p>
 
-          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+          <h3 className="text-xl font-bold text-slate-900 mb-4 mt-10">
             FHSA Eligibility Requirements
           </h3>
-          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8 text-lg">
+          <ul className="space-y-3 text-slate-600 mb-8 text-lg">
             <li>Must be a Canadian resident</li>
             <li>Must be at least 18 years old</li>
             <li>Must be a first-time home buyer (haven't owned a home in the past 4 years)</li>
             <li>Must have a valid Social Insurance Number (SIN)</li>
           </ul>
 
-          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+          <h3 className="text-xl font-bold text-slate-900 mb-4 mt-10">
             How FHSA Contribution Room Works
           </h3>
-          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8 text-lg">
-            <li><strong>Annual limit:</strong> $8,000 per year</li>
-            <li><strong>Lifetime limit:</strong> $40,000 total</li>
-            <li><strong>Carry forward:</strong> Unused room carries forward up to $8,000 per year</li>
-            <li><strong>Maximum single year:</strong> $16,000 if you have carry-forward room</li>
+          <ul className="space-y-3 text-slate-600 mb-8 text-lg">
+            <li><strong className="text-slate-900">Annual limit:</strong> $8,000 per year</li>
+            <li><strong className="text-slate-900">Lifetime limit:</strong> $40,000 total</li>
+            <li><strong className="text-slate-900">Carry forward:</strong> Unused room carries forward up to $8,000 per year</li>
+            <li><strong className="text-slate-900">Maximum single year:</strong> $16,000 if you have carry-forward room</li>
           </ul>
 
-          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+          <h3 className="text-xl font-bold text-slate-900 mb-4 mt-10">
             Combining FHSA with RRSP HBP
           </h3>
-          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+          <p className="text-lg text-slate-600 mb-8 leading-relaxed">
             You can use both the FHSA and the RRSP Home Buyers' Plan together! This allows you to withdraw up to $75,000 tax-free for your first home ($40,000 from FHSA + $35,000 from RRSP HBP). The key difference is that FHSA withdrawals never need to be repaid, while RRSP HBP withdrawals must be repaid over 15 years.
           </p>
 
-          <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-6 mt-10">
-            <p className="text-amber-800 dark:text-amber-200 text-base m-0 leading-relaxed">
+          <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-6 mt-10">
+            <p className="text-amber-800 text-base m-0 leading-relaxed">
               <strong>Disclaimer:</strong> This calculator provides estimates for general guidance. FHSA rules can be complex and individual situations vary. Consult a qualified tax professional for advice specific to your situation.
             </p>
           </div>
