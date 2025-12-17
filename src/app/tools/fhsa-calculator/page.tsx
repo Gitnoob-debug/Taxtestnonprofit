@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Home, Info, Check, X, User, Send, Bot, Sparkles, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Home, Info, Check, X, User, Send, Bot, Sparkles, Loader2, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
@@ -131,13 +131,14 @@ export default function FHSACalculatorPage() {
   }
 
   // Handle sending message to AI
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+  const handleSend = async (messageText?: string) => {
+    const textToSend = messageText || input.trim()
+    if (!textToSend || isLoading) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input.trim()
+      content: textToSend
     }
 
     const newMessages = [...messages, userMessage]
@@ -205,10 +206,10 @@ export default function FHSACalculatorPage() {
     }
   }
 
+  // Two simple examples that auto-solve
   const examplePrompts = [
-    "I make $85,000 in Ontario and want to contribute $8,000 to my FHSA",
-    "I've had my FHSA for 2 years and want to max it out. I earn $65k in BC",
-    "What if I contributed $16,000 with $100k income in Alberta?"
+    "I earn $75,000 in Ontario and want to put $8,000 in my FHSA",
+    "I make $90,000 in BC and want to max out my FHSA"
   ]
 
   return (
@@ -224,57 +225,56 @@ export default function FHSACalculatorPage() {
         </Link>
 
         {/* Header */}
-        <div className="mb-10">
+        <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
-            FHSA Calculator (First Home Savings Account)
+            FHSA Calculator
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400">
-            Tell me about your situation and I'll calculate your FHSA tax savings.
+            Tell me about your situation and I'll calculate your tax savings instantly.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-10">
-          {/* AI Chat Interface - PRIMARY */}
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col" style={{ minHeight: '500px' }}>
-            {/* Chat Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950 dark:to-orange-950">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
-                <Sparkles className="h-5 w-5 text-white" />
+        {/* Main Layout - Chat takes prominence */}
+        <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
+          {/* AI Chat Interface - PRIMARY (takes 3/5 of space) */}
+          <div className="lg:col-span-3 bg-white dark:bg-slate-800 rounded-3xl border-2 border-red-200 dark:border-red-800 shadow-xl shadow-red-100 dark:shadow-red-950/50 overflow-hidden flex flex-col" style={{ minHeight: '600px' }}>
+            {/* Chat Header - More prominent */}
+            <div className="flex items-center gap-4 p-5 border-b border-red-100 dark:border-red-900 bg-gradient-to-r from-red-500 to-orange-500">
+              <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
+                <MessageCircle className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white">FHSA Assistant</h3>
-                <p className="text-xs text-red-600 dark:text-red-400">Describe your situation in plain English</p>
+                <h3 className="font-bold text-white text-lg">Chat with FHSA Assistant</h3>
+                <p className="text-sm text-white/80">Just describe your situation in plain English</p>
               </div>
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {messages.length === 0 ? (
-                <div className="space-y-6">
-                  <div className="text-center py-6">
-                    <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900 dark:to-orange-900 flex items-center justify-center mb-4">
-                      <Home className="h-8 w-8 text-red-600 dark:text-red-400" />
-                    </div>
-                    <p className="text-lg font-medium text-slate-800 dark:text-slate-200 mb-2">
-                      Tell me about your FHSA situation
-                    </p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                      Share your income, province, and how much you'd like to contribute. I'll calculate your tax savings instantly.
-                    </p>
+                <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900 dark:to-orange-900 flex items-center justify-center mb-6">
+                    <Home className="h-10 w-10 text-red-500 dark:text-red-400" />
                   </div>
+                  <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-2">
+                    How can I help with your FHSA?
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md">
+                    Tell me your income, where you live, and how much you want to contribute. I'll calculate your tax savings right away.
+                  </p>
 
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider px-1">Try saying:</p>
+                  {/* Example buttons - clickable and auto-send */}
+                  <div className="w-full max-w-md space-y-3">
+                    <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Click an example to try:</p>
                     {examplePrompts.map((prompt, i) => (
                       <button
                         key={i}
-                        onClick={() => {
-                          setInput(prompt)
-                          inputRef.current?.focus()
-                        }}
-                        className="w-full text-left p-3 rounded-xl border-2 border-red-100 dark:border-red-800 hover:border-red-300 dark:hover:border-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-all text-sm text-slate-700 dark:text-slate-300 font-medium"
+                        onClick={() => handleSend(prompt)}
+                        className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/50 dark:to-orange-950/50 border-2 border-red-100 dark:border-red-800 hover:border-red-300 dark:hover:border-red-600 hover:shadow-md transition-all text-base text-slate-700 dark:text-slate-300"
                       >
-                        "{prompt}"
+                        <span className="text-red-500 dark:text-red-400 font-medium">"</span>
+                        {prompt}
+                        <span className="text-red-500 dark:text-red-400 font-medium">"</span>
                       </button>
                     ))}
                   </div>
@@ -290,23 +290,23 @@ export default function FHSACalculatorPage() {
                       )}
                     >
                       {msg.role === 'assistant' && (
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900 dark:to-orange-900 flex items-center justify-center shrink-0">
-                          <Bot className="h-4 w-4 text-red-600 dark:text-red-400" />
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900 dark:to-orange-900 flex items-center justify-center shrink-0">
+                          <Bot className="h-5 w-5 text-red-600 dark:text-red-400" />
                         </div>
                       )}
                       <div
                         className={cn(
-                          "max-w-[85%] rounded-2xl px-4 py-3 text-sm",
+                          "max-w-[80%] rounded-2xl px-5 py-3",
                           msg.role === 'user'
-                            ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-br-md shadow-md'
+                            ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-br-md shadow-lg'
                             : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-bl-md'
                         )}
                       >
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{msg.content}</p>
                         {msg.fieldUpdates && Object.keys(msg.fieldUpdates).length > 0 && (
-                          <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600">
-                            <p className="text-xs opacity-75 mb-1">Values updated:</p>
-                            <div className="flex flex-wrap gap-1">
+                          <div className="mt-3 pt-3 border-t border-slate-200/50 dark:border-slate-600/50">
+                            <p className="text-xs opacity-70 mb-2">Updated:</p>
+                            <div className="flex flex-wrap gap-2">
                               {Object.entries(msg.fieldUpdates).map(([field, value]) => {
                                 const fieldLabel = calculatorFields.find(f => f.name === field)?.label || field
                                 let displayValue = value
@@ -319,10 +319,10 @@ export default function FHSACalculatorPage() {
                                   <span
                                     key={field}
                                     className={cn(
-                                      "inline-flex items-center px-2 py-0.5 rounded-full text-xs",
+                                      "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
                                       msg.role === 'user'
                                         ? "bg-white/20 text-white"
-                                        : "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
+                                        : "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300"
                                     )}
                                   >
                                     {fieldLabel}: {displayValue}
@@ -338,15 +338,15 @@ export default function FHSACalculatorPage() {
 
                   {isLoading && (
                     <div className="flex gap-3 justify-start">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900 dark:to-orange-900 flex items-center justify-center shrink-0">
-                        <Loader2 className="h-4 w-4 text-red-600 dark:text-red-400 animate-spin" />
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900 dark:to-orange-900 flex items-center justify-center shrink-0">
+                        <Loader2 className="h-5 w-5 text-red-600 dark:text-red-400 animate-spin" />
                       </div>
-                      <div className="bg-slate-100 dark:bg-slate-700 rounded-2xl rounded-bl-md px-4 py-3">
-                        <div className="flex gap-1">
+                      <div className="bg-slate-100 dark:bg-slate-700 rounded-2xl rounded-bl-md px-5 py-3">
+                        <div className="flex gap-1.5">
                           {[0, 1, 2].map((i) => (
                             <motion.div
                               key={i}
-                              className="h-2 w-2 rounded-full bg-red-400"
+                              className="h-2.5 w-2.5 rounded-full bg-red-400"
                               animate={{ opacity: [0.3, 1, 0.3] }}
                               transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
                             />
@@ -360,25 +360,25 @@ export default function FHSACalculatorPage() {
               )}
             </div>
 
-            {/* Input Area */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+            {/* Input Area - Larger and more prominent */}
+            <div className="p-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
               <div className="relative">
                 <Textarea
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="E.g., I make $80,000 in BC and want to contribute $8,000..."
-                  className="min-h-[60px] max-h-[120px] pr-12 resize-none text-sm bg-white dark:bg-slate-800 border-2 border-red-100 dark:border-red-800 focus:border-red-300 dark:focus:border-red-600"
+                  placeholder="Type your situation here... (e.g., I make $80,000 in BC)"
+                  className="min-h-[80px] max-h-[150px] pr-14 resize-none text-base bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 focus:border-red-400 dark:focus:border-red-500 rounded-xl"
                   disabled={isLoading}
                 />
                 <Button
                   size="icon"
-                  onClick={handleSend}
+                  onClick={() => handleSend()}
                   disabled={!input.trim() || isLoading}
-                  className="absolute right-2 bottom-2 h-8 w-8 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                  className="absolute right-3 bottom-3 h-10 w-10 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 shadow-lg"
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-5 w-5" />
                 </Button>
               </div>
             </div>
@@ -471,98 +471,95 @@ export default function FHSACalculatorPage() {
             </AnimatePresence>
           </div>
 
-          {/* Results Section */}
-          <div className="space-y-6 lg:space-y-8">
+          {/* Results Section (takes 2/5 of space) */}
+          <div className="lg:col-span-2 space-y-6">
             {results ? (
               <>
                 {/* Summary Card */}
-                <div className="bg-red-50 dark:bg-red-950 rounded-2xl border border-red-200 dark:border-red-800 p-6 sm:p-8">
+                <div className="bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl p-6 text-white shadow-xl">
                   <div className="flex items-center gap-2 mb-4">
-                    <Home className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <h3 className="font-semibold text-red-900 dark:text-red-100">
-                      Your FHSA Summary
-                    </h3>
+                    <Home className="h-5 w-5" />
+                    <h3 className="font-semibold">Your Tax Savings</h3>
                   </div>
+                  <div className="text-4xl font-bold mb-2">
+                    {formatCurrency(results.taxSavings)}
+                  </div>
+                  <p className="text-white/80 text-sm">
+                    On a {formatCurrency(results.actualContribution)} contribution
+                  </p>
+                </div>
 
-                  <div className="space-y-3">
+                {/* Details Card */}
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                    Breakdown
+                  </h3>
+                  <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-red-700 dark:text-red-300">Available contribution room</span>
-                      <span className="font-medium text-red-900 dark:text-red-100">
+                      <span className="text-slate-600 dark:text-slate-400">Contribution room available</span>
+                      <span className="font-medium text-slate-900 dark:text-white">
                         {formatCurrency(results.totalAvailableRoom)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-red-700 dark:text-red-300">Your contribution</span>
-                      <span className="font-medium text-red-900 dark:text-red-100">
+                      <span className="text-slate-600 dark:text-slate-400">Your contribution</span>
+                      <span className="font-medium text-slate-900 dark:text-white">
                         {formatCurrency(results.actualContribution)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-red-700 dark:text-red-300">Your marginal tax rate</span>
-                      <span className="font-medium text-red-900 dark:text-red-100">
+                      <span className="text-slate-600 dark:text-slate-400">Marginal tax rate</span>
+                      <span className="font-medium text-slate-900 dark:text-white">
                         {formatPercent(results.marginalRate)}
                       </span>
                     </div>
-                    <div className="border-t border-red-300 dark:border-red-700 pt-3">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-red-900 dark:text-red-100">
-                          Tax Savings
-                        </span>
-                        <span className="font-bold text-2xl text-red-600 dark:text-red-400">
-                          {formatCurrency(results.taxSavings)}
+                    <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">Lifetime room remaining</span>
+                        <span className="font-medium text-slate-900 dark:text-white">
+                          {formatCurrency(results.lifetimeRemaining)}
                         </span>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Room Remaining */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">
-                    Remaining Room
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">Lifetime limit remaining</span>
-                      <span className="font-medium text-slate-900 dark:text-white">
-                        {formatCurrency(results.lifetimeRemaining)}
-                      </span>
-                    </div>
+                  {/* Progress bar */}
+                  <div className="mt-4">
                     <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
                       <div
-                        className="bg-red-500 h-2 rounded-full"
+                        className="bg-gradient-to-r from-red-500 to-orange-500 h-2 rounded-full"
                         style={{ width: `${(results.actualContribution / FHSA_LIFETIME_LIMIT) * 100}%` }}
                       />
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {formatCurrency(results.actualContribution)} of {formatCurrency(FHSA_LIFETIME_LIMIT)} lifetime limit used
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                      {formatCurrency(results.actualContribution)} of {formatCurrency(FHSA_LIFETIME_LIMIT)} lifetime limit
                     </p>
                   </div>
                 </div>
 
                 {/* Info Box */}
-                <div className="p-5 bg-amber-50 dark:bg-amber-950 rounded-xl border border-amber-200 dark:border-amber-800">
+                <div className="p-4 bg-amber-50 dark:bg-amber-950 rounded-xl border border-amber-200 dark:border-amber-800">
                   <div className="flex gap-3">
                     <Info className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                     <div className="text-sm text-amber-800 dark:text-amber-200">
-                      <p className="font-medium mb-2">FHSA Key Limits ({TAX_YEAR})</p>
-                      <ul className="space-y-1 text-amber-700 dark:text-amber-300">
-                        <li>• Annual limit: {formatCurrency(FHSA_ANNUAL_LIMIT)}</li>
-                        <li>• Lifetime limit: {formatCurrency(FHSA_LIFETIME_LIMIT)}</li>
-                        <li>• Unused room carries forward (up to $8K/year)</li>
-                      </ul>
+                      <p className="font-medium mb-1">FHSA Limits</p>
+                      <p className="text-amber-700 dark:text-amber-300 text-xs">
+                        Annual: {formatCurrency(FHSA_ANNUAL_LIMIT)} | Lifetime: {formatCurrency(FHSA_LIFETIME_LIMIT)}
+                      </p>
                     </div>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 sm:p-12 text-center">
-                <Home className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-                <p className="text-lg text-slate-500 dark:text-slate-400 mb-2">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
+                  <Home className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                </div>
+                <p className="text-lg font-medium text-slate-600 dark:text-slate-400 mb-2">
                   Your results will appear here
                 </p>
                 <p className="text-sm text-slate-400 dark:text-slate-500">
-                  Tell the AI assistant about your income, province, and contribution plans
+                  Chat with the assistant to calculate your FHSA tax savings
                 </p>
               </div>
             )}
