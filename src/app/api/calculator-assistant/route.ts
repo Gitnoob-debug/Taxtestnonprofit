@@ -39,78 +39,50 @@ interface RequestBody {
 // Build a dynamic system prompt based on the calculator type and fields
 function buildSystemPrompt(calculatorType: string, fields: CalculatorField[]): string {
   const fieldDescriptions = fields.map(f => {
-    let desc = `- ${f.name} (${f.label}): ${f.type}`
+    let desc = `- ${f.name}: ${f.type}`
     if (f.type === 'select' && f.options) {
-      desc += ` - options: ${f.options.map(o => `${o.value}="${o.label}"`).join(', ')}`
+      desc += ` (${f.options.map(o => o.value).join(', ')})`
     }
     if (f.currentValue !== undefined && f.currentValue !== '') {
-      desc += ` [current: ${f.currentValue}]`
+      desc += ` = ${f.currentValue}`
     }
     return desc
   }).join('\n')
 
   const calculatorDescriptions: Record<string, string> = {
-    'tax-calculator': 'Canadian Income Tax Calculator - calculates federal and provincial income tax, CPP, EI, and take-home pay',
-    'rrsp-calculator': 'RRSP Contribution Calculator - calculates RRSP contribution room, tax savings, and refund',
-    'tfsa-room-calculator': 'TFSA Room Calculator - calculates available TFSA contribution room based on age/residency',
-    'capital-gains-calculator': 'Capital Gains Tax Calculator - calculates taxable capital gains and tax owing',
-    'fhsa-calculator': 'FHSA Calculator - First Home Savings Account contribution room and benefits',
-    'rrsp-vs-tfsa': 'RRSP vs TFSA Comparison - helps decide between RRSP and TFSA contributions',
+    'tax-calculator': 'Income Tax Calculator',
+    'rrsp-calculator': 'RRSP Calculator',
+    'tfsa-room-calculator': 'TFSA Room Calculator',
+    'capital-gains-calculator': 'Capital Gains Calculator',
+    'fhsa-calculator': 'FHSA Calculator',
+    'rrsp-vs-tfsa': 'RRSP vs TFSA Comparison',
+    'marginal-tax-calculator': 'Marginal Tax Calculator',
+    'dividend-tax-calculator': 'Dividend Tax Calculator',
+    'self-employment-tax-calculator': 'Self-Employment Tax Calculator',
   }
 
   const calcDesc = calculatorDescriptions[calculatorType] || 'Tax Calculator'
 
-  return `You are a helpful Canadian tax assistant helping users fill in the ${calcDesc}.
+  return `You are a Canadian tax assistant for the ${calcDesc}. Be brief and direct.
 
-Available fields to update:
+Fields:
 ${fieldDescriptions}
 
-Your job is to:
-1. Understand what the user wants to calculate, even if they're vague or conversational
-2. Extract specific values when provided (income, province, age, amounts, etc.)
-3. Ask clarifying questions if you need more information to fill in the calculator
-4. Be conversational and helpful, not robotic
+RESPOND WITH JSON ONLY:
+{"message": "short response", "fieldUpdates": {"field": value} or null, "needsMoreInfo": true/false}
 
-IMPORTANT RESPONSE FORMAT:
-You must respond with valid JSON in this exact format:
-{
-  "message": "Your conversational response to the user",
-  "fieldUpdates": { "fieldName": value } or null if no updates,
-  "needsMoreInfo": true/false
-}
+RULES:
+- Keep messages SHORT (1-2 sentences max)
+- When you have values, just confirm briefly: "Done! Check your results on the right."
+- Only ask ONE question at a time if info is missing
+- Never repeat back all the values - the UI shows them
+- Province codes: ON, BC, AB, QC, MB, SK, NS, NB, NL, PE, NT, NU, YT
+- City mapping: Vancouver/Victoria=BC, Toronto/Ottawa=ON, Montreal=QC, Calgary/Edmonton=AB
 
-For fieldUpdates:
-- Use the exact field names from the list above
-- Numbers should be numbers (not strings)
-- Province codes should be uppercase 2-letter codes (ON, BC, AB, etc.)
-
-Examples of good responses:
-- User says "I make 80 grand in Vancouver": {"message": "Got it! I've set your income to $80,000 and province to BC. Your tax breakdown is now showing.", "fieldUpdates": {"income": 80000, "province": "BC"}, "needsMoreInfo": false}
-- User says "what if I'm rich": {"message": "I'd be happy to calculate that! What annual income would you consider 'rich'? For example, are you thinking $150,000, $250,000, or higher?", "fieldUpdates": null, "needsMoreInfo": true}
-- User says "I'm thinking of moving from Ontario to Alberta": {"message": "Great question! Moving to Alberta could significantly reduce your taxes since there's no provincial sales tax and lower income tax rates. What's your annual income? I can show you the difference.", "fieldUpdates": null, "needsMoreInfo": true}
-
-Be smart about context:
-- "BC" or "Vancouver" → province: "BC"
-- "Toronto" or "GTA" → province: "ON"
-- "Montreal" → province: "QC"
-- "Calgary" or "Edmonton" → province: "AB"
-- "six figures" → ask what specifically
-- "average salary" → suggest ~$60,000 or ask
-- "good salary" → ask what they consider good
-
-For RRSP calculator, understand:
-- "max out my RRSP" → they want to contribute the maximum
-- "I have room from last year" → ask about unused contribution room
-
-For TFSA calculator, understand:
-- Age or birth year helps calculate total room
-- "I've never contributed" → they have maximum room available
-
-For capital gains, understand:
-- They need purchase price AND sale price
-- Ask about both if only one is mentioned
-
-Always be helpful and guide them toward a complete calculation!`
+Examples:
+User: "75k in Ontario, 8000 contribution" → {"message": "Done! Your FHSA savings are showing.", "fieldUpdates": {"income": 75000, "province": "ON", "contribution": 8000}, "needsMoreInfo": false}
+User: "what about BC?" → {"message": "Updated to BC.", "fieldUpdates": {"province": "BC"}, "needsMoreInfo": false}
+User: "max out my FHSA" → {"message": "Set to $8,000 annual max. What's your income?", "fieldUpdates": {"contribution": 8000}, "needsMoreInfo": true}`
 }
 
 export async function POST(req: NextRequest) {
@@ -250,9 +222,9 @@ function handleSimpleParsing(message: string, fields: CalculatorField[]) {
   // Build response
   let responseMessage: string
   if (updates.length > 0) {
-    responseMessage = `Got it! I've updated:\n• ${updates.join('\n• ')}\n\nCheck out your results!`
+    responseMessage = `Done! Check your results.`
   } else {
-    responseMessage = `I'd love to help! Could you tell me a bit more? For example:\n• Your annual income (e.g., "$80,000" or "80k")\n• Your province (e.g., "Ontario" or "BC")\n\nWhat would you like to calculate?`
+    responseMessage = `What's your income and province?`
   }
 
   return NextResponse.json({
