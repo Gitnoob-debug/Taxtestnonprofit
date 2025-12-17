@@ -73,8 +73,14 @@ export function CalculatorAssistant({
     }
   }, [isOpen])
 
-  const parseUserInput = async (userMessage: string) => {
+  const parseUserInput = async (userMessage: string, currentMessages: AssistantMessage[]) => {
     setIsLoading(true)
+
+    // Build conversation history for context
+    const conversationHistory = currentMessages.map(m => ({
+      role: m.role,
+      content: m.content
+    }))
 
     try {
       const response = await fetch('/api/calculator-assistant', {
@@ -89,7 +95,8 @@ export function CalculatorAssistant({
             type: f.type,
             options: f.options,
             currentValue: f.currentValue
-          }))
+          })),
+          conversationHistory
         })
       })
 
@@ -130,10 +137,11 @@ export function CalculatorAssistant({
       content: input.trim()
     }
 
-    setMessages(prev => [...prev, userMessage])
+    const newMessages = [...messages, userMessage]
+    setMessages(newMessages)
     setInput('')
 
-    const response = await parseUserInput(userMessage.content)
+    const response = await parseUserInput(userMessage.content, newMessages)
 
     const assistantMessage: AssistantMessage = {
       id: (Date.now() + 1).toString(),

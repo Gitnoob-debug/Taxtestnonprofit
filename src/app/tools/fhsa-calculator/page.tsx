@@ -20,6 +20,7 @@ import {
   TAX_YEAR,
 } from '@/lib/canadianTaxData'
 import { useProfile } from '@/hooks/useProfile'
+import { CalculatorAssistant, CalculatorField } from '@/components/tools/CalculatorAssistant'
 
 export default function FHSACalculatorPage() {
   const { profile, loading: profileLoading, isLoggedIn } = useProfile()
@@ -28,6 +29,28 @@ export default function FHSACalculatorPage() {
   const [yearsOpen, setYearsOpen] = useState<string>('1')
   const [province, setProvince] = useState<string>('ON')
   const [profileApplied, setProfileApplied] = useState(false)
+
+  // Calculator fields for the AI assistant
+  const calculatorFields: CalculatorField[] = useMemo(() => [
+    { name: 'income', label: 'Annual Income', type: 'number' as const, currentValue: income },
+    { name: 'contribution', label: 'Planned Contribution', type: 'number' as const, currentValue: contribution },
+    { name: 'yearsOpen', label: 'Years FHSA Open', type: 'number' as const, currentValue: yearsOpen },
+    {
+      name: 'province', label: 'Province/Territory', type: 'select' as const,
+      options: Object.entries(PROVINCE_NAMES).map(([code, name]) => ({ value: code, label: name })),
+      currentValue: province
+    }
+  ], [income, contribution, yearsOpen, province])
+
+  const handleFieldUpdate = (fieldName: string, value: string | number) => {
+    const strValue = value.toString()
+    switch (fieldName) {
+      case 'income': setIncome(strValue); break
+      case 'contribution': setContribution(strValue); break
+      case 'yearsOpen': setYearsOpen(strValue); break
+      case 'province': setProvince(strValue); break
+    }
+  }
 
   // Auto-populate province from profile
   useEffect(() => {
@@ -369,6 +392,17 @@ export default function FHSACalculatorPage() {
           </div>
         </div>
       </div>
+
+      <CalculatorAssistant
+        calculatorName="fhsa-calculator"
+        fields={calculatorFields}
+        onFieldUpdate={handleFieldUpdate}
+        examplePrompts={[
+          "I make $70,000 and want to contribute $8,000",
+          "How much can I save if I max out my FHSA?",
+          "I've had my FHSA for 2 years, want to contribute $16,000"
+        ]}
+      />
     </div>
   )
 }

@@ -20,6 +20,7 @@ import {
   TAX_YEAR,
 } from '@/lib/canadianTaxData'
 import { useProfile } from '@/hooks/useProfile'
+import { CalculatorAssistant, CalculatorField } from '@/components/tools/CalculatorAssistant'
 
 export default function CapitalGainsCalculatorPage() {
   const { profile, loading: profileLoading, isLoggedIn } = useProfile()
@@ -27,6 +28,26 @@ export default function CapitalGainsCalculatorPage() {
   const [capitalGain, setCapitalGain] = useState<string>('')
   const [province, setProvince] = useState<string>('ON')
   const [profileApplied, setProfileApplied] = useState(false)
+
+  // Calculator fields for the AI assistant
+  const calculatorFields: CalculatorField[] = useMemo(() => [
+    { name: 'otherIncome', label: 'Other Annual Income', type: 'number' as const, currentValue: otherIncome },
+    { name: 'capitalGain', label: 'Capital Gain Amount', type: 'number' as const, currentValue: capitalGain },
+    {
+      name: 'province', label: 'Province/Territory', type: 'select' as const,
+      options: Object.entries(PROVINCE_NAMES).map(([code, name]) => ({ value: code, label: name })),
+      currentValue: province
+    }
+  ], [otherIncome, capitalGain, province])
+
+  const handleFieldUpdate = (fieldName: string, value: string | number) => {
+    const strValue = value.toString()
+    switch (fieldName) {
+      case 'otherIncome': setOtherIncome(strValue); break
+      case 'capitalGain': setCapitalGain(strValue); break
+      case 'province': setProvince(strValue); break
+    }
+  }
 
   // Auto-populate province from profile
   useEffect(() => {
@@ -348,6 +369,17 @@ export default function CapitalGainsCalculatorPage() {
           </div>
         </div>
       </div>
+
+      <CalculatorAssistant
+        calculatorName="capital-gains-calculator"
+        fields={calculatorFields}
+        onFieldUpdate={handleFieldUpdate}
+        examplePrompts={[
+          "I sold stock for a $50,000 profit in Ontario",
+          "Made $80k/year and sold crypto for $25,000 gain",
+          "What's the tax on a $300,000 capital gain?"
+        ]}
+      />
     </div>
   )
 }

@@ -12,6 +12,7 @@ import {
   TAX_YEAR,
 } from '@/lib/canadianTaxData'
 import { useProfile } from '@/hooks/useProfile'
+import { CalculatorAssistant, CalculatorField } from '@/components/tools/CalculatorAssistant'
 
 // Helper to estimate birth year from age range
 function estimateBirthYearFromAgeRange(ageRange: string): number | null {
@@ -33,6 +34,18 @@ export default function TFSARoomCalculatorPage() {
   const [birthYear, setBirthYear] = useState<string>('')
   const [previousContributions, setPreviousContributions] = useState<string>('')
   const [profileApplied, setProfileApplied] = useState(false)
+
+  // Calculator fields for the AI assistant
+  const calculatorFields: CalculatorField[] = useMemo(() => [
+    { name: 'birthYear', label: 'Year of Birth', type: 'number' as const, currentValue: birthYear },
+    { name: 'previousContributions', label: 'Total Previous Contributions', type: 'number' as const, currentValue: previousContributions },
+  ], [birthYear, previousContributions])
+
+  const handleFieldUpdate = (fieldName: string, value: string | number) => {
+    const strValue = value.toString()
+    if (fieldName === 'birthYear') setBirthYear(strValue)
+    else if (fieldName === 'previousContributions') setPreviousContributions(strValue)
+  }
 
   // Auto-populate birth year from profile age range
   useEffect(() => {
@@ -331,6 +344,17 @@ export default function TFSARoomCalculatorPage() {
           </div>
         </div>
       </div>
+
+      <CalculatorAssistant
+        calculatorName="tfsa-room-calculator"
+        fields={calculatorFields}
+        onFieldUpdate={handleFieldUpdate}
+        examplePrompts={[
+          "I was born in 1990 and have never contributed",
+          "I'm 35 years old and have contributed $40,000 total",
+          "Born in 1985, maxed out every year"
+        ]}
+      />
     </div>
   )
 }

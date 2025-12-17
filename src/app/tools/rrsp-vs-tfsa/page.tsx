@@ -20,6 +20,7 @@ import {
   TAX_YEAR,
 } from '@/lib/canadianTaxData'
 import { useProfile } from '@/hooks/useProfile'
+import { CalculatorAssistant, CalculatorField } from '@/components/tools/CalculatorAssistant'
 
 export default function RRSPvsTFSAPage() {
   const { profile, loading: profileLoading, isLoggedIn } = useProfile()
@@ -30,6 +31,32 @@ export default function RRSPvsTFSAPage() {
   const [expectedReturn, setExpectedReturn] = useState<string>('6')
   const [province, setProvince] = useState<string>('ON')
   const [profileApplied, setProfileApplied] = useState(false)
+
+  // Calculator fields for the AI assistant
+  const calculatorFields: CalculatorField[] = useMemo(() => [
+    { name: 'currentIncome', label: 'Current Annual Income', type: 'number' as const, currentValue: currentIncome },
+    { name: 'retirementIncome', label: 'Expected Retirement Income', type: 'number' as const, currentValue: retirementIncome },
+    { name: 'contribution', label: 'Annual Contribution', type: 'number' as const, currentValue: contribution },
+    { name: 'yearsToRetirement', label: 'Years to Retirement', type: 'number' as const, currentValue: yearsToRetirement },
+    { name: 'expectedReturn', label: 'Expected Annual Return (%)', type: 'number' as const, currentValue: expectedReturn },
+    {
+      name: 'province', label: 'Province/Territory', type: 'select' as const,
+      options: Object.entries(PROVINCE_NAMES).map(([code, name]) => ({ value: code, label: name })),
+      currentValue: province
+    }
+  ], [currentIncome, retirementIncome, contribution, yearsToRetirement, expectedReturn, province])
+
+  const handleFieldUpdate = (fieldName: string, value: string | number) => {
+    const strValue = value.toString()
+    switch (fieldName) {
+      case 'currentIncome': setCurrentIncome(strValue); break
+      case 'retirementIncome': setRetirementIncome(strValue); break
+      case 'contribution': setContribution(strValue); break
+      case 'yearsToRetirement': setYearsToRetirement(strValue); break
+      case 'expectedReturn': setExpectedReturn(strValue); break
+      case 'province': setProvince(strValue); break
+    }
+  }
 
   // Auto-populate province from profile
   useEffect(() => {
@@ -453,6 +480,17 @@ export default function RRSPvsTFSAPage() {
           </div>
         </div>
       </div>
+
+      <CalculatorAssistant
+        calculatorName="rrsp-vs-tfsa"
+        fields={calculatorFields}
+        onFieldUpdate={handleFieldUpdate}
+        examplePrompts={[
+          "I make $90k now and expect $50k in retirement",
+          "30 years old, $80k income, planning to contribute $10k",
+          "Should I use RRSP or TFSA if I'm in a low tax bracket?"
+        ]}
+      />
     </div>
   )
 }

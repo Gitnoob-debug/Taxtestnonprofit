@@ -1,36 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PROVINCE_MAP: Record<string, string> = {
-  'ontario': 'ON',
-  'on': 'ON',
-  'british columbia': 'BC',
-  'bc': 'BC',
-  'alberta': 'AB',
-  'ab': 'AB',
-  'quebec': 'QC',
-  'qc': 'QC',
-  'manitoba': 'MB',
-  'mb': 'MB',
-  'saskatchewan': 'SK',
-  'sk': 'SK',
-  'nova scotia': 'NS',
-  'ns': 'NS',
-  'new brunswick': 'NB',
-  'nb': 'NB',
-  'newfoundland': 'NL',
-  'newfoundland and labrador': 'NL',
-  'nl': 'NL',
-  'prince edward island': 'PE',
-  'pei': 'PE',
-  'pe': 'PE',
-  'northwest territories': 'NT',
-  'nt': 'NT',
-  'nunavut': 'NU',
-  'nu': 'NU',
-  'yukon': 'YT',
-  'yt': 'YT',
-}
-
 const PROVINCE_NAMES: Record<string, string> = {
   'ON': 'Ontario',
   'BC': 'British Columbia',
@@ -55,280 +24,240 @@ interface CalculatorField {
   currentValue?: string | number
 }
 
+interface ConversationMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 interface RequestBody {
   message: string
   calculatorType: string
   fields: CalculatorField[]
+  conversationHistory?: ConversationMessage[]
 }
 
-function parseIncome(text: string): number | null {
-  // Match patterns like: $75,000, 75000, 75k, $120K, 85,000 dollars
-  const patterns = [
-    /\$?\s*([\d,]+(?:\.\d{2})?)\s*(?:k|K)/,  // 75k, $75K
-    /\$?\s*([\d,]+(?:\.\d{2})?)\s*(?:thousand|grand)/i,  // 75 thousand
-    /\$?\s*([\d,]+(?:\.\d{2})?)/,  // $75,000 or 75000
-  ]
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern)
-    if (match) {
-      let value = parseFloat(match[1].replace(/,/g, ''))
-      // If pattern includes k/K or thousand, multiply by 1000
-      if (/k|K|thousand|grand/i.test(match[0])) {
-        value *= 1000
-      }
-      if (value > 0 && value < 10000000) { // Sanity check
-        return value
-      }
+// Build a dynamic system prompt based on the calculator type and fields
+function buildSystemPrompt(calculatorType: string, fields: CalculatorField[]): string {
+  const fieldDescriptions = fields.map(f => {
+    let desc = `- ${f.name} (${f.label}): ${f.type}`
+    if (f.type === 'select' && f.options) {
+      desc += ` - options: ${f.options.map(o => `${o.value}="${o.label}"`).join(', ')}`
     }
+    if (f.currentValue !== undefined && f.currentValue !== '') {
+      desc += ` [current: ${f.currentValue}]`
+    }
+    return desc
+  }).join('\n')
+
+  const calculatorDescriptions: Record<string, string> = {
+    'tax-calculator': 'Canadian Income Tax Calculator - calculates federal and provincial income tax, CPP, EI, and take-home pay',
+    'rrsp-calculator': 'RRSP Contribution Calculator - calculates RRSP contribution room, tax savings, and refund',
+    'tfsa-room-calculator': 'TFSA Room Calculator - calculates available TFSA contribution room based on age/residency',
+    'capital-gains-calculator': 'Capital Gains Tax Calculator - calculates taxable capital gains and tax owing',
+    'fhsa-calculator': 'FHSA Calculator - First Home Savings Account contribution room and benefits',
+    'rrsp-vs-tfsa': 'RRSP vs TFSA Comparison - helps decide between RRSP and TFSA contributions',
   }
-  return null
+
+  const calcDesc = calculatorDescriptions[calculatorType] || 'Tax Calculator'
+
+  return `You are a helpful Canadian tax assistant helping users fill in the ${calcDesc}.
+
+Available fields to update:
+${fieldDescriptions}
+
+Your job is to:
+1. Understand what the user wants to calculate, even if they're vague or conversational
+2. Extract specific values when provided (income, province, age, amounts, etc.)
+3. Ask clarifying questions if you need more information to fill in the calculator
+4. Be conversational and helpful, not robotic
+
+IMPORTANT RESPONSE FORMAT:
+You must respond with valid JSON in this exact format:
+{
+  "message": "Your conversational response to the user",
+  "fieldUpdates": { "fieldName": value } or null if no updates,
+  "needsMoreInfo": true/false
 }
 
-function parseProvince(text: string): string | null {
-  const lowerText = text.toLowerCase()
+For fieldUpdates:
+- Use the exact field names from the list above
+- Numbers should be numbers (not strings)
+- Province codes should be uppercase 2-letter codes (ON, BC, AB, etc.)
 
-  // Try to find province name or code in text
-  for (const [key, code] of Object.entries(PROVINCE_MAP)) {
-    if (lowerText.includes(key)) {
-      return code
-    }
-  }
+Examples of good responses:
+- User says "I make 80 grand in Vancouver": {"message": "Got it! I've set your income to $80,000 and province to BC. Your tax breakdown is now showing.", "fieldUpdates": {"income": 80000, "province": "BC"}, "needsMoreInfo": false}
+- User says "what if I'm rich": {"message": "I'd be happy to calculate that! What annual income would you consider 'rich'? For example, are you thinking $150,000, $250,000, or higher?", "fieldUpdates": null, "needsMoreInfo": true}
+- User says "I'm thinking of moving from Ontario to Alberta": {"message": "Great question! Moving to Alberta could significantly reduce your taxes since there's no provincial sales tax and lower income tax rates. What's your annual income? I can show you the difference.", "fieldUpdates": null, "needsMoreInfo": true}
 
-  return null
-}
+Be smart about context:
+- "BC" or "Vancouver" → province: "BC"
+- "Toronto" or "GTA" → province: "ON"
+- "Montreal" → province: "QC"
+- "Calgary" or "Edmonton" → province: "AB"
+- "six figures" → ask what specifically
+- "average salary" → suggest ~$60,000 or ask
+- "good salary" → ask what they consider good
 
-function parseAge(text: string): number | null {
-  const patterns = [
-    /(\d{1,3})\s*(?:years?\s*old|yo|y\/o)/i,  // 45 years old, 45yo
-    /age\s*(?:of\s*)?(\d{1,3})/i,  // age 45, age of 45
-    /i(?:'m|am)\s*(\d{1,3})/i,  // I'm 45, I am 45
-  ]
+For RRSP calculator, understand:
+- "max out my RRSP" → they want to contribute the maximum
+- "I have room from last year" → ask about unused contribution room
 
-  for (const pattern of patterns) {
-    const match = text.match(pattern)
-    if (match) {
-      const age = parseInt(match[1])
-      if (age > 0 && age < 120) {
-        return age
-      }
-    }
-  }
-  return null
-}
+For TFSA calculator, understand:
+- Age or birth year helps calculate total room
+- "I've never contributed" → they have maximum room available
 
-function parseBirthYear(text: string): number | null {
-  const patterns = [
-    /born\s*(?:in\s*)?(\d{4})/i,  // born in 1990
-    /birth\s*year\s*(?:is\s*)?(\d{4})/i,  // birth year 1990
-  ]
+For capital gains, understand:
+- They need purchase price AND sale price
+- Ask about both if only one is mentioned
 
-  for (const pattern of patterns) {
-    const match = text.match(pattern)
-    if (match) {
-      const year = parseInt(match[1])
-      const currentYear = new Date().getFullYear()
-      if (year > 1900 && year <= currentYear) {
-        return year
-      }
-    }
-  }
-  return null
-}
-
-function parseRRSPContribution(text: string): number | null {
-  const patterns = [
-    /rrsp\s*(?:contribution\s*)?(?:of\s*)?\$?\s*([\d,]+(?:\.\d{2})?)\s*(?:k|K)?/i,
-    /contribut(?:e|ing)\s*\$?\s*([\d,]+(?:\.\d{2})?)\s*(?:k|K)?\s*(?:to\s*)?(?:my\s*)?rrsp/i,
-  ]
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern)
-    if (match) {
-      let value = parseFloat(match[1].replace(/,/g, ''))
-      if (/k|K/.test(match[0])) {
-        value *= 1000
-      }
-      if (value > 0) {
-        return value
-      }
-    }
-  }
-  return null
-}
-
-function parseCapitalGains(text: string): { purchasePrice?: number; salePrice?: number } | null {
-  const result: { purchasePrice?: number; salePrice?: number } = {}
-
-  // Match purchase/bought for
-  const purchasePatterns = [
-    /(?:bought|purchased|paid)\s*(?:for\s*)?\$?\s*([\d,]+(?:\.\d{2})?)\s*(?:k|K)?/i,
-    /(?:cost|purchase\s*price)\s*(?:of\s*)?\$?\s*([\d,]+(?:\.\d{2})?)\s*(?:k|K)?/i,
-  ]
-
-  for (const pattern of purchasePatterns) {
-    const match = text.match(pattern)
-    if (match) {
-      let value = parseFloat(match[1].replace(/,/g, ''))
-      if (/k|K/.test(match[0])) value *= 1000
-      if (value > 0) {
-        result.purchasePrice = value
-        break
-      }
-    }
-  }
-
-  // Match sale/sold for
-  const salePatterns = [
-    /(?:sold|selling)\s*(?:for\s*)?\$?\s*([\d,]+(?:\.\d{2})?)\s*(?:k|K)?/i,
-    /(?:sale\s*price)\s*(?:of\s*)?\$?\s*([\d,]+(?:\.\d{2})?)\s*(?:k|K)?/i,
-  ]
-
-  for (const pattern of salePatterns) {
-    const match = text.match(pattern)
-    if (match) {
-      let value = parseFloat(match[1].replace(/,/g, ''))
-      if (/k|K/.test(match[0])) value *= 1000
-      if (value > 0) {
-        result.salePrice = value
-        break
-      }
-    }
-  }
-
-  return Object.keys(result).length > 0 ? result : null
+Always be helpful and guide them toward a complete calculation!`
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body: RequestBody = await req.json()
-    const { message, calculatorType, fields } = body
+    const { message, calculatorType, fields, conversationHistory = [] } = body
 
-    const fieldUpdates: Record<string, string | number> = {}
-    const updates: string[] = []
+    const openRouterKey = process.env.OPENROUTER_API_KEY
 
-    // Parse income
-    const income = parseIncome(message)
-    if (income !== null) {
-      const incomeField = fields.find(f =>
-        f.name.toLowerCase().includes('income') ||
-        f.label.toLowerCase().includes('income') ||
-        f.name.toLowerCase().includes('salary') ||
-        f.label.toLowerCase().includes('salary')
-      )
-      if (incomeField) {
-        fieldUpdates[incomeField.name] = income
-        updates.push(`income to $${income.toLocaleString()}`)
-      }
+    if (!openRouterKey) {
+      // Fallback to simple parsing if no API key
+      return handleSimpleParsing(message, fields)
     }
 
-    // Parse province
-    const province = parseProvince(message)
-    if (province) {
-      const provinceField = fields.find(f =>
-        f.name.toLowerCase().includes('province') ||
-        f.label.toLowerCase().includes('province') ||
-        f.type === 'select'
-      )
-      if (provinceField) {
-        fieldUpdates[provinceField.name] = province
-        updates.push(`province to ${PROVINCE_NAMES[province]}`)
-      }
-    }
+    const systemPrompt = buildSystemPrompt(calculatorType, fields)
 
-    // Parse age (for TFSA, RRSP calculators)
-    const age = parseAge(message)
-    if (age !== null) {
-      const ageField = fields.find(f =>
-        f.name.toLowerCase().includes('age') ||
-        f.label.toLowerCase().includes('age')
-      )
-      if (ageField) {
-        fieldUpdates[ageField.name] = age
-        updates.push(`age to ${age}`)
-      }
-    }
+    // Build messages for the LLM
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...conversationHistory.slice(-6).map(m => ({ role: m.role, content: m.content })),
+      { role: 'user', content: message }
+    ]
 
-    // Parse birth year
-    const birthYear = parseBirthYear(message)
-    if (birthYear !== null) {
-      const birthYearField = fields.find(f =>
-        f.name.toLowerCase().includes('birth') ||
-        f.name.toLowerCase().includes('year') ||
-        f.label.toLowerCase().includes('birth')
-      )
-      if (birthYearField) {
-        fieldUpdates[birthYearField.name] = birthYear
-        updates.push(`birth year to ${birthYear}`)
-      }
-    }
-
-    // Parse RRSP contribution
-    const rrspContribution = parseRRSPContribution(message)
-    if (rrspContribution !== null) {
-      const rrspField = fields.find(f =>
-        f.name.toLowerCase().includes('rrsp') ||
-        f.name.toLowerCase().includes('contribution') ||
-        f.label.toLowerCase().includes('rrsp')
-      )
-      if (rrspField) {
-        fieldUpdates[rrspField.name] = rrspContribution
-        updates.push(`RRSP contribution to $${rrspContribution.toLocaleString()}`)
-      }
-    }
-
-    // Parse capital gains fields
-    const capitalGains = parseCapitalGains(message)
-    if (capitalGains) {
-      if (capitalGains.purchasePrice !== undefined) {
-        const purchaseField = fields.find(f =>
-          f.name.toLowerCase().includes('purchase') ||
-          f.name.toLowerCase().includes('cost') ||
-          f.name.toLowerCase().includes('buy') ||
-          f.label.toLowerCase().includes('purchase')
-        )
-        if (purchaseField) {
-          fieldUpdates[purchaseField.name] = capitalGains.purchasePrice
-          updates.push(`purchase price to $${capitalGains.purchasePrice.toLocaleString()}`)
-        }
-      }
-      if (capitalGains.salePrice !== undefined) {
-        const saleField = fields.find(f =>
-          f.name.toLowerCase().includes('sale') ||
-          f.name.toLowerCase().includes('sell') ||
-          f.label.toLowerCase().includes('sale') ||
-          f.label.toLowerCase().includes('selling')
-        )
-        if (saleField) {
-          fieldUpdates[saleField.name] = capitalGains.salePrice
-          updates.push(`sale price to $${capitalGains.salePrice.toLocaleString()}`)
-        }
-      }
-    }
-
-    // Build response message
-    let responseMessage: string
-
-    if (updates.length > 0) {
-      if (updates.length === 1) {
-        responseMessage = `Done! I've set your ${updates[0]}. The calculator is now showing your results.`
-      } else {
-        responseMessage = `Got it! I've updated:\n• ${updates.join('\n• ')}\n\nCheck out your results in the calculator!`
-      }
-    } else {
-      responseMessage = `I couldn't find specific values in your message. Try something like:\n\n• "I make $75,000 in Ontario"\n• "Calculate for $120k income in BC"\n• "I'm 35 years old, born in 1989"\n\nWhat would you like to calculate?`
-    }
-
-    return NextResponse.json({
-      message: responseMessage,
-      fieldUpdates: Object.keys(fieldUpdates).length > 0 ? fieldUpdates : undefined
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openRouterKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://taxtestnonprofit.vercel.app',
+        'X-Title': 'Canadian Tax Calculator Assistant'
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3-haiku',
+        messages,
+        max_tokens: 500,
+        temperature: 0.7
+      })
     })
+
+    if (!response.ok) {
+      console.error('OpenRouter error:', await response.text())
+      return handleSimpleParsing(message, fields)
+    }
+
+    const data = await response.json()
+    const content = data.choices?.[0]?.message?.content
+
+    if (!content) {
+      return handleSimpleParsing(message, fields)
+    }
+
+    // Parse the JSON response
+    try {
+      // Extract JSON from the response (in case there's extra text)
+      const jsonMatch = content.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response')
+      }
+
+      const parsed = JSON.parse(jsonMatch[0])
+
+      return NextResponse.json({
+        message: parsed.message || "I'm not sure how to help with that. Can you tell me more?",
+        fieldUpdates: parsed.fieldUpdates || undefined,
+        needsMoreInfo: parsed.needsMoreInfo || false
+      })
+    } catch (parseError) {
+      // If JSON parsing fails, use the content as a message
+      console.error('JSON parse error:', parseError)
+      return NextResponse.json({
+        message: content.replace(/```json|```/g, '').trim(),
+        fieldUpdates: undefined,
+        needsMoreInfo: true
+      })
+    }
 
   } catch (error) {
     console.error('Calculator assistant error:', error)
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      { error: 'Failed to process request', message: "Sorry, I encountered an error. Please try again." },
       { status: 500 }
     )
   }
+}
+
+// Simple fallback parsing when LLM is not available
+function handleSimpleParsing(message: string, fields: CalculatorField[]) {
+  const fieldUpdates: Record<string, string | number> = {}
+  const updates: string[] = []
+
+  // Parse income
+  const incomeMatch = message.match(/\$?\s*([\d,]+(?:\.\d{2})?)\s*(?:k|K|thousand|grand)?/i)
+  if (incomeMatch) {
+    let value = parseFloat(incomeMatch[1].replace(/,/g, ''))
+    if (/k|K|thousand|grand/i.test(incomeMatch[0])) {
+      value *= 1000
+    }
+    if (value > 0 && value < 10000000) {
+      const incomeField = fields.find(f =>
+        f.name.toLowerCase().includes('income') ||
+        f.name.toLowerCase().includes('salary') ||
+        f.name.toLowerCase().includes('earned')
+      )
+      if (incomeField) {
+        fieldUpdates[incomeField.name] = value
+        updates.push(`income to $${value.toLocaleString()}`)
+      }
+    }
+  }
+
+  // Parse province
+  const provinceMap: Record<string, string> = {
+    'ontario': 'ON', 'toronto': 'ON', 'gta': 'ON', 'ottawa': 'ON',
+    'british columbia': 'BC', 'vancouver': 'BC', 'victoria': 'BC',
+    'alberta': 'AB', 'calgary': 'AB', 'edmonton': 'AB',
+    'quebec': 'QC', 'montreal': 'QC',
+    'manitoba': 'MB', 'winnipeg': 'MB',
+    'saskatchewan': 'SK', 'saskatoon': 'SK', 'regina': 'SK',
+    'nova scotia': 'NS', 'halifax': 'NS',
+    'new brunswick': 'NB',
+    'newfoundland': 'NL', 'st johns': 'NL',
+    'pei': 'PE', 'prince edward island': 'PE',
+  }
+
+  const lowerMessage = message.toLowerCase()
+  for (const [key, code] of Object.entries(provinceMap)) {
+    if (lowerMessage.includes(key)) {
+      const provinceField = fields.find(f => f.name.toLowerCase().includes('province'))
+      if (provinceField) {
+        fieldUpdates[provinceField.name] = code
+        updates.push(`province to ${PROVINCE_NAMES[code]}`)
+      }
+      break
+    }
+  }
+
+  // Build response
+  let responseMessage: string
+  if (updates.length > 0) {
+    responseMessage = `Got it! I've updated:\n• ${updates.join('\n• ')}\n\nCheck out your results!`
+  } else {
+    responseMessage = `I'd love to help! Could you tell me a bit more? For example:\n• Your annual income (e.g., "$80,000" or "80k")\n• Your province (e.g., "Ontario" or "BC")\n\nWhat would you like to calculate?`
+  }
+
+  return NextResponse.json({
+    message: responseMessage,
+    fieldUpdates: Object.keys(fieldUpdates).length > 0 ? fieldUpdates : undefined,
+    needsMoreInfo: Object.keys(fieldUpdates).length === 0
+  })
 }
