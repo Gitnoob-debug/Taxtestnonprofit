@@ -30,13 +30,12 @@ const categories = [
     description: 'When and how to file your taxes',
     articles: [
       { slug: 'tax-filing-deadlines', title: 'Tax Deadlines Canada 2026', readTime: '8 min', icon: Calendar },
-      { slug: 'tax-installments-guide', title: 'Quarterly Tax Installments', readTime: '9 min', icon: Calculator },
+      { slug: 'instalment-payments', title: 'Quarterly Tax Installments', readTime: '9 min', icon: Calculator },
       { slug: 'notice-of-assessment', title: 'Notice of Assessment Explained', readTime: '7 min', icon: FileText },
-      { slug: 'cra-my-account-guide', title: 'CRA My Account Guide', readTime: '8 min', icon: Globe },
-      { slug: 'tax-audit-guide', title: 'What to Do If CRA Audits You', readTime: '10 min', icon: FileText },
-      { slug: 'amended-tax-return', title: 'How to Amend a Tax Return', readTime: '7 min', icon: FileText },
-      { slug: 'tax-penalties-interest', title: 'Tax Penalties & Interest', readTime: '8 min', icon: Receipt },
-      { slug: 'voluntary-disclosure-program', title: 'Voluntary Disclosure Program', readTime: '9 min', icon: FileText },
+      { slug: 'cra-my-account', title: 'CRA My Account Guide', readTime: '8 min', icon: Globe },
+      { slug: 'cra-audit', title: 'What to Do If CRA Audits You', readTime: '10 min', icon: FileText },
+      { slug: 'amend-tax-return', title: 'How to Amend a Tax Return', readTime: '7 min', icon: FileText },
+      { slug: 'tax-refund-status', title: 'Check Your Tax Refund Status', readTime: '8 min', icon: Receipt },
     ]
   },
   {
