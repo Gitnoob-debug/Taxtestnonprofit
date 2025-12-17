@@ -87,7 +87,7 @@ export function TaxAssistantPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] w-full bg-background flex flex-col">
+    <div className="h-[calc(100vh-3.5rem)] w-full bg-white flex flex-col">
       <div className="flex-1 flex overflow-hidden">
         <ConversationSidebar
           isOpen={sidebarOpen}
@@ -100,7 +100,7 @@ export function TaxAssistantPage() {
         <div className="flex-1 overflow-hidden relative">
           {isLoadingConversation && activeConversationId ? (
             <div className="flex items-center justify-center h-full">
-              <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+              <div className="animate-spin h-8 w-8 border-2 border-emerald-600 border-t-transparent rounded-full" />
             </div>
           ) : (
             <ChatInterface
