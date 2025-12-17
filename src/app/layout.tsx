@@ -10,28 +10,28 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: {
-    default: 'TaxAssist.ca - Free Canadian Tax Calculator & AI Assistant',
-    template: '%s | TaxAssist.ca',
+    default: 'Tax Radar - Free Canadian Tax Calculator & AI Assistant',
+    template: '%s | Tax Radar',
   },
   description: 'Free Canadian tax calculators and AI-powered tax assistant. Calculate your 2025 income tax, RRSP savings, TFSA room, capital gains, and more. Get instant answers to your tax questions.',
   keywords: ['Canadian tax calculator', 'CRA', 'tax deductions', 'tax credits', 'RRSP calculator', 'TFSA calculator', 'capital gains tax', 'tax filing Canada', 'income tax Canada 2025', 'FHSA calculator'],
-  authors: [{ name: 'TaxAssist.ca' }],
-  creator: 'TaxAssist.ca',
-  publisher: 'TaxAssist.ca',
-  metadataBase: new URL('https://taxassist.ca'),
+  authors: [{ name: 'Tax Radar' }],
+  creator: 'Tax Radar',
+  publisher: 'Tax Radar',
+  metadataBase: new URL('https://taxradar.ca'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'TaxAssist.ca - Free Canadian Tax Calculator & AI Assistant',
+    title: 'Tax Radar - Free Canadian Tax Calculator & AI Assistant',
     description: 'Free Canadian tax calculators and AI-powered tax assistant for 2025. RRSP, TFSA, income tax, capital gains, and more.',
     type: 'website',
     locale: 'en_CA',
-    siteName: 'TaxAssist.ca',
+    siteName: 'Tax Radar',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TaxAssist.ca - Free Canadian Tax Calculator',
+    title: 'Tax Radar - Free Canadian Tax Calculator',
     description: 'Free Canadian tax calculators and AI-powered tax assistant for 2025.',
   },
   robots: {

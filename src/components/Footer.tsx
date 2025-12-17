@@ -17,8 +17,7 @@ export function Footer() {
                 <Leaf className="h-4 w-4 text-white" />
               </div>
               <div>
-                <span className="font-bold text-slate-900">TaxAssist</span>
-                <span className="text-emerald-600 font-bold">.ca</span>
+                <span className="font-bold text-slate-900">Tax Radar</span>
               </div>
             </Link>
             <p className="text-sm text-slate-500 leading-relaxed">
@@ -107,7 +106,7 @@ export function Footer() {
         <div className="mt-10 pt-6 border-t border-slate-200/60">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-slate-400">
-              © {currentYear} TaxAssist.ca. All rights reserved.
+              © {currentYear} Tax Radar. All rights reserved.
             </p>
             <p className="text-xs text-slate-400 text-center md:text-right max-w-md">
               This site provides general tax information only. Not professional tax, legal, or financial advice.

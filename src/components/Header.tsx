@@ -79,8 +79,7 @@ export function Header() {
               <Leaf className="h-5 w-5 text-white" />
             </div>
             <div className="hidden sm:block">
-              <span className="font-bold text-slate-900 text-lg tracking-tight">TaxAssist</span>
-              <span className="text-emerald-600 font-bold">.ca</span>
+              <span className="font-bold text-slate-900 text-lg tracking-tight">Tax Radar</span>
             </div>
           </Link>
 

@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { Leaf, Shield, BookOpen, Users, Target, Heart, ArrowRight, CheckCircle2 } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'About Us | TaxAssist.ca - Canadian Tax Assistant',
-  description: 'Learn about TaxAssist.ca, your free AI-powered Canadian tax assistant. We help Canadians understand their taxes with accurate, CRA-based information and free calculators.',
-  keywords: 'about TaxAssist, Canadian tax help, free tax calculator, CRA tax information, tax assistance Canada',
+  title: 'About Us | Tax Radar - Canadian Tax Assistant',
+  description: 'Learn about Tax Radar, your free AI-powered Canadian tax assistant. We help Canadians understand their taxes with accurate, CRA-based information and free calculators.',
+  keywords: 'about Tax Radar, Canadian tax help, free tax calculator, CRA tax information, tax assistance Canada',
 }
 
 export default function AboutPage() {
@@ -18,7 +18,7 @@ export default function AboutPage() {
             <Leaf className="h-10 w-10 text-white" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-            About TaxAssist.ca
+            About Tax Radar
           </h1>
           <p className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
             Your free, AI-powered Canadian tax assistant. We're here to help you understand
@@ -87,7 +87,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">Always Free</h3>
               <p className="text-slate-600">
-                TaxAssist.ca is completely free to use. No hidden fees, no premium subscriptions.
+                Tax Radar is completely free to use. No hidden fees, no premium subscriptions.
                 We believe tax literacy should be accessible to everyone.
               </p>
             </div>
@@ -120,7 +120,7 @@ export default function AboutPage() {
           <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-6">
             <h3 className="font-bold text-amber-900 mb-2">Important Disclaimer</h3>
             <p className="text-amber-800 leading-relaxed">
-              TaxAssist.ca provides general tax information for educational purposes only.
+              Tax Radar provides general tax information for educational purposes only.
               The information on this website is not professional tax, legal, or financial advice.
               Tax laws are complex and individual circumstances vary. We strongly recommend consulting
               with a qualified tax professional or accountant for advice specific to your situation.

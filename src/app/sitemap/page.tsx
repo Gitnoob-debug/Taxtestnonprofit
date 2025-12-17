@@ -22,9 +22,9 @@ import {
 } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Site Map | TaxAssist.ca - All Pages & Tools',
-  description: 'Complete site map of TaxAssist.ca. Find all our Canadian tax calculators, tools, and resources in one place. Income tax, RRSP, TFSA, capital gains, and more.',
-  keywords: 'TaxAssist sitemap, Canadian tax calculators, tax tools, site navigation',
+  title: 'Site Map | Tax Radar - All Pages & Tools',
+  description: 'Complete site map of Tax Radar. Find all our Canadian tax calculators, tools, and resources in one place. Income tax, RRSP, TFSA, capital gains, and more.',
+  keywords: 'Tax Radar sitemap, Canadian tax calculators, tax tools, site navigation',
 }
 
 const mainPages = [
@@ -49,7 +49,7 @@ const mainPages = [
   {
     href: '/about',
     title: 'About Us',
-    description: 'Learn about TaxAssist.ca and our mission',
+    description: 'Learn about Tax Radar and our mission',
     icon: Info,
   },
 ]
@@ -116,7 +116,7 @@ export default function SitemapPage() {
             Site Map
           </h1>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-            Find all pages and tools available on TaxAssist.ca
+            Find all pages and tools available on Tax Radar
           </p>
         </div>
 

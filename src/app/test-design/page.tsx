@@ -15,7 +15,7 @@ export default function TestDesignPage() {
             <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
-            <span className="font-semibold text-slate-900">TaxAssist</span>
+            <span className="font-semibold text-slate-900">Tax Radar</span>
           </Link>
 
           <div className="flex items-center gap-4">

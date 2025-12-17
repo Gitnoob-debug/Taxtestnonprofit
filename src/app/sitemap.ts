@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://taxassist.ca'
+  const baseUrl = 'https://taxradar.ca'
 
   // Main pages
   const mainPages = [

@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/api/', '/profile/'],
     },
-    sitemap: 'https://taxassist.ca/sitemap.xml',
+    sitemap: 'https://taxradar.ca/sitemap.xml',
   }
 }
