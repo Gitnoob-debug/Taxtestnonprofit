@@ -16,7 +16,6 @@ import {
   calculateTotalTax,
   PROVINCE_NAMES,
   CAPITAL_GAINS_INCLUSION_RATE,
-  CAPITAL_GAINS_INCLUSION_RATE_HIGH,
   TAX_YEAR,
 } from '@/lib/canadianTaxData'
 import { useProfile } from '@/hooks/useProfile'
@@ -63,20 +62,11 @@ export default function CapitalGainsCalculatorPage() {
 
     if (gainNum <= 0) return null
 
-    // Calculate inclusion amounts (2024 rules with $250K threshold)
-    const threshold = 250000
-    let taxableGain: number
-    let inclusionDetails: string
-
-    if (gainNum <= threshold) {
-      taxableGain = gainNum * CAPITAL_GAINS_INCLUSION_RATE
-      inclusionDetails = `${(CAPITAL_GAINS_INCLUSION_RATE * 100).toFixed(0)}% inclusion on entire gain`
-    } else {
-      const lowerPortion = threshold * CAPITAL_GAINS_INCLUSION_RATE
-      const higherPortion = (gainNum - threshold) * CAPITAL_GAINS_INCLUSION_RATE_HIGH
-      taxableGain = lowerPortion + higherPortion
-      inclusionDetails = `50% on first $250K, 66.67% on remainder`
-    }
+    // Calculate inclusion amounts
+    // Note: The proposed 66.67% rate increase was CANCELLED in March 2025
+    // Capital gains inclusion rate remains at 50% for all gains
+    const taxableGain = gainNum * CAPITAL_GAINS_INCLUSION_RATE
+    const inclusionDetails = `${(CAPITAL_GAINS_INCLUSION_RATE * 100).toFixed(0)}% inclusion rate`
 
     // Calculate tax
     const totalIncomeWithGain = otherIncomeNum + taxableGain
@@ -132,7 +122,7 @@ export default function CapitalGainsCalculatorPage() {
             Capital Gains Tax Calculator {TAX_YEAR}
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400">
-            Calculate the tax on your investment gains including the 2024 inclusion rate changes.
+            Calculate the tax on your investment gains with the 50% inclusion rate.
           </p>
         </div>
 
@@ -204,15 +194,15 @@ export default function CapitalGainsCalculatorPage() {
             </div>
 
             {/* Info Box */}
-            <div className="mt-8 p-5 bg-orange-50 dark:bg-orange-950 rounded-xl border border-orange-200 dark:border-orange-800">
+            <div className="mt-8 p-5 bg-green-50 dark:bg-green-950 rounded-xl border border-green-200 dark:border-green-800">
               <div className="flex gap-3">
-                <Info className="h-5 w-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
-                <div className="text-sm text-orange-800 dark:text-orange-200">
+                <Info className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                <div className="text-sm text-green-800 dark:text-green-200">
                   <p className="font-medium mb-2">{TAX_YEAR} Capital Gains Rules</p>
-                  <ul className="space-y-2 text-orange-700 dark:text-orange-300">
-                    <li>• First $250,000: 50% inclusion rate</li>
-                    <li>• Above $250,000: 66.67% inclusion rate</li>
-                    <li>• Changes effective June 25, 2024</li>
+                  <ul className="space-y-2 text-green-700 dark:text-green-300">
+                    <li>• 50% inclusion rate on all capital gains</li>
+                    <li>• The proposed 66.67% rate was cancelled in March 2025</li>
+                    <li>• Lifetime capital gains exemption: $1.25M</li>
                   </ul>
                 </div>
               </div>
@@ -323,17 +313,18 @@ export default function CapitalGainsCalculatorPage() {
           </p>
 
           <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
-            2024 Capital Gains Inclusion Rate Changes
+            {TAX_YEAR} Capital Gains Inclusion Rate
           </h3>
           <p className="text-lg text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
-            As of June 25, 2024, the capital gains inclusion rate has changed:
+            The capital gains inclusion rate in Canada remains at <strong>50%</strong>. This means only half of your capital gain is added to your taxable income.
           </p>
-          <ul className="space-y-3 text-slate-600 dark:text-slate-400 mb-8 text-lg">
-            <li><strong>First $250,000:</strong> 50% inclusion rate (unchanged)</li>
-            <li><strong>Above $250,000:</strong> 66.67% inclusion rate (increased from 50%)</li>
-          </ul>
+          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-8">
+            <p className="text-green-800 dark:text-green-200 text-base m-0">
+              <strong>Good news:</strong> The proposed increase to 66.67% (announced in Budget 2024) was <strong>cancelled in March 2025</strong>. The 50% rate applies to all capital gains regardless of amount.
+            </p>
+          </div>
           <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-            This means if you have a $300,000 capital gain, the first $250,000 has 50% included ($125,000) and the remaining $50,000 has 66.67% included ($33,335), for a total taxable amount of $158,335.
+            For example, if you have a $100,000 capital gain, only $50,000 is added to your taxable income. This amount is then taxed at your marginal tax rate.
           </p>
 
           <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
