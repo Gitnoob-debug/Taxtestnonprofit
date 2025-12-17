@@ -59,6 +59,7 @@ export function Header() {
     { href: '/', label: 'Chat' },
     { href: '/tools', label: 'Calculators' },
     { href: '/academy', label: 'Learn' },
+    { href: '/about', label: 'About' },
   ]
 
   return (
