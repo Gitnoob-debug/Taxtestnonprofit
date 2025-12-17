@@ -39,7 +39,7 @@ export default function TaxDeductionsPage() {
               <Clock className="h-4 w-4" />
               15 min read
             </span>
-            <span>Updated December 2024</span>
+            <span>Updated December 2025</span>
           </div>
         </header>
 

@@ -29,7 +29,7 @@ export default function RESPEducationSavingsPage() {
           </h1>
           <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1"><Clock className="h-4 w-4" />11 min read</span>
-            <span>Updated December 2024</span>
+            <span>Updated December 2025</span>
           </div>
         </header>
 
