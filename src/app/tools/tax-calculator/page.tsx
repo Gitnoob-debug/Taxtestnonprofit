@@ -28,6 +28,9 @@ import {
 import { useProfile } from '@/hooks/useProfile'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import { FAQSchema, BreadcrumbSchema, CalculatorSchema } from '@/components/JsonLd'
+import { RelatedContent } from '@/components/RelatedContent'
+import { calculatorFAQs, relatedTools, relatedAcademyArticles } from '@/lib/seo'
 
 interface Message {
   id: string
@@ -211,356 +214,395 @@ export default function TaxCalculatorPage() {
     "Calculate tax for $120,000 income in BC"
   ]
 
+  const faqs = calculatorFAQs['tax-calculator'] || []
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Back Link */}
-        <Link
-          href="/tools"
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Tools
-        </Link>
+    <>
+      {/* Structured Data */}
+      <FAQSchema faqs={faqs} />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://taxradar.ca' },
+          { name: 'Tools', url: 'https://taxradar.ca/tools' },
+          { name: 'Income Tax Calculator', url: 'https://taxradar.ca/tools/tax-calculator' },
+        ]}
+      />
+      <CalculatorSchema
+        name="Canadian Income Tax Calculator 2025"
+        description="Free Canadian income tax calculator for 2025. Calculate your federal and provincial taxes, CPP, EI, and take-home pay."
+        url="https://taxradar.ca/tools/tax-calculator"
+      />
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
-            Income Tax Calculator {TAX_YEAR}
-          </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400">
-            Tell me your income and province to see your complete tax breakdown.
-          </p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          {/* Back Link */}
+          <Link
+            href="/tools"
+            className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 mb-8"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Tools
+          </Link>
 
-        {/* Main Layout - Chat takes prominence */}
-        <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
-          {/* AI Chat Interface - PRIMARY (takes 3/5 of space) */}
-          <div className="lg:col-span-3 bg-white dark:bg-slate-800 rounded-3xl border-2 border-blue-200 dark:border-blue-800 shadow-xl shadow-blue-100 dark:shadow-blue-950/50 overflow-hidden flex flex-col" style={{ minHeight: '600px' }}>
-            {/* Chat Header */}
-            <div className="flex items-center gap-4 p-5 border-b border-blue-100 dark:border-blue-900 bg-gradient-to-r from-blue-500 to-indigo-500">
-              <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                <MessageCircle className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-lg">Chat with Tax Assistant</h3>
-                <p className="text-sm text-white/80">Just tell me your income and where you live</p>
-              </div>
-            </div>
-
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center px-4">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center mb-6">
-                    <Calculator className="h-10 w-10 text-blue-500 dark:text-blue-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-2">
-                    How can I help with your taxes?
-                  </h3>
-                  <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md">
-                    Tell me your annual income and province. I'll calculate your federal tax, provincial tax, CPP, EI, and take-home pay.
-                  </p>
-
-                  {/* Example buttons - clickable and auto-send */}
-                  <div className="w-full max-w-md space-y-3">
-                    <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Click an example to try:</p>
-                    {examplePrompts.map((prompt, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleSend(prompt)}
-                        className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 border-blue-100 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all text-base text-slate-700 dark:text-slate-300"
-                      >
-                        <span className="text-blue-500 dark:text-blue-400 font-medium">"</span>
-                        {prompt}
-                        <span className="text-blue-500 dark:text-blue-400 font-medium">"</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={cn(
-                        "flex gap-3",
-                        msg.role === 'user' ? 'justify-end' : 'justify-start'
-                      )}
-                    >
-                      {msg.role === 'assistant' && (
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center shrink-0">
-                          <Bot className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        </div>
-                      )}
-                      <div
-                        className={cn(
-                          "max-w-[80%] rounded-2xl px-5 py-3",
-                          msg.role === 'user'
-                            ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-br-md shadow-lg'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-bl-md'
-                        )}
-                      >
-                        <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{msg.content}</p>
-                        {msg.fieldUpdates && Object.keys(msg.fieldUpdates).length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-slate-200/50 dark:border-slate-600/50">
-                            <p className="text-xs opacity-70 mb-2">Updated:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {Object.entries(msg.fieldUpdates).map(([field, value]) => {
-                                const fieldLabel = calculatorFields.find(f => f.name === field)?.label || field
-                                let displayValue = value
-                                if (field === 'province') {
-                                  displayValue = PROVINCE_NAMES[value as keyof typeof PROVINCE_NAMES] || value
-                                } else if (field === 'income') {
-                                  displayValue = formatCurrency(Number(value))
-                                }
-                                return (
-                                  <span
-                                    key={field}
-                                    className={cn(
-                                      "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
-                                      msg.role === 'user'
-                                        ? "bg-white/20 text-white"
-                                        : "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
-                                    )}
-                                  >
-                                    {fieldLabel}: {displayValue}
-                                  </span>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-
-                  {isLoading && (
-                    <div className="flex gap-3 justify-start">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center shrink-0">
-                        <Loader2 className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-spin" />
-                      </div>
-                      <div className="bg-slate-100 dark:bg-slate-700 rounded-2xl rounded-bl-md px-5 py-3">
-                        <div className="flex gap-1.5">
-                          {[0, 1, 2].map((i) => (
-                            <motion.div
-                              key={i}
-                              className="h-2.5 w-2.5 rounded-full bg-blue-400"
-                              animate={{ opacity: [0.3, 1, 0.3] }}
-                              transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </>
-              )}
-            </div>
-
-            {/* Input Area */}
-            <div className="p-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
-              <div className="relative">
-                <Textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Type your situation here... (e.g., I make $75,000 in Alberta)"
-                  className="min-h-[80px] max-h-[150px] pr-14 resize-none text-base bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 focus:border-blue-400 dark:focus:border-blue-500 rounded-xl"
-                  disabled={isLoading}
-                />
-                <Button
-                  size="icon"
-                  onClick={() => handleSend()}
-                  disabled={!input.trim() || isLoading}
-                  className="absolute right-3 bottom-3 h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-lg"
-                >
-                  <Send className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Manual Input Toggle */}
-            <button
-              onClick={() => setShowManualInputs(!showManualInputs)}
-              className="w-full p-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 border-t border-slate-200 dark:border-slate-700"
-            >
-              {showManualInputs ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              {showManualInputs ? 'Hide manual inputs' : 'Or enter values manually'}
-            </button>
-
-            {/* Collapsible Manual Inputs */}
-            <AnimatePresence>
-              {showManualInputs && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden border-t border-slate-200 dark:border-slate-700"
-                >
-                  <div className="p-4 space-y-4 bg-slate-50 dark:bg-slate-900">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="income" className="text-xs">Annual Income</Label>
-                        <div className="relative mt-1">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
-                          <Input
-                            id="income"
-                            type="number"
-                            placeholder="75,000"
-                            value={income}
-                            onChange={(e) => setIncome(e.target.value)}
-                            className="pl-7 h-9 text-sm"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="province" className="text-xs">Province/Territory</Label>
-                        <Select value={province} onValueChange={setProvince}>
-                          <SelectTrigger className="mt-1 h-9 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(PROVINCE_NAMES).map(([code, name]) => (
-                              <SelectItem key={code} value={code}>
-                                {name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Results Section (takes 2/5 of space) */}
-          <div className="lg:col-span-2 space-y-6">
-            {results ? (
-              <>
-                {/* Net Income Card - Primary */}
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl p-6 text-white shadow-xl">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calculator className="h-5 w-5" />
-                    <h3 className="font-semibold">Take-Home Pay</h3>
-                  </div>
-                  <div className="text-4xl font-bold mb-2">
-                    {formatCurrency(results.netIncome)}
-                  </div>
-                  <p className="text-white/80 text-sm">
-                    {formatCurrency(results.monthlyNet)}/month | {formatCurrency(results.biweeklyNet)}/bi-weekly
-                  </p>
-                </div>
-
-                {/* Tax Breakdown Card */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                    Tax Breakdown
-                  </h3>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">Gross Income</span>
-                      <span className="font-medium text-slate-900 dark:text-white">
-                        {formatCurrency(parseFloat(income))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">Federal Tax</span>
-                      <span className="font-medium text-red-600 dark:text-red-400">
-                        -{formatCurrency(results.federalTax)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">Provincial Tax</span>
-                      <span className="font-medium text-red-600 dark:text-red-400">
-                        -{formatCurrency(results.provincialTax)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">CPP</span>
-                      <span className="font-medium text-red-600 dark:text-red-400">
-                        -{formatCurrency(results.cpp)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">EI</span>
-                      <span className="font-medium text-red-600 dark:text-red-400">
-                        -{formatCurrency(results.ei)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Rates Card */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Tax Rates</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Marginal</p>
-                      <p className="text-xl font-bold text-slate-900 dark:text-white">
-                        {formatPercent(results.marginalRate)}
-                      </p>
-                    </div>
-                    <div className="text-center p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Effective</p>
-                      <p className="text-xl font-bold text-slate-900 dark:text-white">
-                        {formatPercent(results.effectiveRate)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
-                  <Calculator className="h-8 w-8 text-slate-400 dark:text-slate-500" />
-                </div>
-                <p className="text-lg font-medium text-slate-600 dark:text-slate-400 mb-2">
-                  Your results will appear here
-                </p>
-                <p className="text-sm text-slate-400 dark:text-slate-500">
-                  Chat with the assistant to calculate your taxes
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* SEO Content */}
-        <div className="mt-16 sm:mt-20 max-w-3xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6">
-            How Canadian Income Tax Works
-          </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-            Canada uses a progressive tax system where higher income is taxed at higher rates. You pay federal tax plus provincial/territorial tax based on where you live on December 31st of the tax year.
-          </p>
-
-          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
-            Basic Personal Amount (BPA)
-          </h3>
-          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-            The Basic Personal Amount is a non-refundable tax credit that every Canadian can claim. For {TAX_YEAR}, the federal BPA is {formatCurrency(FEDERAL_BPA)}. Provincial BPAs vary—{PROVINCE_NAMES[province]}'s BPA is {formatCurrency(PROVINCIAL_BPA[province])}.
-          </p>
-
-          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
-            CPP and EI
-          </h3>
-          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-            In addition to income tax, most employees pay Canada Pension Plan (CPP) contributions (5.95% up to ${CPP_MAX_CONTRIBUTION_EMPLOYEE.toLocaleString()} max) and Employment Insurance (EI) premiums (1.66% up to ${EI_MAX_PREMIUM_EMPLOYEE.toLocaleString()} max).
-          </p>
-
-          <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-6 mt-10">
-            <p className="text-amber-800 dark:text-amber-200 text-base m-0 leading-relaxed">
-              <strong>Disclaimer:</strong> This calculator provides estimates for general guidance only. Your actual tax situation may vary based on deductions, credits, and other factors. Consult a tax professional for personalized advice.
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
+              Income Tax Calculator {TAX_YEAR}
+            </h1>
+            <p className="text-lg text-slate-600 dark:text-slate-400">
+              Tell me your income and province to see your complete tax breakdown.
             </p>
           </div>
+
+          {/* Main Layout - Chat takes prominence */}
+          <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
+            {/* AI Chat Interface - PRIMARY (takes 3/5 of space) */}
+            <div className="lg:col-span-3 bg-white dark:bg-slate-800 rounded-3xl border-2 border-blue-200 dark:border-blue-800 shadow-xl shadow-blue-100 dark:shadow-blue-950/50 overflow-hidden flex flex-col" style={{ minHeight: '600px' }}>
+              {/* Chat Header */}
+              <div className="flex items-center gap-4 p-5 border-b border-blue-100 dark:border-blue-900 bg-gradient-to-r from-blue-500 to-indigo-500">
+                <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
+                  <MessageCircle className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-lg">Chat with Tax Assistant</h3>
+                  <p className="text-sm text-white/80">Just tell me your income and where you live</p>
+                </div>
+              </div>
+
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center mb-6">
+                      <Calculator className="h-10 w-10 text-blue-500 dark:text-blue-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-2">
+                      How can I help with your taxes?
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md">
+                      Tell me your annual income and province. I'll calculate your federal tax, provincial tax, CPP, EI, and take-home pay.
+                    </p>
+
+                    {/* Example buttons - clickable and auto-send */}
+                    <div className="w-full max-w-md space-y-3">
+                      <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Click an example to try:</p>
+                      {examplePrompts.map((prompt, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSend(prompt)}
+                          className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 border-blue-100 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all text-base text-slate-700 dark:text-slate-300"
+                        >
+                          <span className="text-blue-500 dark:text-blue-400 font-medium">"</span>
+                          {prompt}
+                          <span className="text-blue-500 dark:text-blue-400 font-medium">"</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={cn(
+                          "flex gap-3",
+                          msg.role === 'user' ? 'justify-end' : 'justify-start'
+                        )}
+                      >
+                        {msg.role === 'assistant' && (
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center shrink-0">
+                            <Bot className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                        )}
+                        <div
+                          className={cn(
+                            "max-w-[80%] rounded-2xl px-5 py-3",
+                            msg.role === 'user'
+                              ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-br-md shadow-lg'
+                              : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-bl-md'
+                          )}
+                        >
+                          <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{msg.content}</p>
+                          {msg.fieldUpdates && Object.keys(msg.fieldUpdates).length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-slate-200/50 dark:border-slate-600/50">
+                              <p className="text-xs opacity-70 mb-2">Updated:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {Object.entries(msg.fieldUpdates).map(([field, value]) => {
+                                  const fieldLabel = calculatorFields.find(f => f.name === field)?.label || field
+                                  let displayValue = value
+                                  if (field === 'province') {
+                                    displayValue = PROVINCE_NAMES[value as keyof typeof PROVINCE_NAMES] || value
+                                  } else if (field === 'income') {
+                                    displayValue = formatCurrency(Number(value))
+                                  }
+                                  return (
+                                    <span
+                                      key={field}
+                                      className={cn(
+                                        "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
+                                        msg.role === 'user'
+                                          ? "bg-white/20 text-white"
+                                          : "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+                                      )}
+                                    >
+                                      {fieldLabel}: {displayValue}
+                                    </span>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {isLoading && (
+                      <div className="flex gap-3 justify-start">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center shrink-0">
+                          <Loader2 className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-spin" />
+                        </div>
+                        <div className="bg-slate-100 dark:bg-slate-700 rounded-2xl rounded-bl-md px-5 py-3">
+                          <div className="flex gap-1.5">
+                            {[0, 1, 2].map((i) => (
+                              <motion.div
+                                key={i}
+                                className="h-2.5 w-2.5 rounded-full bg-blue-400"
+                                animate={{ opacity: [0.3, 1, 0.3] }}
+                                transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </>
+                )}
+              </div>
+
+              {/* Input Area */}
+              <div className="p-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <div className="relative">
+                  <Textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type your situation here... (e.g., I make $75,000 in Alberta)"
+                    className="min-h-[80px] max-h-[150px] pr-14 resize-none text-base bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 focus:border-blue-400 dark:focus:border-blue-500 rounded-xl"
+                    disabled={isLoading}
+                  />
+                  <Button
+                    size="icon"
+                    onClick={() => handleSend()}
+                    disabled={!input.trim() || isLoading}
+                    className="absolute right-3 bottom-3 h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-lg"
+                  >
+                    <Send className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Manual Input Toggle */}
+              <button
+                onClick={() => setShowManualInputs(!showManualInputs)}
+                className="w-full p-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 border-t border-slate-200 dark:border-slate-700"
+              >
+                {showManualInputs ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {showManualInputs ? 'Hide manual inputs' : 'Or enter values manually'}
+              </button>
+
+              {/* Collapsible Manual Inputs */}
+              <AnimatePresence>
+                {showManualInputs && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden border-t border-slate-200 dark:border-slate-700"
+                  >
+                    <div className="p-4 space-y-4 bg-slate-50 dark:bg-slate-900">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="income" className="text-xs">Annual Income</Label>
+                          <div className="relative mt-1">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
+                            <Input
+                              id="income"
+                              type="number"
+                              placeholder="75,000"
+                              value={income}
+                              onChange={(e) => setIncome(e.target.value)}
+                              className="pl-7 h-9 text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="province" className="text-xs">Province/Territory</Label>
+                          <Select value={province} onValueChange={setProvince}>
+                            <SelectTrigger className="mt-1 h-9 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(PROVINCE_NAMES).map(([code, name]) => (
+                                <SelectItem key={code} value={code}>
+                                  {name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Results Section (takes 2/5 of space) */}
+            <div className="lg:col-span-2 space-y-6">
+              {results ? (
+                <>
+                  {/* Net Income Card - Primary */}
+                  <div className="bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl p-6 text-white shadow-xl">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Calculator className="h-5 w-5" />
+                      <h3 className="font-semibold">Take-Home Pay</h3>
+                    </div>
+                    <div className="text-4xl font-bold mb-2">
+                      {formatCurrency(results.netIncome)}
+                    </div>
+                    <p className="text-white/80 text-sm">
+                      {formatCurrency(results.monthlyNet)}/month | {formatCurrency(results.biweeklyNet)}/bi-weekly
+                    </p>
+                  </div>
+
+                  {/* Tax Breakdown Card */}
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                      Tax Breakdown
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">Gross Income</span>
+                        <span className="font-medium text-slate-900 dark:text-white">
+                          {formatCurrency(parseFloat(income))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">Federal Tax</span>
+                        <span className="font-medium text-red-600 dark:text-red-400">
+                          -{formatCurrency(results.federalTax)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">Provincial Tax</span>
+                        <span className="font-medium text-red-600 dark:text-red-400">
+                          -{formatCurrency(results.provincialTax)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">CPP</span>
+                        <span className="font-medium text-red-600 dark:text-red-400">
+                          -{formatCurrency(results.cpp)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">EI</span>
+                        <span className="font-medium text-red-600 dark:text-red-400">
+                          -{formatCurrency(results.ei)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rates Card */}
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Tax Rates</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Marginal</p>
+                        <p className="text-xl font-bold text-slate-900 dark:text-white">
+                          {formatPercent(results.marginalRate)}
+                        </p>
+                      </div>
+                      <div className="text-center p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Effective</p>
+                        <p className="text-xl font-bold text-slate-900 dark:text-white">
+                          {formatPercent(results.effectiveRate)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
+                    <Calculator className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                  </div>
+                  <p className="text-lg font-medium text-slate-600 dark:text-slate-400 mb-2">
+                    Your results will appear here
+                  </p>
+                  <p className="text-sm text-slate-400 dark:text-slate-500">
+                    Chat with the assistant to calculate your taxes
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* SEO Content */}
+          <div className="mt-16 sm:mt-20 max-w-3xl">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6">
+              How Canadian Income Tax Works
+            </h2>
+            <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+              Canada uses a progressive tax system where higher income is taxed at higher rates. You pay federal tax plus provincial/territorial tax based on where you live on December 31st of the tax year.
+            </p>
+
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+              Basic Personal Amount (BPA)
+            </h3>
+            <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+              The Basic Personal Amount is a non-refundable tax credit that every Canadian can claim. For {TAX_YEAR}, the federal BPA is {formatCurrency(FEDERAL_BPA)}. Provincial BPAs vary—{PROVINCE_NAMES[province]}'s BPA is {formatCurrency(PROVINCIAL_BPA[province])}.
+            </p>
+
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+              CPP and EI
+            </h3>
+            <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+              In addition to income tax, most employees pay Canada Pension Plan (CPP) contributions (5.95% up to ${CPP_MAX_CONTRIBUTION_EMPLOYEE.toLocaleString()} max) and Employment Insurance (EI) premiums (1.66% up to ${EI_MAX_PREMIUM_EMPLOYEE.toLocaleString()} max).
+            </p>
+
+            {/* FAQ Section */}
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 mt-10">
+              Frequently Asked Questions
+            </h3>
+            <div className="space-y-4">
+              {faqs.map((faq, index) => (
+                <div key={index} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-5">
+                  <h4 className="font-semibold text-slate-900 dark:text-white mb-2">{faq.question}</h4>
+                  <p className="text-slate-600 dark:text-slate-400">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-6 mt-10">
+              <p className="text-amber-800 dark:text-amber-200 text-base m-0 leading-relaxed">
+                <strong>Disclaimer:</strong> This calculator provides estimates for general guidance only. Your actual tax situation may vary based on deductions, credits, and other factors. Consult a tax professional for personalized advice.
+              </p>
+            </div>
+          </div>
+
+          {/* Related Content */}
+          <RelatedContent
+            currentTool="tax-calculator"
+            relatedToolSlugs={relatedTools['tax-calculator']}
+            relatedArticleSlugs={relatedAcademyArticles['tax-calculator']}
+          />
         </div>
       </div>
-    </div>
+    </>
   )
 }
