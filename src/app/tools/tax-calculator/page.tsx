@@ -25,12 +25,42 @@ import {
   TAX_YEAR,
 } from '@/lib/canadianTaxData'
 import { useProfile } from '@/hooks/useProfile'
+import { CalculatorAssistant, CalculatorField } from '@/components/tools/CalculatorAssistant'
 
 export default function TaxCalculatorPage() {
   const { profile, loading: profileLoading, isLoggedIn } = useProfile()
   const [income, setIncome] = useState<string>('')
   const [province, setProvince] = useState<string>('ON')
   const [profileApplied, setProfileApplied] = useState(false)
+
+  // Calculator fields for the AI assistant
+  const calculatorFields: CalculatorField[] = useMemo(() => [
+    {
+      name: 'income',
+      label: 'Annual Income',
+      type: 'number' as const,
+      currentValue: income
+    },
+    {
+      name: 'province',
+      label: 'Province/Territory',
+      type: 'select' as const,
+      options: Object.entries(PROVINCE_NAMES).map(([code, name]) => ({
+        value: code,
+        label: name
+      })),
+      currentValue: province
+    }
+  ], [income, province])
+
+  // Handle field updates from AI assistant
+  const handleFieldUpdate = (fieldName: string, value: string | number) => {
+    if (fieldName === 'income') {
+      setIncome(value.toString())
+    } else if (fieldName === 'province') {
+      setProvince(value.toString())
+    }
+  }
 
   // Auto-populate province from profile
   useEffect(() => {
@@ -320,6 +350,18 @@ export default function TaxCalculatorPage() {
           </div>
         </div>
       </div>
+
+      {/* AI Assistant Sidebar */}
+      <CalculatorAssistant
+        calculatorName="tax-calculator"
+        fields={calculatorFields}
+        onFieldUpdate={handleFieldUpdate}
+        examplePrompts={[
+          "I make $85,000 per year in Ontario",
+          "Calculate for someone earning $120k in BC",
+          "What if I made $50,000 in Alberta?"
+        ]}
+      />
     </div>
   )
 }
