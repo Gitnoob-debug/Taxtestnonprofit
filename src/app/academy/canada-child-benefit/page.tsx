@@ -69,7 +69,7 @@ export default function CanadaChildBenefitPage() {
           </div>
         </div>
 
-        <div className="prose prose-lg prose-slate max-w-none">
+        <div className="prose prose-lg prose-slate max-w-none prose-headings:scroll-mt-20 prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4 prose-p:text-base prose-p:sm:text-lg prose-p:leading-relaxed prose-p:mb-4 prose-li:text-base prose-li:sm:text-lg prose-ul:my-4 prose-ol:my-4">
 
           <h2 id="ccb-amounts">2024-2025 CCB Maximum Amounts</h2>
           <p>For the July 2024 to June 2025 benefit year (based on your 2023 tax return):</p>
