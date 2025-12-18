@@ -12,6 +12,25 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-6 py-16">
+        {/* Important Disclaimer - Top of Page */}
+        <div className="mb-12 bg-amber-100 border-2 border-amber-400 rounded-2xl p-6 shadow-lg">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-amber-900 mb-2">Important Disclaimer</h2>
+              <p className="text-amber-900 leading-relaxed font-medium">
+                Tax Radar provides general tax information for educational purposes only.
+                This is <strong>not professional tax, legal, or financial advice</strong>.
+                Tax laws are complex and individual circumstances vary. We strongly recommend consulting
+                with a qualified tax professional or accountant for advice specific to your situation.
+                Always verify information with official CRA sources before making tax decisions.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Hero Section */}
         <div className="text-center mb-16 animate-fade-in">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 mb-6 shadow-xl shadow-emerald-500/25">
@@ -103,8 +122,6 @@ export default function AboutPage() {
                 'All tax rates and rules are sourced from official CRA publications',
                 'Calculators are updated annually to reflect current tax year changes',
                 'AI responses cite official CRA documents when available',
-                'We clearly distinguish between general information and professional advice',
-                'Regular audits ensure our calculations match CRA guidelines',
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
@@ -112,20 +129,6 @@ export default function AboutPage() {
                 </li>
               ))}
             </ul>
-          </div>
-        </section>
-
-        {/* Disclaimer */}
-        <section className="mb-16">
-          <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-6">
-            <h3 className="font-bold text-amber-900 mb-2">Important Disclaimer</h3>
-            <p className="text-amber-800 leading-relaxed">
-              Tax Radar provides general tax information for educational purposes only.
-              The information on this website is not professional tax, legal, or financial advice.
-              Tax laws are complex and individual circumstances vary. We strongly recommend consulting
-              with a qualified tax professional or accountant for advice specific to your situation.
-              Always verify information with official CRA sources before making tax decisions.
-            </p>
           </div>
         </section>
 
