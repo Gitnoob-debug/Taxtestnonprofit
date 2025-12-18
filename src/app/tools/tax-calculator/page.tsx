@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FAQSchema, BreadcrumbSchema, CalculatorSchema } from '@/components/JsonLd'
 import { RelatedContent } from '@/components/RelatedContent'
+import { PersonalizedBanner } from '@/components/PersonalizedBanner'
 import { calculatorFAQs, relatedTools, relatedAcademyArticles } from '@/lib/seo'
 
 interface Message {
@@ -82,10 +83,15 @@ export default function TaxCalculatorPage() {
     }
   }
 
-  // Auto-populate province from profile
+  // Auto-populate from profile (province AND income)
   useEffect(() => {
-    if (!profileLoading && profile?.province && !profileApplied) {
-      setProvince(profile.province)
+    if (!profileLoading && profile && !profileApplied) {
+      if (profile.province) {
+        setProvince(profile.province)
+      }
+      if (profile.annual_income) {
+        setIncome(profile.annual_income.toString())
+      }
       setProfileApplied(true)
     }
   }, [profile, profileLoading, profileApplied])
@@ -245,7 +251,7 @@ export default function TaxCalculatorPage() {
           </Link>
 
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
               Income Tax Calculator {TAX_YEAR}
             </h1>
@@ -253,6 +259,15 @@ export default function TaxCalculatorPage() {
               Tell me your income and province to see your complete tax breakdown.
             </p>
           </div>
+
+          {/* Personalized Banner */}
+          <PersonalizedBanner
+            profile={profile}
+            isLoggedIn={isLoggedIn}
+            loading={profileLoading}
+            calculatorName="tax calculator"
+            prefilledFields={['income', 'province']}
+          />
 
           {/* Main Layout - Chat takes prominence */}
           <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">

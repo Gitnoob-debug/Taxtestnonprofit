@@ -16,6 +16,7 @@ import {
 import { useProfile } from '@/hooks/useProfile'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import { PersonalizedBanner } from '@/components/PersonalizedBanner'
 
 interface Message {
   id: string
@@ -65,16 +66,25 @@ export default function TFSARoomCalculatorPage() {
     else if (fieldName === 'previousContributions') setPreviousContributions(strValue)
   }
 
-  // Auto-populate birth year from profile age range
+  // Auto-populate from profile (birth year and TFSA contributions)
   useEffect(() => {
-    if (!profileLoading && profile?.age_range && !profileApplied && !birthYear) {
-      const estimatedYear = estimateBirthYearFromAgeRange(profile.age_range)
-      if (estimatedYear) {
-        setBirthYear(estimatedYear.toString())
-        setProfileApplied(true)
+    if (!profileLoading && profile && !profileApplied) {
+      // Prefer exact birth year, fall back to age range estimate
+      if (profile.birth_year) {
+        setBirthYear(profile.birth_year.toString())
+      } else if (profile.age_range) {
+        const estimatedYear = estimateBirthYearFromAgeRange(profile.age_range)
+        if (estimatedYear) {
+          setBirthYear(estimatedYear.toString())
+        }
       }
+      // Pre-fill TFSA lifetime contributions
+      if (profile.tfsa_contributions_lifetime) {
+        setPreviousContributions(profile.tfsa_contributions_lifetime.toString())
+      }
+      setProfileApplied(true)
     }
-  }, [profile, profileLoading, profileApplied, birthYear])
+  }, [profile, profileLoading, profileApplied])
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -221,7 +231,7 @@ export default function TFSARoomCalculatorPage() {
         </Link>
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
             TFSA Room Calculator
           </h1>
@@ -229,6 +239,15 @@ export default function TFSARoomCalculatorPage() {
             Tell me your age and contributions to see your available TFSA room.
           </p>
         </div>
+
+        {/* Personalized Banner */}
+        <PersonalizedBanner
+          profile={profile}
+          isLoggedIn={isLoggedIn}
+          loading={profileLoading}
+          calculatorName="TFSA room calculator"
+          prefilledFields={['birthYear', 'tfsa']}
+        />
 
         {/* Main Layout - Chat takes prominence */}
         <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
