@@ -228,14 +228,21 @@ export async function searchByForm(formNumber: string, topK: number = 10): Promi
 
 export async function isHybridSearchAvailable(): Promise<boolean> {
   try {
-    // Check if the documents table exists and has data
-    const { count, error } = await getSupabase()
+    // Add timeout to prevent hanging on cold starts
+    const timeoutPromise = new Promise<null>((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout')), 5000);
+    });
+
+    const queryPromise = getSupabase()
       .from('documents')
       .select('*', { count: 'exact', head: true });
 
-    if (error) return false;
-    return (count || 0) > 0;
-  } catch {
+    const result = await Promise.race([queryPromise, timeoutPromise]);
+
+    if (!result || 'error' in result && result.error) return false;
+    return ((result as any).count || 0) > 0;
+  } catch (e) {
+    console.log('[TAX] Hybrid search availability check failed:', e instanceof Error ? e.message : 'unknown error');
     return false;
   }
 }

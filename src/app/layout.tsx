@@ -64,6 +64,14 @@ export default function RootLayout({
       <head>
         <OrganizationSchema />
         <WebSiteSchema />
+        {/* Google AdSense */}
+        {process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID}`}
+            crossOrigin="anonymous"
+          />
+        )}
       </head>
       <body className={`${inter.className} gradient-mesh min-h-screen flex flex-col`}>
         <Providers>

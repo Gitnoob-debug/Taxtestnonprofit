@@ -14,6 +14,23 @@ const taxGenerator = new TaxRAGGenerator({
   temperature: 0.3,
 })
 
+// Pre-warm connection on module load (helps with cold starts)
+let isWarmedUp = false
+const warmUp = async () => {
+  if (isWarmedUp) return
+  isWarmedUp = true
+  try {
+    // Trigger lazy initialization of supabase connection
+    if (supabaseAdmin) {
+      await supabaseAdmin.from('user_profiles').select('count', { count: 'exact', head: true }).limit(1)
+      console.log('[TAX-STREAM] Connection pre-warmed')
+    }
+  } catch {
+    // Ignore errors - this is just a warm-up attempt
+  }
+}
+warmUp()
+
 interface ConversationMessage {
   role: 'user' | 'assistant'
   content: string

@@ -179,6 +179,8 @@ export interface EnhancedSearchResult extends SearchResult {
 }
 
 let hybridAvailable: boolean | null = null;
+let lastHybridCheck: number = 0;
+const HYBRID_CHECK_INTERVAL = 60000; // Re-check every 60 seconds if previously failed
 
 function buildEnrichedQuery(question: string, history: ConversationMessage[]): string {
   if (!history || history.length === 0) {
@@ -298,7 +300,10 @@ export async function retrieveContext(query: TaxQuery): Promise<SearchResult[]> 
     return [];
   }
 
-  if (hybridAvailable === null) {
+  // Check hybrid availability, re-checking if it previously failed
+  const now = Date.now();
+  if (hybridAvailable === null || (hybridAvailable === false && now - lastHybridCheck > HYBRID_CHECK_INTERVAL)) {
+    lastHybridCheck = now;
     hybridAvailable = await isHybridSearchAvailable();
     console.log(`[TAX] Hybrid search available: ${hybridAvailable}`);
   }

@@ -4,7 +4,6 @@
 
 import { UserProfile, generateProfileContext } from './profileUtils';
 import { ConfidenceResult, getResponseStrategy } from './confidenceScoring';
-import { getInlineSponsor, Sponsor } from '@/lib/sponsors';
 
 export interface PromptContext {
   profile: UserProfile | null;
@@ -16,9 +15,6 @@ export interface PromptContext {
 export function buildSystemPrompt(ctx: PromptContext): string {
   const strategy = getResponseStrategy(ctx.confidence);
   const profileContext = ctx.profile ? generateProfileContext(ctx.profile) : '';
-
-  // Find a relevant sponsor for potential inline mention
-  const inlineSponsor = getInlineSponsor(ctx.query);
 
   const sections: string[] = [];
   
@@ -73,23 +69,6 @@ ${ctx.retrievedContext}
     sections.push(`## Retrieved Context
 
 No specific CRA documents were retrieved for this query. Provide personalized guidance based on general Canadian tax knowledge, clearly noting that the user should verify details on canada.ca.`);
-  }
-
-  // Add sponsor context if available (for natural inline mentions)
-  if (inlineSponsor) {
-    sections.push(`## Sponsored Partner (Optional Mention)
-
-If naturally relevant to your answer, you may briefly mention this partner service. This is optional and should only be included if it genuinely helps the user.
-
-Partner: ${inlineSponsor.name}
-Context: ${inlineSponsor.inline_mention}
-
-Rules for mentioning:
-- Only mention if directly relevant to the user's question
-- Keep it brief and natural (1 sentence max)
-- Do NOT hard-sell or use marketing language
-- Prefix with [Ad] when mentioning, e.g., "[Ad] Many Canadians use Wealthsimple to..."
-- If not relevant to the question, don't force it in`);
   }
 
   sections.push(`## Your Task

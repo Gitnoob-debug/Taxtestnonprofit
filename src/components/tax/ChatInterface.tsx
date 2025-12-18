@@ -319,9 +319,12 @@ export function ChatInterface({
               </motion.div>
             ) : (
               <>
-                {messages.map((msg) => (
-                  <MessageBubble key={msg.id} message={msg} />
-                ))}
+                {messages.map((msg, index) => {
+                  // Show ad after every 3rd assistant response
+                  const assistantMessagesBefore = messages.slice(0, index + 1).filter(m => m.role === 'assistant').length
+                  const showAd = msg.role === 'assistant' && assistantMessagesBefore % 3 === 0
+                  return <MessageBubble key={msg.id} message={msg} showAd={showAd} />
+                })}
 
                 <AnimatePresence>
                   {isLoading && (
@@ -427,14 +430,14 @@ export function ChatInterface({
       {/* Input */}
       <div className="relative p-4 sm:p-6 border-t border-slate-200/60 bg-white/50 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto">
-          <div className="card-premium p-1 focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-300 transition-all duration-200">
+          <div className="card-premium p-3 focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-300 transition-all duration-200">
             <div className="relative">
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask a question about your taxes..."
-                className="min-h-[56px] max-h-[200px] w-full resize-none border-0 bg-transparent focus-visible:ring-0 py-4 pl-4 pr-14 text-base text-slate-700 placeholder:text-slate-400"
+                className="min-h-[48px] max-h-[200px] !w-full resize-none border-0 bg-transparent focus-visible:ring-0 py-3 pl-3 pr-14 text-base text-slate-700 placeholder:text-slate-400"
                 disabled={isLoading}
               />
               <Button
@@ -442,7 +445,7 @@ export function ChatInterface({
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
                 className={cn(
-                  'absolute right-2 bottom-2 h-10 w-10 rounded-xl transition-all duration-200 btn-premium',
+                  'absolute right-1 bottom-1 h-10 w-10 rounded-xl transition-all duration-200 btn-premium',
                   input.trim() ? 'opacity-100 scale-100' : 'opacity-50 scale-90'
                 )}
               >
