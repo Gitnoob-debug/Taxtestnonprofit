@@ -60,6 +60,7 @@ export function Header() {
     { href: '/tools', label: 'Calculators' },
     { href: '/academy', label: 'Learn' },
     { href: '/about', label: 'About' },
+    ...(user ? [{ href: '/profile', label: 'My Profile' }] : []),
   ]
 
   return (
