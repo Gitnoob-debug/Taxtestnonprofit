@@ -96,9 +96,27 @@ export default function TaxCalculatorPage() {
     }
   }, [profile, profileLoading, profileApplied])
 
-  // Scroll to bottom when messages change
+  // Scroll management - only scroll on assistant responses, not user input
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const shouldScrollRef = useRef(true)
+
+  const handleScroll = () => {
+    const container = chatContainerRef.current
+    if (!container) return
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150
+    shouldScrollRef.current = isNearBottom
+  }
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = chatContainerRef.current
+    if (!container || messages.length === 0) return
+
+    const lastMessage = messages[messages.length - 1]
+    if (shouldScrollRef.current && lastMessage?.role === 'assistant') {
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight
+      })
+    }
   }, [messages])
 
   const results = useMemo(() => {
@@ -285,7 +303,7 @@ export default function TaxCalculatorPage() {
               </div>
 
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-5 space-y-4">
                 {messages.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center px-4">
                     <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center mb-6">

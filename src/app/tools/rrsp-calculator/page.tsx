@@ -23,6 +23,7 @@ import {
   TAX_YEAR,
 } from '@/lib/canadianTaxData'
 import { useProfile } from '@/hooks/useProfile'
+import { PersonalizedBanner } from '@/components/PersonalizedBanner'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -71,17 +72,37 @@ export default function RRSPCalculatorPage() {
     }
   }
 
-  // Auto-populate province from profile
+  // Auto-populate from profile (province, income, RRSP room)
   useEffect(() => {
-    if (!profileLoading && profile?.province && !profileApplied) {
-      setProvince(profile.province)
+    if (!profileLoading && profile && !profileApplied) {
+      if (profile.province) setProvince(profile.province)
+      if (profile.annual_income) setIncome(profile.annual_income.toString())
+      if (profile.rrsp_contribution_room) setUnusedRoom(profile.rrsp_contribution_room.toString())
       setProfileApplied(true)
     }
   }, [profile, profileLoading, profileApplied])
 
-  // Scroll to bottom when messages change
+  // Scroll management - only scroll on assistant responses, not user input
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const shouldScrollRef = useRef(true)
+
+  const handleScroll = () => {
+    const container = chatContainerRef.current
+    if (!container) return
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150
+    shouldScrollRef.current = isNearBottom
+  }
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = chatContainerRef.current
+    if (!container || messages.length === 0) return
+
+    const lastMessage = messages[messages.length - 1]
+    if (shouldScrollRef.current && lastMessage?.role === 'assistant') {
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight
+      })
+    }
   }, [messages])
 
   const results = useMemo(() => {
@@ -222,7 +243,7 @@ export default function RRSPCalculatorPage() {
         </Link>
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
             RRSP Calculator {TAX_YEAR}
           </h1>
@@ -230,6 +251,15 @@ export default function RRSPCalculatorPage() {
             Tell me about your situation and I'll calculate your RRSP room and tax savings.
           </p>
         </div>
+
+        {/* Personalized Banner */}
+        <PersonalizedBanner
+          profile={profile}
+          isLoggedIn={isLoggedIn}
+          loading={profileLoading}
+          calculatorName="RRSP calculator"
+          prefilledFields={['income', 'province', 'rrsp']}
+        />
 
         {/* Main Layout - Chat takes prominence */}
         <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
@@ -247,7 +277,7 @@ export default function RRSPCalculatorPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-5 space-y-4">
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center px-4">
                   <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-teal-100 to-emerald-100 dark:from-teal-900 dark:to-emerald-900 flex items-center justify-center mb-6">

@@ -24,6 +24,7 @@ import {
   CPP_MAX_PENSIONABLE_EARNINGS,
 } from '@/lib/canadianTaxData'
 import { useProfile } from '@/hooks/useProfile'
+import { PersonalizedBanner } from '@/components/PersonalizedBanner'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // Small business corporate tax rates by province (2025)
@@ -61,17 +62,35 @@ export default function SalaryVsDividendCalculatorPage() {
   const [showManualInputs, setShowManualInputs] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  const shouldScrollRef = useRef(true)
+
+  const handleScroll = () => {
+    const container = chatContainerRef.current
+    if (!container) return
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150
+    shouldScrollRef.current = isNearBottom
   }
 
+  // Scroll management - only scroll on assistant responses, not user input
   useEffect(() => {
-    scrollToBottom()
+    const container = chatContainerRef.current
+    if (!container || messages.length === 0) return
+
+    const lastMessage = messages[messages.length - 1]
+    if (shouldScrollRef.current && lastMessage?.role === 'assistant') {
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight
+      })
+    }
   }, [messages])
 
+  // Auto-populate from profile (province, income as corporate profit estimate)
   useEffect(() => {
-    if (!profileLoading && profile?.province && !profileApplied) {
-      setProvince(profile.province)
+    if (!profileLoading && profile && !profileApplied) {
+      if (profile.province) setProvince(profile.province)
+      if (profile.annual_income) setCorporateProfit(profile.annual_income.toString())
       setProfileApplied(true)
     }
   }, [profile, profileLoading, profileApplied])
@@ -264,7 +283,7 @@ export default function SalaryVsDividendCalculatorPage() {
           Back to Tools
         </Link>
 
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Salary vs Dividend Calculator {TAX_YEAR}
           </h1>
@@ -272,6 +291,15 @@ export default function SalaryVsDividendCalculatorPage() {
             Compare taking income as salary vs dividends from your corporation.
           </p>
         </div>
+
+        {/* Personalized Banner */}
+        <PersonalizedBanner
+          profile={profile}
+          isLoggedIn={isLoggedIn}
+          loading={profileLoading}
+          calculatorName="salary vs dividend calculator"
+          prefilledFields={['income', 'province']}
+        />
 
         <div className="grid lg:grid-cols-5 gap-6">
           {/* Chat Section - 3/5 width */}
@@ -290,7 +318,7 @@ export default function SalaryVsDividendCalculatorPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6">
                   <div className="w-16 h-16 rounded-full bg-violet-100 flex items-center justify-center mb-4">

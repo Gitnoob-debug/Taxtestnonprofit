@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles } from 'lucide-react'
+import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 interface ProfileData {
@@ -70,6 +70,14 @@ interface ProfileData {
 
   // Business
   business_type: string | null
+
+  // Notification preferences
+  notification_preferences: {
+    tax_deadline_reminders: boolean
+    rrsp_deadline_reminder: boolean
+    quarterly_installment_reminders: boolean
+    tax_tips: boolean
+  }
 
   // Meta
   profile_completeness: number
@@ -190,6 +198,12 @@ export function ProfilePage() {
     has_tfsa: false,
     has_fhsa: false,
     business_type: null,
+    notification_preferences: {
+      tax_deadline_reminders: true,
+      rrsp_deadline_reminder: true,
+      quarterly_installment_reminders: false,
+      tax_tips: true,
+    },
     profile_completeness: 0,
   })
 
@@ -261,6 +275,12 @@ export function ProfilePage() {
               has_tfsa: p.has_tfsa || false,
               has_fhsa: p.has_fhsa || false,
               business_type: p.business_type || null,
+              notification_preferences: p.notification_preferences || {
+                tax_deadline_reminders: true,
+                rrsp_deadline_reminder: true,
+                quarterly_installment_reminders: false,
+                tax_tips: true,
+              },
               profile_completeness: p.profile_completeness || 0,
             })
           }
@@ -826,6 +846,113 @@ export function ProfilePage() {
                   </Label>
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notification Preferences */}
+        <Card className="mb-6 border-blue-200 dark:border-blue-800">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 rounded-t-lg">
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-blue-600" />
+              <CardTitle>Notification Preferences</CardTitle>
+            </div>
+            <CardDescription>
+              Get reminders for important tax deadlines and tips
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="tax_deadline_reminders"
+                  checked={profile.notification_preferences.tax_deadline_reminders}
+                  onCheckedChange={(c) =>
+                    updateProfile('notification_preferences', {
+                      ...profile.notification_preferences,
+                      tax_deadline_reminders: c === true,
+                    })
+                  }
+                />
+                <div className="space-y-1">
+                  <Label htmlFor="tax_deadline_reminders" className="cursor-pointer font-medium">
+                    Tax Filing Deadline Reminders
+                  </Label>
+                  <p className="text-sm text-slate-500">
+                    Get reminded before April 30 (or June 15 for self-employed)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="rrsp_deadline_reminder"
+                  checked={profile.notification_preferences.rrsp_deadline_reminder}
+                  onCheckedChange={(c) =>
+                    updateProfile('notification_preferences', {
+                      ...profile.notification_preferences,
+                      rrsp_deadline_reminder: c === true,
+                    })
+                  }
+                />
+                <div className="space-y-1">
+                  <Label htmlFor="rrsp_deadline_reminder" className="cursor-pointer font-medium">
+                    RRSP Contribution Deadline
+                  </Label>
+                  <p className="text-sm text-slate-500">
+                    Reminder before the first 60 days deadline (usually March 1)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="quarterly_installment_reminders"
+                  checked={profile.notification_preferences.quarterly_installment_reminders}
+                  onCheckedChange={(c) =>
+                    updateProfile('notification_preferences', {
+                      ...profile.notification_preferences,
+                      quarterly_installment_reminders: c === true,
+                    })
+                  }
+                />
+                <div className="space-y-1">
+                  <Label htmlFor="quarterly_installment_reminders" className="cursor-pointer font-medium">
+                    Quarterly Tax Installment Reminders
+                  </Label>
+                  <p className="text-sm text-slate-500">
+                    For self-employed or those who owe taxes: Mar 15, Jun 15, Sep 15, Dec 15
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="tax_tips"
+                  checked={profile.notification_preferences.tax_tips}
+                  onCheckedChange={(c) =>
+                    updateProfile('notification_preferences', {
+                      ...profile.notification_preferences,
+                      tax_tips: c === true,
+                    })
+                  }
+                />
+                <div className="space-y-1">
+                  <Label htmlFor="tax_tips" className="cursor-pointer font-medium">
+                    Tax Saving Tips
+                  </Label>
+                  <p className="text-sm text-slate-500">
+                    Occasional tips based on your profile to help reduce your taxes
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                <strong>Note:</strong> Email notifications will be sent to your account email.
+                Make sure your email is verified in your account settings.
+              </p>
             </div>
           </CardContent>
         </Card>

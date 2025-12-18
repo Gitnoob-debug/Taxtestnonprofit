@@ -18,6 +18,7 @@ import {
   Key,
   Sparkles,
 } from 'lucide-react'
+import { ToolsPageClient } from './ToolsPageClient'
 
 export const metadata: Metadata = {
   title: 'Canadian Tax Calculators & Tools 2025 | Free Tax Planning Tools',
@@ -204,6 +205,11 @@ export default function ToolsPage() {
             Free, accurate calculators for Canadian taxes. Plan smarter with tools
             designed to help you save more.
           </p>
+        </div>
+
+        {/* Tax Season Checklist */}
+        <div className="mb-16 animate-fade-in">
+          <ToolsPageClient />
         </div>
 
         {/* Tools by Category */}

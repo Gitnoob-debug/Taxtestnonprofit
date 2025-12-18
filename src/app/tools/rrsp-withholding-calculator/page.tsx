@@ -19,6 +19,8 @@ import {
   RRSP_WITHHOLDING_RATES,
 } from '@/lib/canadianTaxData'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useProfile } from '@/hooks/useProfile'
+import { PersonalizedBanner } from '@/components/PersonalizedBanner'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -26,6 +28,9 @@ interface Message {
 }
 
 export default function RRSPWithholdingCalculatorPage() {
+  const { profile, loading: profileLoading, isLoggedIn } = useProfile()
+  const [profileApplied, setProfileApplied] = useState(false)
+
   const [withdrawalAmount, setWithdrawalAmount] = useState<string>('')
   const [isQuebec, setIsQuebec] = useState<'no' | 'yes'>('no')
 
@@ -36,13 +41,37 @@ export default function RRSPWithholdingCalculatorPage() {
   const [showManualInputs, setShowManualInputs] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  const shouldScrollRef = useRef(true)
+
+  const handleScroll = () => {
+    const container = chatContainerRef.current
+    if (!container) return
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150
+    shouldScrollRef.current = isNearBottom
   }
 
+  // Scroll management - only scroll on assistant responses, not user input
   useEffect(() => {
-    scrollToBottom()
+    const container = chatContainerRef.current
+    if (!container || messages.length === 0) return
+
+    const lastMessage = messages[messages.length - 1]
+    if (shouldScrollRef.current && lastMessage?.role === 'assistant') {
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight
+      })
+    }
   }, [messages])
+
+  // Auto-populate from profile (Quebec detection)
+  useEffect(() => {
+    if (!profileLoading && profile && !profileApplied) {
+      if (profile.province === 'QC') setIsQuebec('yes')
+      setProfileApplied(true)
+    }
+  }, [profile, profileLoading, profileApplied])
 
   const handleFieldUpdate = (fieldName: string, value: string | number) => {
     const strValue = value.toString()
@@ -142,6 +171,14 @@ export default function RRSPWithholdingCalculatorPage() {
           </p>
         </div>
 
+        <PersonalizedBanner
+          profile={profile}
+          isLoggedIn={isLoggedIn}
+          loading={profileLoading}
+          calculatorName="RRSP withholding calculator"
+          prefilledFields={['province']}
+        />
+
         <div className="grid lg:grid-cols-5 gap-6">
           {/* Chat Section - 3/5 width */}
           <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col" style={{ height: '600px' }}>
@@ -159,7 +196,7 @@ export default function RRSPWithholdingCalculatorPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6">
                   <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-4">

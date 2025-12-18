@@ -21,6 +21,8 @@ import {
   CPP_DELAY_INCREASE_PER_MONTH,
   estimateCPPBenefit,
 } from '@/lib/canadianTaxData'
+import { useProfile } from '@/hooks/useProfile'
+import { PersonalizedBanner } from '@/components/PersonalizedBanner'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Message {
@@ -29,10 +31,12 @@ interface Message {
 }
 
 export default function CPPRetirementCalculatorPage() {
+  const { profile, loading: profileLoading, isLoggedIn } = useProfile()
   const [startAge, setStartAge] = useState<string>('65')
   const [yearsContributed, setYearsContributed] = useState<string>('39')
   const [earningsLevel, setEarningsLevel] = useState<'max' | 'average' | 'custom'>('max')
   const [customPercent, setCustomPercent] = useState<string>('75')
+  const [profileApplied, setProfileApplied] = useState(false)
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([])
@@ -41,13 +45,40 @@ export default function CPPRetirementCalculatorPage() {
   const [showManualInputs, setShowManualInputs] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  const shouldScrollRef = useRef(true)
+
+  const handleScroll = () => {
+    const container = chatContainerRef.current
+    if (!container) return
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150
+    shouldScrollRef.current = isNearBottom
   }
 
+  // Scroll management - only scroll on assistant responses, not user input
   useEffect(() => {
-    scrollToBottom()
+    const container = chatContainerRef.current
+    if (!container || messages.length === 0) return
+
+    const lastMessage = messages[messages.length - 1]
+    if (shouldScrollRef.current && lastMessage?.role === 'assistant') {
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight
+      })
+    }
   }, [messages])
+
+  // Auto-populate from profile (retirement age, birth year for age calculation)
+  useEffect(() => {
+    if (!profileLoading && profile && !profileApplied) {
+      if (profile.expected_retirement_age) {
+        const retireAge = Math.max(60, Math.min(70, profile.expected_retirement_age))
+        setStartAge(retireAge.toString())
+      }
+      setProfileApplied(true)
+    }
+  }, [profile, profileLoading, profileApplied])
 
   const handleFieldUpdate = (fieldName: string, value: string | number) => {
     const strValue = value.toString()
@@ -196,7 +227,7 @@ export default function CPPRetirementCalculatorPage() {
           Back to Tools
         </Link>
 
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
             CPP Retirement Calculator {TAX_YEAR}
           </h1>
@@ -204,6 +235,15 @@ export default function CPPRetirementCalculatorPage() {
             Estimate your CPP pension and compare starting at different ages.
           </p>
         </div>
+
+        {/* Personalized Banner */}
+        <PersonalizedBanner
+          profile={profile}
+          isLoggedIn={isLoggedIn}
+          loading={profileLoading}
+          calculatorName="CPP retirement calculator"
+          prefilledFields={[]}
+        />
 
         <div className="grid lg:grid-cols-5 gap-6">
           {/* Chat Section - 3/5 width */}
@@ -222,7 +262,7 @@ export default function CPPRetirementCalculatorPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6">
                   <div className="w-16 h-16 rounded-full bg-cyan-100 flex items-center justify-center mb-4">

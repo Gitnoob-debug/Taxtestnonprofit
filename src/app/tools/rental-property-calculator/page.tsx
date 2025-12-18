@@ -19,6 +19,7 @@ import {
   CAPITAL_GAINS_INCLUSION_RATE,
 } from '@/lib/canadianTaxData'
 import { useProfile } from '@/hooks/useProfile'
+import { PersonalizedBanner } from '@/components/PersonalizedBanner'
 
 // CCA Class 1 for buildings (4%)
 const CCA_RATE_BUILDING = 0.04
@@ -50,9 +51,11 @@ export default function RentalPropertyCalculatorPage() {
 
   const [profileApplied, setProfileApplied] = useState(false)
 
+  // Auto-populate from profile (province, income)
   useEffect(() => {
-    if (!profileLoading && profile?.province && !profileApplied) {
-      setProvince(profile.province)
+    if (!profileLoading && profile && !profileApplied) {
+      if (profile.province) setProvince(profile.province)
+      if (profile.annual_income) setOtherIncome(profile.annual_income.toString())
       setProfileApplied(true)
     }
   }, [profile, profileLoading, profileApplied])
@@ -175,7 +178,7 @@ export default function RentalPropertyCalculatorPage() {
           Back to Tools
         </Link>
 
-        <div className="mb-10">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Rental Property Tax Calculator {TAX_YEAR}
           </h1>
@@ -183,6 +186,15 @@ export default function RentalPropertyCalculatorPage() {
             Calculate the tax on your rental property income and see your after-tax cash flow.
           </p>
         </div>
+
+        {/* Personalized Banner */}
+        <PersonalizedBanner
+          profile={profile}
+          isLoggedIn={isLoggedIn}
+          loading={profileLoading}
+          calculatorName="rental property calculator"
+          prefilledFields={['income', 'province']}
+        />
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Input Section */}

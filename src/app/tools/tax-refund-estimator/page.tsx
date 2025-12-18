@@ -23,6 +23,7 @@ import {
   RRSP_LIMIT_2025,
 } from '@/lib/canadianTaxData'
 import { useProfile } from '@/hooks/useProfile'
+import { PersonalizedBanner } from '@/components/PersonalizedBanner'
 
 export default function TaxRefundEstimatorPage() {
   const { profile, loading: profileLoading, isLoggedIn } = useProfile()
@@ -48,9 +49,11 @@ export default function TaxRefundEstimatorPage() {
   const [province, setProvince] = useState<string>('ON')
   const [profileApplied, setProfileApplied] = useState(false)
 
+  // Auto-populate from profile (province and income)
   useEffect(() => {
-    if (!profileLoading && profile?.province && !profileApplied) {
-      setProvince(profile.province)
+    if (!profileLoading && profile && !profileApplied) {
+      if (profile.province) setProvince(profile.province)
+      if (profile.annual_income) setEmploymentIncome(profile.annual_income.toString())
       setProfileApplied(true)
     }
   }, [profile, profileLoading, profileApplied])
@@ -194,6 +197,14 @@ export default function TaxRefundEstimatorPage() {
             Estimate if you'll get a refund or owe money when you file your {TAX_YEAR} tax return.
           </p>
         </div>
+
+        <PersonalizedBanner
+          profile={profile}
+          isLoggedIn={isLoggedIn}
+          loading={profileLoading}
+          calculatorName="tax refund estimator"
+          prefilledFields={['income', 'province']}
+        />
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Input Section */}

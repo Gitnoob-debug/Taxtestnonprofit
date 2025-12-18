@@ -23,6 +23,8 @@ import {
   OAS_FULL_CLAWBACK_65_74,
   OAS_FULL_CLAWBACK_75_PLUS,
 } from '@/lib/canadianTaxData'
+import { useProfile } from '@/hooks/useProfile'
+import { PersonalizedBanner } from '@/components/PersonalizedBanner'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Message {
@@ -31,8 +33,10 @@ interface Message {
 }
 
 export default function OASClawbackCalculatorPage() {
+  const { profile, loading: profileLoading, isLoggedIn } = useProfile()
   const [income, setIncome] = useState<string>('')
   const [ageGroup, setAgeGroup] = useState<'65-74' | '75+'>('65-74')
+  const [profileApplied, setProfileApplied] = useState(false)
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([])
@@ -41,13 +45,42 @@ export default function OASClawbackCalculatorPage() {
   const [showManualInputs, setShowManualInputs] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  const shouldScrollRef = useRef(true)
+
+  const handleScroll = () => {
+    const container = chatContainerRef.current
+    if (!container) return
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150
+    shouldScrollRef.current = isNearBottom
   }
 
+  // Scroll management - only scroll on assistant responses, not user input
   useEffect(() => {
-    scrollToBottom()
+    const container = chatContainerRef.current
+    if (!container || messages.length === 0) return
+
+    const lastMessage = messages[messages.length - 1]
+    if (shouldScrollRef.current && lastMessage?.role === 'assistant') {
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight
+      })
+    }
   }, [messages])
+
+  // Auto-populate from profile (income, age group from birth year)
+  useEffect(() => {
+    if (!profileLoading && profile && !profileApplied) {
+      if (profile.annual_income) setIncome(profile.annual_income.toString())
+      if (profile.birth_year) {
+        const currentYear = new Date().getFullYear()
+        const age = currentYear - profile.birth_year
+        if (age >= 75) setAgeGroup('75+')
+      }
+      setProfileApplied(true)
+    }
+  }, [profile, profileLoading, profileApplied])
 
   const handleFieldUpdate = (fieldName: string, value: string | number) => {
     const strValue = value.toString()
@@ -151,7 +184,7 @@ export default function OASClawbackCalculatorPage() {
           Back to Tools
         </Link>
 
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
             OAS Clawback Calculator {TAX_YEAR}
           </h1>
@@ -159,6 +192,15 @@ export default function OASClawbackCalculatorPage() {
             Calculate how much of your Old Age Security pension will be clawed back based on your income.
           </p>
         </div>
+
+        {/* Personalized Banner */}
+        <PersonalizedBanner
+          profile={profile}
+          isLoggedIn={isLoggedIn}
+          loading={profileLoading}
+          calculatorName="OAS clawback calculator"
+          prefilledFields={['income']}
+        />
 
         <div className="grid lg:grid-cols-5 gap-6">
           {/* Chat Section - 3/5 width */}
@@ -177,7 +219,7 @@ export default function OASClawbackCalculatorPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6">
                   <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center mb-4">
