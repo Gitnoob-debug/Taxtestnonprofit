@@ -1,11 +1,14 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Message } from '@/types/tax'
 import ReactMarkdown from 'react-markdown'
 import { cn } from '@/lib/utils'
 import { CitationCard } from './CitationCard'
 import { Bot, User, AlertTriangle, ShieldCheck, Info, Sparkles, Coins, Leaf } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { findRelevantSponsors } from '@/lib/sponsors'
+import { SponsoredRecommendation } from '@/components/SponsoredRecommendation'
 
 interface MessageBubbleProps {
   message: Message
@@ -13,6 +16,12 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === 'user'
+
+  // Find relevant sponsors based on message content (only for assistant messages)
+  const relevantSponsors = useMemo(() => {
+    if (isUser) return []
+    return findRelevantSponsors(message.content, 2)
+  }, [message.content, isUser])
 
   const ConfidenceBadge = ({ level }: { level: 'high' | 'medium' | 'low' }) => {
     const config = {
@@ -232,6 +241,11 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                   ${message.usage.estimated_cost.toFixed(4)}
                 </div>
               </div>
+            )}
+
+            {/* Sponsored recommendations based on content */}
+            {relevantSponsors.length > 0 && (
+              <SponsoredRecommendation sponsors={relevantSponsors} />
             )}
           </div>
         )}
