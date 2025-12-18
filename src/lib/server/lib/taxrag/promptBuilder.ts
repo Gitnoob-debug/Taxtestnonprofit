@@ -82,7 +82,7 @@ No specific CRA documents were retrieved for this query. Provide personalized gu
 If naturally relevant to your answer, you may briefly mention this partner service. This is optional and should only be included if it genuinely helps the user.
 
 Partner: ${inlineSponsor.name}
-Context: ${inlineSponsor.inlineMention}
+Context: ${inlineSponsor.inline_mention}
 
 Rules for mentioning:
 - Only mention if directly relevant to the user's question

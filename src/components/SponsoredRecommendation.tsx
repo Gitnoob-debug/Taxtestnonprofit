@@ -1,6 +1,7 @@
 'use client'
 
-import { Sponsor } from '@/lib/sponsors'
+import { useEffect, useRef } from 'react'
+import { Sponsor, trackSponsorEvent } from '@/lib/sponsors'
 import { ExternalLink, Info } from 'lucide-react'
 import { motion } from 'framer-motion'
 import {
@@ -13,6 +14,7 @@ import {
 interface SponsoredRecommendationProps {
   sponsors: Sponsor[]
   className?: string
+  queryContext?: string // What query triggered these sponsors
 }
 
 const categoryColors: Record<Sponsor['category'], string> = {
@@ -33,7 +35,30 @@ const categoryLabels: Record<Sponsor['category'], string> = {
   education: 'Education',
 }
 
-export function SponsoredRecommendation({ sponsors, className = '' }: SponsoredRecommendationProps) {
+export function SponsoredRecommendation({ sponsors, className = '', queryContext }: SponsoredRecommendationProps) {
+  const hasTrackedImpression = useRef(false)
+
+  // Track impressions when component mounts
+  useEffect(() => {
+    if (hasTrackedImpression.current || sponsors.length === 0) return
+    hasTrackedImpression.current = true
+
+    sponsors.forEach(sponsor => {
+      trackSponsorEvent('impression', sponsor.id, {
+        pageUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+        queryContext,
+      })
+    })
+  }, [sponsors, queryContext])
+
+  // Handle click tracking
+  const handleClick = (sponsor: Sponsor) => {
+    trackSponsorEvent('click', sponsor.id, {
+      pageUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+      queryContext,
+    })
+  }
+
   if (!sponsors || sponsors.length === 0) return null
 
   return (
@@ -72,10 +97,11 @@ export function SponsoredRecommendation({ sponsors, className = '' }: SponsoredR
         {sponsors.map((sponsor) => (
           <a
             key={sponsor.id}
-            href={sponsor.affiliateUrl || sponsor.url}
+            href={sponsor.affiliate_url || sponsor.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
             className="group block"
+            onClick={() => handleClick(sponsor)}
           >
             <div className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md">
               {/* Gradient accent */}
@@ -124,12 +150,19 @@ export function SponsoredRecommendation({ sponsors, className = '' }: SponsoredR
 
 // Inline ad component - smaller, for embedding in responses
 export function InlineAd({ sponsor }: { sponsor: Sponsor }) {
+  const handleClick = () => {
+    trackSponsorEvent('click', sponsor.id, {
+      pageUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+    })
+  }
+
   return (
     <a
-      href={sponsor.affiliateUrl || sponsor.url}
+      href={sponsor.affiliate_url || sponsor.url}
       target="_blank"
       rel="noopener noreferrer sponsored"
       className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm group"
+      onClick={handleClick}
     >
       <span className="text-[9px] font-semibold uppercase text-slate-400">Ad</span>
       <span className="text-slate-700 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
