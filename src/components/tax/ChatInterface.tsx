@@ -5,7 +5,7 @@ import { Message, Citation, UsageInfo, ConversationMessage, StreamStatus } from 
 import { askTaxAssistantStream } from '@/lib/taxApi'
 import { createConversation, addMessage } from '@/lib/conversationApi'
 import { MessageBubble } from './MessageBubble'
-import { Send, Eraser, Sparkles, ArrowUp, Bot, Search, Brain, FileText, Database, Zap, Leaf } from 'lucide-react'
+import { Send, Eraser, Sparkles, ArrowUp, Bot, Search, Brain, FileText, Database, Zap, Leaf, Paperclip, X, Image, Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -43,6 +43,17 @@ export function ChatInterface({
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(
     initialConversationId
   )
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [fileAnalysis, setFileAnalysis] = useState<{
+    documentType: string
+    taxYear: number | null
+    issuerName: string | null
+    summary: string
+    keyFields: Record<string, any>
+    confidence: 'high' | 'medium' | 'low'
+  } | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
@@ -99,8 +110,80 @@ export function ChatInterface({
     }
   }
 
+  const saveDocumentToStorage = async () => {
+    if (!uploadedFile || !fileAnalysis) return null
+
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase!.auth.getSession()
+
+      if (!session?.access_token) {
+        throw new Error('Not authenticated')
+      }
+
+      const formData = new FormData()
+      formData.append('file', uploadedFile)
+      formData.append('documentType', fileAnalysis.documentType)
+      if (fileAnalysis.taxYear) {
+        formData.append('taxYear', fileAnalysis.taxYear.toString())
+      }
+      if (fileAnalysis.issuerName) {
+        formData.append('issuerName', fileAnalysis.issuerName)
+      }
+      formData.append('extractedData', JSON.stringify(fileAnalysis.keyFields || {}))
+      formData.append('aiSummary', fileAnalysis.summary)
+
+      const response = await fetch('/api/documents/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save document')
+      }
+
+      return data.document
+    } catch (err) {
+      console.error('Save document error:', err)
+      throw err
+    }
+  }
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
+
+    // Check if user is confirming document save
+    const isConfirmation = uploadedFile && fileAnalysis &&
+      (input.trim().toLowerCase() === 'yes' || input.trim().toLowerCase() === 'confirm')
+
+    if (isConfirmation) {
+      setIsLoading(true)
+      try {
+        await saveDocumentToStorage()
+        toast.success('Document saved successfully!')
+
+        // Add confirmation message to chat
+        const confirmMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `I've saved your **${fileAnalysis.documentType}**${fileAnalysis.taxYear ? ` for tax year ${fileAnalysis.taxYear}` : ''} to your documents. You can view all your documents in your profile.\n\nIs there anything specific you'd like to know about this document?`,
+          timestamp: Date.now(),
+        }
+        setMessages(prev => [...prev, confirmMessage])
+        clearUploadedFile()
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to save document')
+      } finally {
+        setIsLoading(false)
+        setInput('')
+      }
+      return
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -230,6 +313,93 @@ export function ChatInterface({
   const clearChat = () => {
     setMessages([])
     setCurrentConversationId(null)
+    clearUploadedFile()
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !isAuthenticated) return
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    const maxSize = 10 * 1024 * 1024 // 10MB
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Please upload a PDF or image.')
+      return
+    }
+
+    if (file.size > maxSize) {
+      toast.error('File too large. Maximum size is 10MB.')
+      return
+    }
+
+    setUploadedFile(file)
+    setIsAnalyzing(true)
+    setFileAnalysis(null)
+
+    try {
+      const token = localStorage.getItem('supabase.auth.token')
+      const session = token ? JSON.parse(token) : null
+      const accessToken = session?.currentSession?.access_token
+
+      if (!accessToken) {
+        // Try to get fresh token
+        const { supabase } = await import('@/lib/supabase')
+        const { data: { session: freshSession } } = await supabase!.auth.getSession()
+        if (!freshSession?.access_token) {
+          throw new Error('Not authenticated')
+        }
+      }
+
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('analyzeOnly', 'true')
+
+      const response = await fetch('/api/documents/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken || (await import('@/lib/supabase').then(m => m.supabase?.auth.getSession().then(s => s.data.session?.access_token)))}`,
+        },
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to analyze document')
+      }
+
+      if (data.analysis) {
+        setFileAnalysis(data.analysis)
+      }
+    } catch (err) {
+      console.error('File analysis error:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to analyze document')
+      clearUploadedFile()
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const clearUploadedFile = () => {
+    setUploadedFile(null)
+    setFileAnalysis(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const getFileIcon = (type: string) => {
+    if (type === 'application/pdf') {
+      return <FileText className="h-4 w-4 text-red-500" />
+    }
+    return <Image className="h-4 w-4 text-blue-500" />
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B'
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
   const CurrentIcon = currentStatus
@@ -430,31 +600,120 @@ export function ChatInterface({
       {/* Input */}
       <div className="relative p-4 sm:p-6 border-t border-slate-200/60 bg-white/50 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto">
+          {/* File preview */}
+          {uploadedFile && (
+            <div className="mb-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-white rounded-lg border border-slate-200">
+                  {getFileIcon(uploadedFile.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">
+                    {uploadedFile.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {formatFileSize(uploadedFile.size)}
+                  </p>
+                  {isAnalyzing && (
+                    <div className="flex items-center gap-2 mt-1 text-xs text-emerald-600">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Analyzing with AI...
+                    </div>
+                  )}
+                  {fileAnalysis && (
+                    <div className="mt-2 p-2 bg-white rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Check className="h-3 w-3 text-green-500" />
+                        <span className="text-xs font-medium text-slate-700">
+                          {fileAnalysis.documentType}
+                          {fileAnalysis.taxYear && ` (${fileAnalysis.taxYear})`}
+                        </span>
+                        <span className={cn(
+                          'text-xs px-1.5 py-0.5 rounded',
+                          fileAnalysis.confidence === 'high' ? 'bg-green-100 text-green-700' :
+                          fileAnalysis.confidence === 'medium' ? 'bg-amber-100 text-amber-700' :
+                          'bg-red-100 text-red-700'
+                        )}>
+                          {fileAnalysis.confidence}
+                        </span>
+                      </div>
+                      {fileAnalysis.issuerName && (
+                        <p className="text-xs text-slate-600">From: {fileAnalysis.issuerName}</p>
+                      )}
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{fileAnalysis.summary}</p>
+                      <p className="text-xs text-slate-400 mt-2 italic">
+                        Is this correct? Ask a question or type &quot;yes&quot; to confirm and save.
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearUploadedFile}
+                  className="text-slate-400 hover:text-slate-600 h-8 w-8 p-0"
+                  disabled={isAnalyzing}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="card-premium p-3 focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-300 transition-all duration-200">
-            <div className="relative">
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask a question about your taxes..."
-                className="min-h-[48px] max-h-[200px] !w-full resize-none border-0 bg-transparent focus-visible:ring-0 py-3 pl-3 pr-14 text-base text-slate-700 placeholder:text-slate-400"
-                disabled={isLoading}
-              />
-              <Button
-                size="icon"
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                className={cn(
-                  'absolute right-1 bottom-1 h-10 w-10 rounded-xl transition-all duration-200 btn-premium',
-                  input.trim() ? 'opacity-100 scale-100' : 'opacity-50 scale-90'
-                )}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf,image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+
+            <div className="relative flex items-end gap-2">
+              {/* File upload button */}
+              {isAuthenticated && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || isAnalyzing}
+                  className="h-10 w-10 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl shrink-0"
+                  title="Upload tax document"
+                >
+                  <Paperclip className="h-5 w-5" />
+                </Button>
+              )}
+
+              <div className="flex-1 relative">
+                <Textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={uploadedFile ? "Ask about this document or type 'yes' to confirm..." : "Ask a question about your taxes..."}
+                  className="min-h-[48px] max-h-[200px] !w-full resize-none border-0 bg-transparent focus-visible:ring-0 py-3 pl-3 pr-14 text-base text-slate-700 placeholder:text-slate-400"
+                  disabled={isLoading}
+                />
+                <Button
+                  size="icon"
+                  onClick={handleSend}
+                  disabled={!input.trim() || isLoading}
+                  className={cn(
+                    'absolute right-1 bottom-1 h-10 w-10 rounded-xl transition-all duration-200 btn-premium',
+                    input.trim() ? 'opacity-100 scale-100' : 'opacity-50 scale-90'
+                  )}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
           <p className="text-center text-xs text-slate-400 mt-3">
-            AI can make mistakes. Verify important information with official CRA sources.
+            {isAuthenticated
+              ? 'Upload tax documents (T4, T5, receipts) for AI analysis. '
+              : 'Sign in to upload documents. '}
+            AI can make mistakes. Verify with official CRA sources.
           </p>
         </div>
       </div>

@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell } from 'lucide-react'
+import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 
 interface ProfileData {
@@ -395,6 +396,27 @@ export function ProfilePage() {
             {saveMessage.text}
           </div>
         )}
+
+        {/* Quick Links */}
+        <Card className="mb-6 border-emerald-200">
+          <CardContent className="p-4">
+            <Link
+              href="/profile/documents"
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <FileText className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900">My Documents</p>
+                  <p className="text-sm text-slate-500">View and manage your uploaded tax documents</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+            </Link>
+          </CardContent>
+        </Card>
 
         {/* Profile Completeness */}
         <Card className="mb-6">
