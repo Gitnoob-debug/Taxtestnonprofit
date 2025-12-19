@@ -33,7 +33,9 @@ import {
   Check,
   AlertCircle,
   FolderOpen,
-  Eye,
+  ChevronDown,
+  ChevronUp,
+  DollarSign,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
@@ -85,6 +87,7 @@ export function MyDocumentsPage() {
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [expandedDocId, setExpandedDocId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -412,90 +415,155 @@ export function MyDocumentsPage() {
                   Tax Year {year}
                 </h2>
                 <div className="space-y-3">
-                  {groupedByYear[year].map((doc) => (
-                    <Card
-                      key={doc.id}
-                      className={cn(
-                        'transition-all hover:shadow-md',
-                        !doc.user_confirmed && 'border-amber-200 bg-amber-50/50'
-                      )}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-4">
-                          {/* File Icon */}
-                          <div className="p-3 bg-white rounded-lg border border-slate-200 shrink-0">
-                            {getFileIcon(doc.file_type)}
-                          </div>
+                  {groupedByYear[year].map((doc) => {
+                    const isExpanded = expandedDocId === doc.id
+                    return (
+                      <Card
+                        key={doc.id}
+                        className={cn(
+                          'transition-all hover:shadow-md cursor-pointer',
+                          !doc.user_confirmed && 'border-amber-200 bg-amber-50/50'
+                        )}
+                      >
+                        <CardContent className="p-4">
+                          {/* Main row - clickable to expand */}
+                          <div
+                            className="flex items-start gap-4"
+                            onClick={() => setExpandedDocId(isExpanded ? null : doc.id)}
+                          >
+                            {/* File Icon */}
+                            <div className="p-3 bg-white rounded-lg border border-slate-200 shrink-0">
+                              {getFileIcon(doc.file_type)}
+                            </div>
 
-                          {/* Document Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-medium text-slate-900 truncate">
-                                {doc.file_name}
-                              </h3>
-                              {doc.user_confirmed ? (
-                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-                                  <Check className="h-3 w-3" />
-                                  Confirmed
-                                </span>
+                            {/* Document Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-medium text-slate-900 truncate">
+                                  {doc.file_name}
+                                </h3>
+                                {doc.user_confirmed ? (
+                                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                                    <Check className="h-3 w-3" />
+                                    Confirmed
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                                    <AlertCircle className="h-3 w-3" />
+                                    Pending Review
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500 mb-2">
+                                {doc.document_type && (
+                                  <span className="font-medium text-slate-700">
+                                    {DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}
+                                  </span>
+                                )}
+                                {doc.issuer_name && (
+                                  <span className="flex items-center gap-1">
+                                    <Building2 className="h-3 w-3" />
+                                    {doc.issuer_name}
+                                  </span>
+                                )}
+                                <span>{formatFileSize(doc.file_size)}</span>
+                                <span>{formatDate(doc.created_at)}</span>
+                              </div>
+
+                              {!isExpanded && doc.ai_summary && (
+                                <p className="text-sm text-slate-600 line-clamp-2">{doc.ai_summary}</p>
+                              )}
+                            </div>
+
+                            {/* Expand/Collapse Icon */}
+                            <div className="shrink-0 text-slate-400">
+                              {isExpanded ? (
+                                <ChevronUp className="h-5 w-5" />
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                                  <AlertCircle className="h-3 w-3" />
-                                  Pending Review
-                                </span>
+                                <ChevronDown className="h-5 w-5" />
                               )}
                             </div>
+                          </div>
 
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500 mb-2">
-                              {doc.document_type && (
-                                <span className="font-medium text-slate-700">
-                                  {DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}
-                                </span>
+                          {/* Expanded Details */}
+                          {isExpanded && (
+                            <div className="mt-4 pt-4 border-t border-slate-200">
+                              {/* Full Summary */}
+                              {doc.ai_summary && (
+                                <div className="mb-4">
+                                  <h4 className="text-sm font-medium text-slate-700 mb-2">AI Summary</h4>
+                                  <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">
+                                    {doc.ai_summary}
+                                  </p>
+                                </div>
                               )}
-                              {doc.issuer_name && (
-                                <span className="flex items-center gap-1">
-                                  <Building2 className="h-3 w-3" />
-                                  {doc.issuer_name}
-                                </span>
+
+                              {/* Extracted Data */}
+                              {doc.extracted_data && Object.keys(doc.extracted_data).length > 0 && (
+                                <div className="mb-4">
+                                  <h4 className="text-sm font-medium text-slate-700 mb-2">Extracted Information</h4>
+                                  <div className="bg-slate-50 p-3 rounded-lg">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                      {Object.entries(doc.extracted_data).map(([key, value]) => (
+                                        <div key={key} className="flex items-start gap-2">
+                                          <DollarSign className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                                          <div>
+                                            <p className="text-xs text-slate-500 capitalize">
+                                              {key.replace(/_/g, ' ')}
+                                            </p>
+                                            <p className="text-sm font-medium text-slate-900">
+                                              {typeof value === 'number'
+                                                ? value.toLocaleString('en-CA', {
+                                                    style: 'currency',
+                                                    currency: 'CAD',
+                                                  })
+                                                : String(value)}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
                               )}
-                              <span>{formatFileSize(doc.file_size)}</span>
-                              <span>{formatDate(doc.created_at)}</span>
+
+                              {/* Actions */}
+                              <div className="flex items-center gap-2 justify-end">
+                                {!doc.user_confirmed && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      confirmDocument(doc)
+                                    }}
+                                    className="gap-1 text-green-600 border-green-200 hover:bg-green-50"
+                                  >
+                                    <Check className="h-3 w-3" />
+                                    Confirm Details
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setDocumentToDelete(doc)
+                                    setDeleteDialogOpen(true)
+                                  }}
+                                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
+                                </Button>
+                              </div>
                             </div>
-
-                            {doc.ai_summary && (
-                              <p className="text-sm text-slate-600 line-clamp-2">{doc.ai_summary}</p>
-                            )}
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            {!doc.user_confirmed && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => confirmDocument(doc)}
-                                className="gap-1 text-green-600 border-green-200 hover:bg-green-50"
-                              >
-                                <Check className="h-3 w-3" />
-                                Confirm
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setDocumentToDelete(doc)
-                                setDeleteDialogOpen(true)
-                              }}
-                              className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                          )}
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
                 </div>
               </div>
             ))}
