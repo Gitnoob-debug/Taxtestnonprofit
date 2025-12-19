@@ -18,7 +18,10 @@ import {
   Key,
   BookOpen,
   Map,
-  Info
+  Info,
+  Shield,
+  FileText,
+  AlertTriangle
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -51,6 +54,27 @@ const mainPages = [
     title: 'About Us',
     description: 'Learn about Tax Radar and our mission',
     icon: Info,
+  },
+]
+
+const legalPages = [
+  {
+    href: '/privacy',
+    title: 'Privacy Policy',
+    description: 'How we collect, use, and protect your information',
+    icon: Shield,
+  },
+  {
+    href: '/terms',
+    title: 'Terms of Service',
+    description: 'Terms and conditions for using Tax Radar',
+    icon: FileText,
+  },
+  {
+    href: '/disclaimer',
+    title: 'Disclaimer',
+    description: 'Important disclaimers about tax information',
+    icon: AlertTriangle,
   },
 ]
 
@@ -175,6 +199,33 @@ export default function SitemapPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Legal Pages */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">Legal</h2>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {legalPages.map((page) => {
+              const Icon = page.icon
+              return (
+                <Link
+                  key={page.href}
+                  href={page.href}
+                  className="card-premium p-5 flex items-start gap-4 group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center shrink-0 shadow-lg">
+                    <Icon className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors">
+                      {page.title}
+                    </h3>
+                    <p className="text-sm text-slate-500 mt-1">{page.description}</p>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </section>
 
