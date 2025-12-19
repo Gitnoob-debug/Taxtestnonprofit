@@ -94,6 +94,21 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/privacy" className="text-slate-500 hover:text-emerald-600 transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-slate-500 hover:text-emerald-600 transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/disclaimer" className="text-slate-500 hover:text-emerald-600 transition-colors">
+                  Disclaimer
+                </Link>
+              </li>
+              <li>
                 <Link href="/sitemap" className="text-slate-500 hover:text-emerald-600 transition-colors">
                   Site Map
                 </Link>
