@@ -136,10 +136,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { question, tax_year, province, conversationHistory = [] } = body
+    const { question, tax_year, province, conversationHistory = [], documentContext } = body
 
     // Sanitize the query
     const { isValid, sanitizedQuery, rejectionReason } = sanitizeQuery(question)
+
+    // Build document context string if document is attached
+    let documentContextString = ''
+    if (documentContext) {
+      const { documentType, taxYear, issuerName, summary, keyFields } = documentContext
+      documentContextString = `\n\n[UPLOADED DOCUMENT CONTEXT]\nThe user has uploaded a ${documentType}${taxYear ? ` for tax year ${taxYear}` : ''}${issuerName ? ` from ${issuerName}` : ''}.\n\nDocument Summary: ${summary}\n\nExtracted Fields:\n${Object.entries(keyFields || {}).map(([k, v]) => `- ${k}: ${v}`).join('\n')}\n\nPlease use this document information when answering the user's question.\n[END DOCUMENT CONTEXT]`
+    }
 
     if (!isValid) {
       const encoder = new TextEncoder()
@@ -260,7 +267,7 @@ export async function POST(request: NextRequest) {
 
           await taxGenerator.generateStream(
             {
-              query: sanitizedQuery,
+              query: sanitizedQuery + documentContextString,
               profile: userProfile,
               conversationHistory: validHistory,
               searchResults: searchResults.map((r) => ({

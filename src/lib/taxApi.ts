@@ -14,12 +14,21 @@ export interface StreamCallbacks {
   onError: (error: string) => void
 }
 
+export interface DocumentContext {
+  documentType: string
+  taxYear: number | null
+  issuerName: string | null
+  summary: string
+  keyFields: Record<string, any>
+}
+
 export async function askTaxAssistantStream(
   question: string,
   conversationHistory: ConversationMessage[] = [],
   callbacks: StreamCallbacks,
   taxYear?: number,
-  province?: string
+  province?: string,
+  documentContext?: DocumentContext
 ): Promise<void> {
   const token = await getAccessToken()
   const headers: HeadersInit = {
@@ -37,6 +46,7 @@ export async function askTaxAssistantStream(
       conversationHistory,
       tax_year: taxYear,
       province,
+      documentContext,
     }),
   })
 

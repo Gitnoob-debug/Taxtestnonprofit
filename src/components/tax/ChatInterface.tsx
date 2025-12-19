@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Message, Citation, UsageInfo, ConversationMessage, StreamStatus } from '@/types/tax'
-import { askTaxAssistantStream } from '@/lib/taxApi'
+import { askTaxAssistantStream, DocumentContext } from '@/lib/taxApi'
 import { createConversation, addMessage } from '@/lib/conversationApi'
 import { MessageBubble } from './MessageBubble'
 import { Send, Eraser, Sparkles, ArrowUp, Bot, Search, Brain, FileText, Database, Zap, Leaf, Paperclip, X, Image, Check, Loader2 } from 'lucide-react'
@@ -234,6 +234,15 @@ export function ChatInterface({
       )
     }
 
+    // Build document context if there's an uploaded file with analysis
+    const docContext: DocumentContext | undefined = fileAnalysis ? {
+      documentType: fileAnalysis.documentType,
+      taxYear: fileAnalysis.taxYear,
+      issuerName: fileAnalysis.issuerName,
+      summary: fileAnalysis.summary,
+      keyFields: fileAnalysis.keyFields,
+    } : undefined
+
     try {
       await askTaxAssistantStream(userMessage.content, conversationHistory, {
         onStatus: (status) => {
@@ -294,7 +303,7 @@ export function ChatInterface({
           setIsLoading(false)
           setCurrentStatus(null)
         },
-      })
+      }, undefined, undefined, docContext)
     } catch (error) {
       console.error('Failed to get response', error)
       toast.error(error instanceof Error ? error.message : 'Failed to get response. Please try again.')
