@@ -56,10 +56,10 @@ export function Header() {
   const email = user?.email
 
   const navLinks = [
-    { href: '/', label: 'Chat' },
+    { href: '/', label: 'Home' },
+    { href: '/chat', label: 'AI Teacher' },
     { href: '/tools', label: 'Calculators' },
     { href: '/academy', label: 'Learn' },
-    { href: '/about', label: 'About' },
     ...(user ? [{ href: '/profile', label: 'My Profile' }] : []),
   ]
 

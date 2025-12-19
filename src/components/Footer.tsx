@@ -62,8 +62,8 @@ export function Footer() {
             <h3 className="font-semibold text-slate-900 mb-3">Resources</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/" className="text-slate-500 hover:text-emerald-600 transition-colors">
-                  AI Tax Assistant
+                <Link href="/chat" className="text-slate-500 hover:text-emerald-600 transition-colors">
+                  AI Tax Teacher
                 </Link>
               </li>
               <li>

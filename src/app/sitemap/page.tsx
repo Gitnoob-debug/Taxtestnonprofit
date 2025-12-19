@@ -33,7 +33,13 @@ export const metadata: Metadata = {
 const mainPages = [
   {
     href: '/',
-    title: 'AI Tax Assistant',
+    title: 'Home',
+    description: 'Tax Radar landing page and overview',
+    icon: Home,
+  },
+  {
+    href: '/chat',
+    title: 'AI Tax Teacher',
     description: 'Chat with our AI assistant trained on CRA documents',
     icon: MessageSquare,
   },
@@ -235,7 +241,10 @@ export default function SitemapPage() {
           <div className="card-premium p-6">
             <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3">
               <Link href="/" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                Home - AI Tax Chat
+                Home
+              </Link>
+              <Link href="/chat" className="text-slate-600 hover:text-emerald-600 transition-colors">
+                AI Tax Teacher
               </Link>
               <Link href="/tools" className="text-slate-600 hover:text-emerald-600 transition-colors">
                 All Calculators
