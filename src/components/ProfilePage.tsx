@@ -15,9 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
+import { useProfile } from '@/hooks/useProfile'
+import { TaxDeadlineChecklist } from '@/components/TaxDeadlineChecklist'
 
 interface ProfileData {
   // Basic info
@@ -399,7 +401,7 @@ export function ProfilePage() {
 
         {/* Quick Links */}
         <Card className="mb-6 border-emerald-200">
-          <CardContent className="p-4">
+          <CardContent className="p-4 space-y-3">
             <Link
               href="/profile/documents"
               className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 transition-colors group"
@@ -414,6 +416,21 @@ export function ProfilePage() {
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+            </Link>
+            <Link
+              href="/profile/checklist"
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-teal-50 to-cyan-50 hover:from-teal-100 hover:to-cyan-100 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-teal-100 rounded-lg">
+                  <Calendar className="h-5 w-5 text-teal-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900">Tax Season Checklist</p>
+                  <p className="text-sm text-slate-500">Track your tax preparation progress</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-teal-600 transition-colors" />
             </Link>
           </CardContent>
         </Card>
