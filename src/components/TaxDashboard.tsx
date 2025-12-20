@@ -40,7 +40,8 @@ import {
   GraduationCap,
   Home,
   Circle,
-  X
+  X,
+  Mail
 } from 'lucide-react'
 import { calculateTotalTax } from '@/lib/canadianTaxData'
 
@@ -1518,7 +1519,7 @@ export function TaxDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Link
                 href="/profile/optimization"
                 className="flex flex-col items-center p-4 rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 hover:shadow-md transition-shadow"
@@ -1546,6 +1547,13 @@ export function TaxDashboard() {
               >
                 <PiggyBank className="h-6 w-6 text-pink-600 mb-2" />
                 <span className="text-sm font-medium text-center">Family Optimizer</span>
+              </Link>
+              <Link
+                href="/profile/cra-letters"
+                className="flex flex-col items-center p-4 rounded-lg bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 hover:shadow-md transition-shadow"
+              >
+                <Mail className="h-6 w-6 text-red-600 mb-2" />
+                <span className="text-sm font-medium text-center">CRA Letter Decoder</span>
               </Link>
             </div>
           </CardContent>

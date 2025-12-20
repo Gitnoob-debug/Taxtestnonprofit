@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight, Calendar, TrendingUp, GitCompare, LineChart, Heart, LayoutDashboard } from 'lucide-react'
+import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight, Calendar, TrendingUp, GitCompare, LineChart, Heart, LayoutDashboard, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -504,6 +504,21 @@ export function ProfilePage() {
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-teal-600 transition-colors" />
+            </Link>
+            <Link
+              href="/profile/cra-letters"
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <Mail className="h-5 w-5 text-red-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900">CRA Letter Decoder</p>
+                  <p className="text-sm text-slate-500">Upload CRA letters for plain English explanations</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-red-600 transition-colors" />
             </Link>
           </CardContent>
         </Card>

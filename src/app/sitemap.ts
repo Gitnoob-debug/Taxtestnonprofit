@@ -70,6 +70,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     'family',         // Family Tax Optimizer
     'documents',      // Document Dashboard
     'checklist',      // Tax Season Checklist
+    'cra-letters',    // CRA Letter Decoder
   ].map((slug) => ({
     url: `${baseUrl}/profile/${slug}`,
     lastModified: new Date(),
