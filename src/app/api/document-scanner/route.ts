@@ -498,10 +498,61 @@ export async function POST(request: NextRequest) {
 
     console.log(`[DOC-SCANNER] Analyzed: ${result.documentType}, Year: ${result.taxYear}`)
 
+    // Upload file to Supabase storage
+    const fileExt = file.name.split('.').pop() || 'jpg'
+    const filePath = `${user.id}/${Date.now()}.${fileExt}`
+
+    const { data: uploadData, error: uploadError } = await supabaseAdmin
+      .storage
+      .from('document-scans')
+      .upload(filePath, bytes, {
+        contentType: file.type,
+        upsert: false
+      })
+
+    if (uploadError) {
+      console.error('[DOC-SCANNER] Upload error:', uploadError)
+      // Continue without saving - still return analysis
+    }
+
+    // Get public URL for the file
+    let fileUrl = null
+    if (uploadData) {
+      const { data: urlData } = supabaseAdmin
+        .storage
+        .from('document-scans')
+        .getPublicUrl(filePath)
+      fileUrl = urlData?.publicUrl || null
+    }
+
+    // Save analysis to database
+    const { data: savedScan, error: saveError } = await supabaseAdmin
+      .from('document_scans')
+      .insert({
+        user_id: user.id,
+        file_name: file.name,
+        file_url: fileUrl,
+        file_type: file.type,
+        document_type: result.documentType,
+        document_name: result.documentName,
+        category: result.category,
+        key_amounts: result.keyAmounts,
+        analysis: result.analysis,
+        tax_year: result.taxYear
+      })
+      .select()
+      .single()
+
+    if (saveError) {
+      console.error('[DOC-SCANNER] Save error:', saveError)
+      // Continue without saving - still return analysis
+    }
+
     return Response.json({
       success: true,
       result: {
         ...result,
+        id: savedScan?.id || null,
         fileName: file.name,
         analyzedAt: new Date().toISOString()
       }
@@ -512,6 +563,68 @@ export async function POST(request: NextRequest) {
     return Response.json({
       error: 'Failed to analyze document',
       details: err instanceof Error ? err.message : 'Unknown error'
+    }, { status: 500 })
+  }
+}
+
+// GET endpoint to retrieve scan history
+export async function GET(request: NextRequest) {
+  if (!supabaseAdmin) {
+    return Response.json({ error: 'Service unavailable' }, { status: 503 })
+  }
+
+  const authHeader = request.headers.get('authorization')
+  const user = await getUserFromToken(authHeader)
+
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const { searchParams } = new URL(request.url)
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const offset = parseInt(searchParams.get('offset') || '0')
+    const category = searchParams.get('category')
+    const taxYear = searchParams.get('tax_year')
+
+    let query = supabaseAdmin
+      .from('document_scans')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('scanned_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (category) {
+      query = query.eq('category', category)
+    }
+    if (taxYear) {
+      query = query.eq('tax_year', parseInt(taxYear))
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      throw error
+    }
+
+    // Get total count
+    const { count } = await supabaseAdmin
+      .from('document_scans')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+
+    return Response.json({
+      success: true,
+      scans: data || [],
+      total: count || 0,
+      limit,
+      offset
+    })
+
+  } catch (err) {
+    console.error('[DOC-SCANNER] Get history error:', err)
+    return Response.json({
+      error: 'Failed to retrieve scan history'
     }, { status: 500 })
   }
 }

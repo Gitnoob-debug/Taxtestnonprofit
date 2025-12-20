@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,10 +31,13 @@ import {
   Sparkles,
   RotateCcw,
   MessageSquare,
-  X
+  X,
+  History,
+  Clock
 } from 'lucide-react'
 
 interface AnalysisResult {
+  id?: string
   documentType: string
   documentName: string
   category: string
@@ -58,6 +61,18 @@ interface AnalysisResult {
   }
   fileName: string
   analyzedAt: string
+}
+
+interface SavedScan {
+  id: string
+  file_name: string
+  document_type: string
+  document_name: string
+  category: string
+  key_amounts: Record<string, number>
+  analysis: AnalysisResult['analysis']
+  tax_year: number | null
+  scanned_at: string
 }
 
 // Calculator mapping for quick links
@@ -100,11 +115,62 @@ const DOCUMENT_EXAMPLES = [
 export function DocumentScanner() {
   const router = useRouter()
   const { user, loading: authLoading, getToken } = useAuth()
+  const [activeTab, setActiveTab] = useState<'scan' | 'history'>('scan')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null)
+  const [history, setHistory] = useState<SavedScan[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+  const [historyTotal, setHistoryTotal] = useState(0)
+
+  // Load scan history
+  useEffect(() => {
+    if (user && activeTab === 'history') {
+      loadHistory()
+    }
+  }, [user, activeTab])
+
+  async function loadHistory() {
+    setLoadingHistory(true)
+    try {
+      const token = await getToken()
+      if (!token) return
+
+      const res = await fetch('/api/document-scanner?limit=20', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setHistory(data.scans || [])
+        setHistoryTotal(data.total || 0)
+      }
+    } catch (err) {
+      console.error('Failed to load history:', err)
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
+
+  function viewSavedScan(scan: SavedScan) {
+    // Convert saved scan to result format
+    setResult({
+      id: scan.id,
+      documentType: scan.document_type,
+      documentName: scan.document_name,
+      category: scan.category,
+      taxYear: scan.tax_year,
+      issuerName: null,
+      keyAmounts: scan.key_amounts || {},
+      confidence: 'high',
+      analysis: scan.analysis,
+      fileName: scan.file_name,
+      analyzedAt: scan.scanned_at
+    })
+    setActiveTab('scan')
+  }
 
   // Handle drag events
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -234,10 +300,109 @@ export function DocumentScanner() {
               <p className="text-slate-600 dark:text-slate-400">Upload any tax document for instant AI analysis</p>
             </div>
           </div>
+
+          {/* Tab Navigation */}
+          <div className="flex gap-2 mt-4">
+            <Button
+              variant={activeTab === 'scan' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('scan')}
+              className={activeTab === 'scan' ? 'bg-teal-600 hover:bg-teal-700' : ''}
+            >
+              <Scan className="h-4 w-4 mr-2" />
+              Scan New
+            </Button>
+            <Button
+              variant={activeTab === 'history' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('history')}
+              className={activeTab === 'history' ? 'bg-teal-600 hover:bg-teal-700' : ''}
+            >
+              <History className="h-4 w-4 mr-2" />
+              History
+              {historyTotal > 0 && (
+                <span className="ml-2 px-1.5 py-0.5 text-xs bg-white/20 rounded-full">
+                  {historyTotal}
+                </span>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Main Content */}
-        {!result ? (
+        {activeTab === 'history' && !result ? (
+          /* History View */
+          <div className="space-y-4">
+            {loadingHistory ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+              </div>
+            ) : history.length === 0 ? (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <History className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                  <p className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    No scans yet
+                  </p>
+                  <p className="text-slate-500 mb-4">
+                    Upload your first document to get started
+                  </p>
+                  <Button onClick={() => setActiveTab('scan')} className="bg-teal-600 hover:bg-teal-700">
+                    <Scan className="h-4 w-4 mr-2" />
+                    Scan Document
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <p className="text-sm text-slate-500 mb-4">
+                  Showing {history.length} of {historyTotal} scanned documents
+                </p>
+                {history.map((scan) => {
+                  const catConfig = CATEGORY_CONFIG[scan.category] || CATEGORY_CONFIG.other
+                  const CatIcon = catConfig.icon
+                  return (
+                    <Card
+                      key={scan.id}
+                      className="hover:border-teal-300 cursor-pointer transition-colors"
+                      onClick={() => viewSavedScan(scan)}
+                    >
+                      <CardContent className="py-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-3 rounded-xl ${catConfig.bgColor}`}>
+                            <CatIcon className={`h-5 w-5 ${catConfig.color}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-slate-900 dark:text-slate-100 truncate">
+                              {scan.document_name}
+                            </p>
+                            <div className="flex items-center gap-3 text-sm text-slate-500">
+                              <span className="truncate">{scan.file_name}</span>
+                              {scan.tax_year && (
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3.5 w-3.5" />
+                                  {scan.tax_year}
+                                </span>
+                              )}
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                {new Date(scan.scanned_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {scan.analysis?.summary && (
+                              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-1">
+                                {scan.analysis.summary}
+                              </p>
+                            )}
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-slate-400 flex-shrink-0" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </>
+            )}
+          </div>
+        ) : !result ? (
           <div className="space-y-6">
             {/* Upload Area */}
             <Card className="overflow-hidden">
@@ -347,7 +512,7 @@ export function DocumentScanner() {
               <div>
                 <p className="font-medium text-blue-800 dark:text-blue-200">Your documents are secure</p>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  We analyze documents in memory and don't store the files. Any sensitive numbers like SINs are automatically masked.
+                  Documents are securely stored in your account so you can access analysis history anytime. Sensitive numbers like SINs are automatically masked.
                 </p>
               </div>
             </div>
