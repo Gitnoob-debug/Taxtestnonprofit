@@ -53,6 +53,14 @@ export function ChatInterface({
     confidence: 'high' | 'medium' | 'low'
   } | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [savedDocuments, setSavedDocuments] = useState<Array<{
+    id: string
+    document_type: string | null
+    tax_year: number | null
+    issuer_name: string | null
+    ai_summary: string | null
+    extracted_data: Record<string, any>
+  }>>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
@@ -69,6 +77,34 @@ export function ChatInterface({
     setMessages(initialMessages)
     setCurrentConversationId(initialConversationId)
   }, [initialMessages, initialConversationId])
+
+  // Load user's saved documents for context
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const loadSavedDocuments = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase')
+        const { data: { session } } = await supabase!.auth.getSession()
+        if (!session?.access_token) return
+
+        const res = await fetch('/api/documents', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setSavedDocuments(data.documents || [])
+        }
+      } catch (err) {
+        console.error('Failed to load saved documents:', err)
+      }
+    }
+
+    loadSavedDocuments()
+  }, [isAuthenticated])
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -234,14 +270,44 @@ export function ChatInterface({
       )
     }
 
-    // Build document context if there's an uploaded file with analysis
-    const docContext: DocumentContext | undefined = fileAnalysis ? {
-      documentType: fileAnalysis.documentType,
-      taxYear: fileAnalysis.taxYear,
-      issuerName: fileAnalysis.issuerName,
-      summary: fileAnalysis.summary,
-      keyFields: fileAnalysis.keyFields,
-    } : undefined
+    // Build document context - prefer uploaded file, fall back to saved documents
+    let docContext: DocumentContext | undefined = undefined
+
+    if (fileAnalysis) {
+      // Use currently uploaded/analyzed file
+      docContext = {
+        documentType: fileAnalysis.documentType,
+        taxYear: fileAnalysis.taxYear,
+        issuerName: fileAnalysis.issuerName,
+        summary: fileAnalysis.summary,
+        keyFields: fileAnalysis.keyFields,
+      }
+    } else if (savedDocuments.length > 0) {
+      // Build context from all saved documents
+      const savedDocsContext = savedDocuments.map(doc => ({
+        documentType: doc.document_type || 'Unknown',
+        taxYear: doc.tax_year,
+        issuerName: doc.issuer_name,
+        summary: doc.ai_summary || '',
+        keyFields: doc.extracted_data || {},
+      }))
+
+      // Combine all saved documents into one context
+      docContext = {
+        documentType: 'Multiple Saved Documents',
+        taxYear: null,
+        issuerName: null,
+        summary: `User has ${savedDocuments.length} saved document(s): ${savedDocsContext.map(d => `${d.documentType}${d.taxYear ? ` (${d.taxYear})` : ''}`).join(', ')}`,
+        keyFields: savedDocsContext.reduce((acc, doc, idx) => {
+          const prefix = `doc_${idx + 1}_${doc.documentType.replace(/\s+/g, '_')}`
+          acc[`${prefix}_summary`] = doc.summary
+          Object.entries(doc.keyFields).forEach(([k, v]) => {
+            acc[`${prefix}_${k}`] = v
+          })
+          return acc
+        }, {} as Record<string, any>),
+      }
+    }
 
     try {
       await askTaxAssistantStream(userMessage.content, conversationHistory, {
