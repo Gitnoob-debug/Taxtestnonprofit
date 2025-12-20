@@ -30,9 +30,7 @@ export async function askTaxAssistantStream(
   province?: string,
   documentContext?: DocumentContext
 ): Promise<void> {
-  console.log('[taxApi] askTaxAssistantStream starting...')
   const token = await getAccessToken()
-  console.log('[taxApi] Got token:', token ? 'yes' : 'no')
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -41,7 +39,6 @@ export async function askTaxAssistantStream(
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  console.log('[taxApi] Fetching /api/tax/ask-stream...')
   const response = await fetch('/api/tax/ask-stream', {
     method: 'POST',
     headers,
@@ -54,21 +51,15 @@ export async function askTaxAssistantStream(
     }),
   })
 
-  console.log('[taxApi] Response status:', response.status, response.statusText)
-
   if (!response.ok) {
     const error = await response.json()
-    console.error('[taxApi] Response NOT OK:', error)
     throw new Error(error.details || error.error || 'Failed to get tax assistant response')
   }
 
   const reader = response.body?.getReader()
   if (!reader) {
-    console.error('[taxApi] No response body reader!')
     throw new Error('No response body')
   }
-
-  console.log('[taxApi] Starting to read stream...')
 
   const decoder = new TextDecoder()
   let buffer = ''

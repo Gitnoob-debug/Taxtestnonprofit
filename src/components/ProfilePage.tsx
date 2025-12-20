@@ -18,7 +18,6 @@ import {
 import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
-import { useProfile } from '@/hooks/useProfile'
 
 interface ProfileData {
   // Basic info

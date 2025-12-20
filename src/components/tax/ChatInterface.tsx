@@ -204,22 +204,7 @@ export function ChatInterface({
   }
 
   const handleSend = async () => {
-    console.log('[ChatInterface] handleSend called', {
-      input: input.trim().slice(0, 50),
-      isLoading,
-      isAuthenticated,
-      documentsLoaded,
-      savedDocumentsCount: savedDocuments.length
-    })
-
-    if (!input.trim() || isLoading || (isAuthenticated && !documentsLoaded)) {
-      console.log('[ChatInterface] handleSend blocked', {
-        noInput: !input.trim(),
-        isLoading,
-        waitingForDocs: isAuthenticated && !documentsLoaded
-      })
-      return
-    }
+    if (!input.trim() || isLoading || (isAuthenticated && !documentsLoaded)) return
 
     // Check if user is confirming document save
     const isConfirmation = uploadedFile && fileAnalysis &&
@@ -337,16 +322,9 @@ export function ChatInterface({
       }
     }
 
-    console.log('[ChatInterface] Calling askTaxAssistantStream', {
-      question: userMessage.content.slice(0, 50),
-      historyLength: conversationHistory.length,
-      hasDocContext: !!docContext
-    })
-
     try {
       await askTaxAssistantStream(userMessage.content, conversationHistory, {
         onStatus: (status) => {
-          console.log('[ChatInterface] onStatus:', status)
           setCurrentStatus(status)
         },
         onChunk: (chunk) => {
@@ -400,15 +378,12 @@ export function ChatInterface({
           streamingMetadataRef.current = {}
         },
         onError: (error) => {
-          console.error('[ChatInterface] onError callback:', error)
           toast.error(error)
           setIsLoading(false)
           setCurrentStatus(null)
         },
       }, undefined, undefined, docContext)
-      console.log('[ChatInterface] askTaxAssistantStream completed successfully')
     } catch (error) {
-      console.error('[ChatInterface] askTaxAssistantStream THREW error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to get response. Please try again.')
       setIsLoading(false)
       setCurrentStatus(null)

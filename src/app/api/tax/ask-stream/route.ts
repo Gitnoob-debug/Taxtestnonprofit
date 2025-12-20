@@ -110,32 +110,9 @@ async function getUserProfileFromToken(authHeader: string | null): Promise<UserP
   }
 }
 
-function getDisclaimer(confidence: 'high' | 'medium' | 'low'): string {
-  const standard =
-    'This information is for general guidance only and does not constitute professional tax advice. Tax situations vary—please consult a qualified tax professional for advice specific to your circumstances.'
-  const currency =
-    'Tax rules change frequently. Always verify current rules on canada.ca or with a tax professional.'
-  const complexity =
-    'This appears to be a complex tax situation. We strongly recommend consulting with a certified accountant or tax professional before making decisions.'
-
-  switch (confidence) {
-    case 'high':
-      return standard
-    case 'medium':
-      return standard + ' ' + currency
-    case 'low':
-      return complexity + ' ' + standard
-    default:
-      return standard
-  }
-}
-
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
-  console.log('[TAX-STREAM] Auth header present:', !!authHeader)
-
   const userProfile = await getUserProfileFromToken(authHeader)
-  console.log('[TAX-STREAM] User profile:', userProfile ? JSON.stringify(userProfile) : 'null')
 
   try {
     const body = await request.json()

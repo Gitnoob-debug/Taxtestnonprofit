@@ -7,7 +7,15 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nAdd legal pages for Google AdSense compliance\n\n- Add Privacy Policy page (PIPEDA compliant)\n- Add Terms of Service page\n- Add Disclaimer page with CRA resource links\n- Update Footer with links to all legal pages\n\nThese pages are required for Google AdSense approval and\nprovide important legal disclosures for a tax information site.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push:*)",
       "Bash(git commit:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(grep:*)",
+      "Bash(while read f)",
+      "Bash(do echo '=== $f ===')",
+      "Bash(done)",
+      "Bash(paste:*)",
+      "Bash(for f in command pagination carousel calendar context-menu menubar navigation-menu)",
+      "Bash(do echo -n '$f: ')",
+      "Bash(npm install:*)"
     ]
   }
 }
