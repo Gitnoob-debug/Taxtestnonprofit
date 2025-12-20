@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight, Calendar, TrendingUp, GitCompare, LineChart, Heart, LayoutDashboard, Mail, Scan } from 'lucide-react'
+import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight, Calendar, TrendingUp, GitCompare, LineChart, Heart, LayoutDashboard, Mail, Scan, Gauge } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -401,6 +401,21 @@ export function ProfilePage() {
         <Card className="mb-6 border-emerald-200">
           <CardContent className="p-4 space-y-3">
             <Link
+              href="/profile/command-center"
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 transition-colors group border-2 border-teal-500 ring-2 ring-teal-500/20"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg">
+                  <Gauge className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-bold text-white">Tax Command Center</p>
+                  <p className="text-sm text-slate-400">Your complete financial control room</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-teal-400 group-hover:text-teal-300 transition-colors" />
+            </Link>
+            <Link
               href="/profile/dashboard"
               className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-teal-100 to-emerald-100 hover:from-teal-200 hover:to-emerald-200 transition-colors group border-2 border-teal-300"
             >
@@ -410,7 +425,7 @@ export function ProfilePage() {
                 </div>
                 <div>
                   <p className="font-semibold text-slate-900">My Tax Dashboard</p>
-                  <p className="text-sm text-slate-500">Your personalized tax command center</p>
+                  <p className="text-sm text-slate-500">Your personalized tax dashboard</p>
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-teal-500 group-hover:text-teal-600 transition-colors" />

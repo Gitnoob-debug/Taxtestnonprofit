@@ -63,6 +63,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   // Profile feature pages (new wowza features!)
   const profilePages = [
+    'command-center', // Tax Command Center - THE control room!
     'dashboard',      // My Tax Dashboard - the one-stop shop!
     'scanner',        // Document Scanner - AI-powered analysis
     'optimization',   // Tax Optimization Report
