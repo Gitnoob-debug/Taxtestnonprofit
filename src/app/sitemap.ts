@@ -64,6 +64,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Profile feature pages (new wowza features!)
   const profilePages = [
     'dashboard',      // My Tax Dashboard - the one-stop shop!
+    'scanner',        // Document Scanner - AI-powered analysis
     'optimization',   // Tax Optimization Report
     'scenarios',      // What-If Scenario Planner
     'planner',        // Multi-Year Tax Planner

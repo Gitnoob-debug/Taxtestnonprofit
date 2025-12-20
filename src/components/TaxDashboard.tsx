@@ -41,7 +41,8 @@ import {
   Home,
   Circle,
   X,
-  Mail
+  Mail,
+  Scan
 } from 'lucide-react'
 import { calculateTotalTax } from '@/lib/canadianTaxData'
 
@@ -1519,7 +1520,14 @@ export function TaxDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <Link
+                href="/profile/scanner"
+                className="flex flex-col items-center p-4 rounded-lg bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 hover:shadow-md transition-shadow border-2 border-teal-200 dark:border-teal-800"
+              >
+                <Scan className="h-6 w-6 text-teal-600 mb-2" />
+                <span className="text-sm font-medium text-center">Document Scanner</span>
+              </Link>
               <Link
                 href="/profile/optimization"
                 className="flex flex-col items-center p-4 rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 hover:shadow-md transition-shadow"

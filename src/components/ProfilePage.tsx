@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight, Calendar, TrendingUp, GitCompare, LineChart, Heart, LayoutDashboard, Mail } from 'lucide-react'
+import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight, Calendar, TrendingUp, GitCompare, LineChart, Heart, LayoutDashboard, Mail, Scan } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -414,6 +414,21 @@ export function ProfilePage() {
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-teal-500 group-hover:text-teal-600 transition-colors" />
+            </Link>
+            <Link
+              href="/profile/scanner"
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-teal-50 to-cyan-50 hover:from-teal-100 hover:to-cyan-100 transition-colors group border-2 border-teal-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-teal-100 rounded-lg">
+                  <Scan className="h-5 w-5 text-teal-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900">Document Scanner</p>
+                  <p className="text-sm text-slate-500">Upload any tax document for instant AI analysis</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-teal-400 group-hover:text-teal-600 transition-colors" />
             </Link>
             <Link
               href="/profile/optimization"
