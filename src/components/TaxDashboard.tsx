@@ -26,7 +26,21 @@ import {
   Percent,
   PiggyBank,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Upload,
+  Zap,
+  Building2,
+  Landmark,
+  Briefcase,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownRight,
+  Gift,
+  Heart,
+  GraduationCap,
+  Home,
+  Circle,
+  X
 } from 'lucide-react'
 import { calculateTotalTax } from '@/lib/canadianTaxData'
 
@@ -79,6 +93,415 @@ interface ConversationSummary {
   topics: string[]
   created_at: string
   updated_at: string
+}
+
+// Personalized tips based on profile (Facebook feed style)
+interface TaxTip {
+  id: string
+  icon: 'gift' | 'heart' | 'graduation' | 'home' | 'briefcase' | 'trending' | 'piggy' | 'zap'
+  title: string
+  description: string
+  action?: { label: string; href: string }
+  priority: 'high' | 'medium' | 'low'
+  category: string
+}
+
+function getPersonalizedTips(profile: ProfileData, documents: DocumentData[]): TaxTip[] {
+  const tips: TaxTip[] = []
+  const currentYear = new Date().getFullYear()
+  const currentMonth = new Date().getMonth()
+
+  // RRSP optimization tips
+  if (profile.rrsp_contribution_room && profile.annual_income) {
+    const remaining = profile.rrsp_contribution_room - (profile.rrsp_contributions_ytd || 0)
+    if (remaining > 5000) {
+      const marginalRate = profile.annual_income > 235675 ? 0.53 :
+                          profile.annual_income > 155625 ? 0.48 :
+                          profile.annual_income > 106717 ? 0.43 :
+                          profile.annual_income > 55867 ? 0.30 : 0.20
+      const potentialSavings = Math.round(remaining * marginalRate)
+      tips.push({
+        id: 'rrsp-room',
+        icon: 'piggy',
+        title: `You have ${remaining.toLocaleString()} in RRSP room`,
+        description: `Contributing the max could save you up to $${potentialSavings.toLocaleString()} in taxes this year.`,
+        action: { label: 'Calculate savings', href: '/tools/rrsp-calculator' },
+        priority: 'high',
+        category: 'Savings'
+      })
+    }
+  }
+
+  // TFSA tips
+  if (profile.birth_year) {
+    tips.push({
+      id: 'tfsa-growth',
+      icon: 'trending',
+      title: 'TFSA investments grow tax-free',
+      description: 'Unlike RRSPs, TFSA withdrawals are completely tax-free. Consider using it for high-growth investments.',
+      action: { label: 'RRSP vs TFSA', href: '/tools/rrsp-vs-tfsa' },
+      priority: 'medium',
+      category: 'Strategy'
+    })
+  }
+
+  // Self-employment tips
+  if (profile.has_self_employment_income) {
+    tips.push({
+      id: 'self-emp-expenses',
+      icon: 'briefcase',
+      title: 'Track all business expenses',
+      description: 'Home office, vehicle, equipment, and professional fees can all be deducted from self-employment income.',
+      action: { label: 'Learn more', href: '/academy/self-employment-taxes' },
+      priority: 'high',
+      category: 'Deductions'
+    })
+
+    // Quarterly installment reminder
+    if (currentMonth === 2 || currentMonth === 5 || currentMonth === 8 || currentMonth === 11) {
+      tips.push({
+        id: 'installments',
+        icon: 'zap',
+        title: 'Quarterly tax installment due soon',
+        description: 'Self-employed individuals may need to pay taxes quarterly to avoid interest charges.',
+        action: { label: 'Learn about installments', href: '/academy/instalment-payments' },
+        priority: 'high',
+        category: 'Deadlines'
+      })
+    }
+  }
+
+  // Investment income tips
+  if (profile.has_investment_income) {
+    tips.push({
+      id: 'dividend-credit',
+      icon: 'gift',
+      title: 'Canadian dividends get special treatment',
+      description: 'Eligible Canadian dividends qualify for the dividend tax credit, making them more tax-efficient than interest.',
+      action: { label: 'Calculate dividend tax', href: '/tools/dividend-tax-calculator' },
+      priority: 'medium',
+      category: 'Investments'
+    })
+
+    // Year-end tax-loss harvesting
+    if (currentMonth >= 9) {
+      tips.push({
+        id: 'tax-loss',
+        icon: 'trending',
+        title: 'Consider tax-loss harvesting',
+        description: 'Selling investments at a loss before year-end can offset capital gains and reduce your tax bill.',
+        action: { label: 'Learn how', href: '/academy/tax-loss-harvesting' },
+        priority: 'high',
+        category: 'Year-End'
+      })
+    }
+  }
+
+  // Medical expenses
+  if (profile.has_medical_expenses) {
+    tips.push({
+      id: 'medical-12mo',
+      icon: 'heart',
+      title: 'Medical expenses: Pick your 12-month period',
+      description: 'You can claim any 12-month period ending in the tax year. Choose the period with the highest expenses!',
+      action: { label: 'What qualifies', href: '/academy/medical-expenses' },
+      priority: 'medium',
+      category: 'Credits'
+    })
+  }
+
+  // Childcare
+  if (profile.has_childcare_expenses) {
+    tips.push({
+      id: 'childcare-claim',
+      icon: 'heart',
+      title: 'Childcare: Lower-income spouse claims',
+      description: 'Generally, the lower-income spouse must claim childcare expenses. This maximizes the tax benefit.',
+      action: { label: 'Childcare rules', href: '/academy/childcare-expenses' },
+      priority: 'medium',
+      category: 'Credits'
+    })
+  }
+
+  // Charitable donations
+  if (profile.has_charitable_donations) {
+    tips.push({
+      id: 'donation-combine',
+      icon: 'gift',
+      title: 'Combine donations with your spouse',
+      description: 'Either spouse can claim all donations. The first $200 gets 15% credit, amounts above get 29% or more.',
+      action: { label: 'Donation strategy', href: '/academy/charitable-donations' },
+      priority: 'medium',
+      category: 'Credits'
+    })
+  }
+
+  // Rental income
+  if (profile.has_rental_income) {
+    tips.push({
+      id: 'rental-cca',
+      icon: 'home',
+      title: 'Rental CCA: Use wisely',
+      description: 'Capital Cost Allowance reduces rental income but can trigger recapture when you sell. Plan carefully.',
+      action: { label: 'CCA explained', href: '/academy/rental-income-tax' },
+      priority: 'medium',
+      category: 'Real Estate'
+    })
+  }
+
+  // Marriage/common-law tips
+  if (profile.marital_status === 'married' || profile.marital_status === 'common-law') {
+    if (profile.spouse_income !== null && profile.annual_income) {
+      const diff = Math.abs(profile.annual_income - (profile.spouse_income || 0))
+      if (diff > 30000) {
+        tips.push({
+          id: 'income-split',
+          icon: 'heart',
+          title: 'Income splitting opportunity',
+          description: 'With different income levels, spousal RRSP or pension splitting could save your family thousands.',
+          action: { label: 'Family optimizer', href: '/profile/family' },
+          priority: 'high',
+          category: 'Family'
+        })
+      }
+    }
+  }
+
+  // Age-based tips
+  if (profile.birth_year) {
+    const age = currentYear - profile.birth_year
+    if (age >= 65) {
+      tips.push({
+        id: 'pension-split',
+        icon: 'gift',
+        title: 'Pension income splitting available',
+        description: 'At 65+, you can split up to 50% of eligible pension income with your spouse, potentially saving thousands.',
+        action: { label: 'Learn how', href: '/academy/pension-income-splitting' },
+        priority: 'high',
+        category: 'Retirement'
+      })
+    } else if (age >= 60) {
+      tips.push({
+        id: 'cpp-timing',
+        icon: 'trending',
+        title: 'CPP: Start at 60, 65, or 70?',
+        description: 'Taking CPP early reduces payments by 0.6%/month. Waiting until 70 increases them by 0.7%/month.',
+        action: { label: 'CPP calculator', href: '/tools/cpp-retirement-calculator' },
+        priority: 'medium',
+        category: 'Retirement'
+      })
+    } else if (age < 35) {
+      tips.push({
+        id: 'fhsa-first-home',
+        icon: 'home',
+        title: 'First-time home buyer? Open an FHSA',
+        description: 'The FHSA combines RRSP and TFSA benefits: tax-deductible contributions AND tax-free withdrawals for your first home.',
+        action: { label: 'FHSA calculator', href: '/tools/fhsa-calculator' },
+        priority: 'high',
+        category: 'Home'
+      })
+    }
+  }
+
+  // Document-based tips
+  const hasT4 = documents.some(d => d.document_type === 'T4')
+  if (!hasT4 && profile.has_employment_income && currentMonth >= 1 && currentMonth <= 3) {
+    tips.push({
+      id: 'get-t4',
+      icon: 'briefcase',
+      title: 'Upload your T4 when you receive it',
+      description: 'Employers must provide T4s by end of February. Upload yours to get an accurate tax estimate.',
+      action: { label: 'Upload documents', href: '/profile/documents' },
+      priority: 'high',
+      category: 'Documents'
+    })
+  }
+
+  // General seasonal tips
+  if (currentMonth >= 0 && currentMonth <= 3) {
+    tips.push({
+      id: 'rrsp-deadline',
+      icon: 'zap',
+      title: 'RRSP deadline is March 1',
+      description: 'Contributions made by March 1 can be deducted on your previous year return.',
+      priority: 'high',
+      category: 'Deadlines'
+    })
+  }
+
+  if (currentMonth === 11) {
+    tips.push({
+      id: 'year-end-planning',
+      icon: 'zap',
+      title: 'Year-end tax planning',
+      description: 'December is your last chance for charitable donations, TFSA contributions, and tax-loss harvesting for this year.',
+      action: { label: 'Optimization report', href: '/profile/optimization' },
+      priority: 'high',
+      category: 'Year-End'
+    })
+  }
+
+  // Sort by priority
+  const priorityOrder = { high: 0, medium: 1, low: 2 }
+  return tips.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).slice(0, 8)
+}
+
+// Get document sources and what's needed from each
+function getDocumentsBySource(profile: ProfileData, documents: DocumentData[]): Array<{
+  source: string
+  icon: 'building' | 'landmark' | 'briefcase' | 'home'
+  needed: Array<{ type: string; name: string; have: boolean }>
+}> {
+  const sources: Array<{
+    source: string
+    icon: 'building' | 'landmark' | 'briefcase' | 'home'
+    needed: Array<{ type: string; name: string; have: boolean }>
+  }> = []
+
+  const currentYear = new Date().getFullYear()
+  const relevantDocs = documents.filter(d => d.tax_year === currentYear - 1)
+
+  // Employer documents
+  if (profile.has_employment_income) {
+    const employerDocs = [
+      { type: 'T4', name: 'T4 - Employment Income', have: relevantDocs.some(d => d.document_type.includes('T4') && !d.document_type.includes('T4A')) },
+      { type: 'T2200', name: 'T2200 - Work from Home', have: relevantDocs.some(d => d.document_type.includes('T2200')) },
+    ]
+    sources.push({
+      source: 'Employer',
+      icon: 'building',
+      needed: employerDocs
+    })
+  }
+
+  // Financial institutions
+  if (profile.has_investment_income || profile.rrsp_contribution_room) {
+    const bankDocs = [
+      { type: 'T5', name: 'T5 - Investment Income', have: relevantDocs.some(d => d.document_type.includes('T5') && !d.document_type.includes('T5008')) },
+      { type: 'T3', name: 'T3 - Trust Income', have: relevantDocs.some(d => d.document_type.includes('T3')) },
+      { type: 'T5008', name: 'T5008 - Securities Transactions', have: relevantDocs.some(d => d.document_type.includes('T5008')) },
+      { type: 'RRSP', name: 'RRSP Contribution Receipt', have: relevantDocs.some(d => d.document_type.toLowerCase().includes('rrsp')) },
+    ]
+    sources.push({
+      source: 'Bank / Brokerage',
+      icon: 'landmark',
+      needed: bankDocs.filter(d => d.type === 'RRSP' || profile.has_investment_income)
+    })
+  }
+
+  // Self-employment / Business
+  if (profile.has_self_employment_income) {
+    const bizDocs = [
+      { type: 'Income', name: 'Business Income Records', have: relevantDocs.some(d => d.document_type.toLowerCase().includes('business') || d.document_type.toLowerCase().includes('invoice')) },
+      { type: 'Expenses', name: 'Business Expense Receipts', have: relevantDocs.some(d => d.document_type.toLowerCase().includes('expense') || d.document_type.toLowerCase().includes('receipt')) },
+      { type: 'T4A', name: 'T4A - Contract Income', have: relevantDocs.some(d => d.document_type.includes('T4A')) },
+    ]
+    sources.push({
+      source: 'Self-Employment',
+      icon: 'briefcase',
+      needed: bizDocs
+    })
+  }
+
+  // Rental property
+  if (profile.has_rental_income) {
+    const rentalDocs = [
+      { type: 'Rental', name: 'Rental Income Records', have: relevantDocs.some(d => d.document_type.toLowerCase().includes('rental')) },
+      { type: 'Expenses', name: 'Property Expense Receipts', have: relevantDocs.some(d => d.document_type.toLowerCase().includes('property') || d.document_type.toLowerCase().includes('maintenance')) },
+      { type: 'Mortgage', name: 'Mortgage Interest Statement', have: relevantDocs.some(d => d.document_type.toLowerCase().includes('mortgage')) },
+    ]
+    sources.push({
+      source: 'Rental Property',
+      icon: 'home',
+      needed: rentalDocs
+    })
+  }
+
+  return sources
+}
+
+// Calculate year-over-year comparison from documents
+function calculateYearOverYear(documents: DocumentData[], currentYear: number): {
+  thisYear: { income: number; withheld: number; docCount: number }
+  lastYear: { income: number; withheld: number; docCount: number }
+  incomeChange: number
+  incomeChangePercent: number
+  withheldChange: number
+  hasData: boolean
+} {
+  const thisYearDocs = documents.filter(d => d.tax_year === currentYear - 1)
+  const lastYearDocs = documents.filter(d => d.tax_year === currentYear - 2)
+
+  const thisYear = {
+    income: thisYearDocs.reduce((sum, d) => sum + (d.extracted_data?.income_amount || 0), 0),
+    withheld: thisYearDocs.reduce((sum, d) => sum + (d.extracted_data?.tax_withheld || 0), 0),
+    docCount: thisYearDocs.length
+  }
+
+  const lastYear = {
+    income: lastYearDocs.reduce((sum, d) => sum + (d.extracted_data?.income_amount || 0), 0),
+    withheld: lastYearDocs.reduce((sum, d) => sum + (d.extracted_data?.tax_withheld || 0), 0),
+    docCount: lastYearDocs.length
+  }
+
+  const incomeChange = thisYear.income - lastYear.income
+  const incomeChangePercent = lastYear.income > 0 ? (incomeChange / lastYear.income) * 100 : 0
+  const withheldChange = thisYear.withheld - lastYear.withheld
+
+  return {
+    thisYear,
+    lastYear,
+    incomeChange,
+    incomeChangePercent,
+    withheldChange,
+    hasData: thisYear.income > 0 && lastYear.income > 0
+  }
+}
+
+// Calculate RRSP optimization - how much to contribute to drop a bracket
+function calculateRRSPOptimization(profile: ProfileData): {
+  currentBracket: string
+  currentRate: number
+  nextBracketDown: string
+  amountToNextBracket: number
+  potentialSavings: number
+} | null {
+  if (!profile.annual_income || !profile.rrsp_contribution_room) return null
+
+  const income = profile.annual_income
+  const remaining = profile.rrsp_contribution_room - (profile.rrsp_contributions_ytd || 0)
+  if (remaining <= 0) return null
+
+  // Federal tax brackets for 2024
+  const brackets = [
+    { min: 0, max: 55867, rate: 0.15, name: '15%' },
+    { min: 55867, max: 111733, rate: 0.205, name: '20.5%' },
+    { min: 111733, max: 173205, rate: 0.26, name: '26%' },
+    { min: 173205, max: 246752, rate: 0.29, name: '29%' },
+    { min: 246752, max: Infinity, rate: 0.33, name: '33%' },
+  ]
+
+  // Find current bracket
+  const currentBracketIdx = brackets.findIndex(b => income <= b.max)
+  if (currentBracketIdx <= 0) return null // Already in lowest bracket
+
+  const currentBracket = brackets[currentBracketIdx]
+  const nextBracketDown = brackets[currentBracketIdx - 1]
+  const amountToNextBracket = Math.min(income - nextBracketDown.max, remaining)
+
+  if (amountToNextBracket <= 0) return null
+
+  // Calculate savings from contributing to drop a bracket
+  const savingsRate = currentBracket.rate - nextBracketDown.rate
+  const potentialSavings = Math.round(amountToNextBracket * savingsRate)
+
+  return {
+    currentBracket: currentBracket.name,
+    currentRate: currentBracket.rate * 100,
+    nextBracketDown: nextBracketDown.name,
+    amountToNextBracket,
+    potentialSavings
+  }
 }
 
 // Smart question suggestions based on profile
@@ -510,6 +933,29 @@ export function TaxDashboard() {
     return Math.max(0, daysLeft)
   }, [currentYear, currentDate])
 
+  // Personalized tips feed
+  const personalizedTips = useMemo(() => {
+    if (!profile) return []
+    return getPersonalizedTips(profile, documents)
+  }, [profile, documents])
+
+  // Document sources checklist
+  const documentSources = useMemo(() => {
+    if (!profile) return []
+    return getDocumentsBySource(profile, documents)
+  }, [profile, documents])
+
+  // RRSP optimization calculation
+  const rrspOptimization = useMemo(() => {
+    if (!profile) return null
+    return calculateRRSPOptimization(profile)
+  }, [profile])
+
+  // Year-over-year comparison
+  const yearOverYear = useMemo(() => {
+    return calculateYearOverYear(documents, currentYear)
+  }, [documents, currentYear])
+
   // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-CA', {
@@ -552,6 +998,38 @@ export function TaxDashboard() {
           <Button variant="outline" onClick={() => router.push('/profile')} className="gap-2">
             Edit Profile
           </Button>
+        </div>
+
+        {/* Quick Actions Bar */}
+        <div className="mb-6 flex flex-wrap gap-3">
+          <Link
+            href="/profile/documents"
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors shadow-sm"
+          >
+            <Upload className="h-4 w-4" />
+            Upload Document
+          </Link>
+          <Link
+            href="/chat"
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors"
+          >
+            <MessageSquare className="h-4 w-4 text-teal-600" />
+            Ask a Question
+          </Link>
+          <Link
+            href="/tools"
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors"
+          >
+            <Calculator className="h-4 w-4 text-blue-600" />
+            Run Calculator
+          </Link>
+          <Link
+            href="/profile/optimization"
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors"
+          >
+            <Zap className="h-4 w-4 text-amber-500" />
+            View Tax Tips
+          </Link>
         </div>
 
         {/* Alert Banner for urgent deadlines */}
@@ -698,6 +1176,188 @@ export function TaxDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Tax Summary Card - Visual Breakdown */}
+        {taxEstimates && profile?.annual_income && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-teal-600" />
+                {currentYear} Tax Summary
+              </CardTitle>
+              <CardDescription>Based on your profile: {formatCurrency(profile.annual_income)} income in {profile.province?.toUpperCase() || 'ON'}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Gross Income */}
+                <div className="text-center p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">Gross Income</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(profile.annual_income)}</p>
+                </div>
+
+                {/* Estimated Tax */}
+                <div className="text-center p-4 bg-red-50 dark:bg-red-950/30 rounded-lg">
+                  <p className="text-xs text-red-600 uppercase tracking-wide">Total Tax</p>
+                  <p className="text-xl font-bold text-red-600">{formatCurrency(taxEstimates.totalTax)}</p>
+                  <p className="text-xs text-slate-500">{taxEstimates.effectiveRate.toFixed(1)}% effective</p>
+                </div>
+
+                {/* Take Home */}
+                <div className="text-center p-4 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                  <p className="text-xs text-green-600 uppercase tracking-wide">Take Home</p>
+                  <p className="text-xl font-bold text-green-600">{formatCurrency(profile.annual_income - taxEstimates.totalTax)}</p>
+                  <p className="text-xs text-slate-500">{formatCurrency((profile.annual_income - taxEstimates.totalTax) / 12)}/month</p>
+                </div>
+
+                {/* Marginal Rate */}
+                <div className="text-center p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg">
+                  <p className="text-xs text-purple-600 uppercase tracking-wide">Marginal Rate</p>
+                  <p className="text-xl font-bold text-purple-600">{taxEstimates.marginalRate.toFixed(1)}%</p>
+                  <p className="text-xs text-slate-500">Next dollar taxed</p>
+                </div>
+              </div>
+
+              {/* Visual Tax Breakdown Bar */}
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Where your money goes:</p>
+                <div className="h-6 rounded-full overflow-hidden flex">
+                  <div
+                    className="bg-green-500 flex items-center justify-center text-xs text-white font-medium"
+                    style={{ width: `${((profile.annual_income - taxEstimates.totalTax) / profile.annual_income) * 100}%` }}
+                  >
+                    Take Home
+                  </div>
+                  <div
+                    className="bg-red-400 flex items-center justify-center text-xs text-white font-medium"
+                    style={{ width: `${(taxEstimates.totalTax / profile.annual_income) * 100}%` }}
+                  >
+                    Tax
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Year-over-Year Comparison */}
+        {yearOverYear.hasData && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-blue-500" />
+                Year-over-Year Comparison
+              </CardTitle>
+              <CardDescription>Based on uploaded tax documents</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Income Comparison */}
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-500">Total Income</span>
+                    <span className={`flex items-center gap-1 text-sm font-medium ${yearOverYear.incomeChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {yearOverYear.incomeChange >= 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+                      {yearOverYear.incomeChangePercent >= 0 ? '+' : ''}{yearOverYear.incomeChangePercent.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div>
+                      <p className="text-xs text-slate-400">{currentYear - 2}</p>
+                      <p className="font-medium">{formatCurrency(yearOverYear.lastYear.income)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-slate-400">{currentYear - 1}</p>
+                      <p className="font-bold text-lg">{formatCurrency(yearOverYear.thisYear.income)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tax Withheld Comparison */}
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-500">Tax Withheld</span>
+                    <span className={`flex items-center gap-1 text-sm font-medium ${yearOverYear.withheldChange >= 0 ? 'text-amber-600' : 'text-green-600'}`}>
+                      {yearOverYear.withheldChange >= 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+                      {yearOverYear.lastYear.withheld > 0 ? `${yearOverYear.withheldChange >= 0 ? '+' : ''}${((yearOverYear.withheldChange / yearOverYear.lastYear.withheld) * 100).toFixed(1)}%` : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div>
+                      <p className="text-xs text-slate-400">{currentYear - 2}</p>
+                      <p className="font-medium">{formatCurrency(yearOverYear.lastYear.withheld)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-slate-400">{currentYear - 1}</p>
+                      <p className="font-bold text-lg">{formatCurrency(yearOverYear.thisYear.withheld)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Documents Uploaded */}
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-500">Documents Uploaded</span>
+                    <span className="text-sm text-slate-400">Tax Year</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div>
+                      <p className="text-xs text-slate-400">{currentYear - 2}</p>
+                      <p className="font-medium">{yearOverYear.lastYear.docCount} docs</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-slate-400">{currentYear - 1}</p>
+                      <p className="font-bold text-lg">{yearOverYear.thisYear.docCount} docs</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Change Summary */}
+              <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg text-sm text-center">
+                {yearOverYear.incomeChange > 0 ? (
+                  <span>Your income increased by <span className="font-bold text-green-600">{formatCurrency(yearOverYear.incomeChange)}</span> ({yearOverYear.incomeChangePercent.toFixed(1)}%) from {currentYear - 2} to {currentYear - 1}</span>
+                ) : yearOverYear.incomeChange < 0 ? (
+                  <span>Your income decreased by <span className="font-bold text-red-600">{formatCurrency(Math.abs(yearOverYear.incomeChange))}</span> ({Math.abs(yearOverYear.incomeChangePercent).toFixed(1)}%) from {currentYear - 2} to {currentYear - 1}</span>
+                ) : (
+                  <span>Your income remained stable from {currentYear - 2} to {currentYear - 1}</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* RRSP Optimizer Widget */}
+        {rrspOptimization && (
+          <Card className="mb-6 border-emerald-200 dark:border-emerald-800 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-emerald-100 dark:bg-emerald-900 rounded-full">
+                    <TrendingDown className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
+                      Drop to the {rrspOptimization.nextBracketDown} tax bracket
+                      <ArrowDownRight className="h-4 w-4" />
+                    </p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      Contribute <span className="font-bold text-emerald-600">{formatCurrency(rrspOptimization.amountToNextBracket)}</span> to your RRSP
+                      to save <span className="font-bold text-emerald-600">{formatCurrency(rrspOptimization.potentialSavings)}</span> in taxes
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Currently in the {rrspOptimization.currentBracket} bracket ({rrspOptimization.currentRate.toFixed(0)}% federal)
+                    </p>
+                  </div>
+                </div>
+                <Link href="/tools/rrsp-calculator">
+                  <Button variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50">
+                    Calculate <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Refund/Owing Estimator */}
         {taxEstimates?.hasDocumentData && (
@@ -890,6 +1550,132 @@ export function TaxDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Document Checklist by Source */}
+        {documentSources.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-500" />
+                Documents by Source
+              </CardTitle>
+              <CardDescription>Track what you need from each source for {currentYear - 1} taxes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {documentSources.map((source, idx) => {
+                  const IconComponent = source.icon === 'building' ? Building2 :
+                                       source.icon === 'landmark' ? Landmark :
+                                       source.icon === 'briefcase' ? Briefcase : Home
+                  const haveCount = source.needed.filter(d => d.have).length
+                  const totalCount = source.needed.length
+                  return (
+                    <div key={idx} className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                          <IconComponent className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium">{source.source}</p>
+                          <p className="text-xs text-slate-500">{haveCount}/{totalCount} documents</p>
+                        </div>
+                        <div className={`text-sm font-medium ${haveCount === totalCount ? 'text-green-600' : 'text-amber-600'}`}>
+                          {Math.round((haveCount / totalCount) * 100)}%
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {source.needed.map((doc, docIdx) => (
+                          <div key={docIdx} className="flex items-center gap-2 text-sm">
+                            {doc.have ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Circle className="h-4 w-4 text-slate-300" />
+                            )}
+                            <span className={doc.have ? 'text-slate-500 line-through' : 'text-slate-700 dark:text-slate-300'}>
+                              {doc.name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <Link href="/profile/documents" className="flex items-center justify-center gap-2 p-2 mt-4 text-sm text-teal-600 hover:underline">
+                Manage all documents <ChevronRight className="h-4 w-4" />
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Personalized Tips Feed - Facebook style */}
+        {personalizedTips.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-amber-500" />
+                Your Tax Tips
+              </CardTitle>
+              <CardDescription>Personalized recommendations based on your profile</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {personalizedTips.map((tip) => {
+                  const IconComponent = tip.icon === 'gift' ? Gift :
+                                       tip.icon === 'heart' ? Heart :
+                                       tip.icon === 'graduation' ? GraduationCap :
+                                       tip.icon === 'home' ? Home :
+                                       tip.icon === 'briefcase' ? Briefcase :
+                                       tip.icon === 'trending' ? TrendingUp :
+                                       tip.icon === 'piggy' ? PiggyBank : Zap
+                  return (
+                    <div
+                      key={tip.id}
+                      className={`p-4 rounded-lg border ${
+                        tip.priority === 'high'
+                          ? 'border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800'
+                          : 'border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg ${
+                          tip.priority === 'high'
+                            ? 'bg-amber-100 dark:bg-amber-900/50'
+                            : 'bg-slate-100 dark:bg-slate-800'
+                        }`}>
+                          <IconComponent className={`h-5 w-5 ${
+                            tip.priority === 'high' ? 'text-amber-600' : 'text-slate-600'
+                          }`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">{tip.title}</p>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              tip.priority === 'high'
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
+                                : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                            }`}>
+                              {tip.category}
+                            </span>
+                          </div>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{tip.description}</p>
+                          {tip.action && (
+                            <Link
+                              href={tip.action.href}
+                              className="inline-flex items-center gap-1 mt-2 text-sm text-teal-600 hover:underline"
+                            >
+                              {tip.action.label} <ChevronRight className="h-3 w-3" />
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Conversation Memory */}
         {conversations.length > 0 && (
