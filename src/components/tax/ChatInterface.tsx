@@ -61,6 +61,8 @@ export function ChatInterface({
     ai_summary: string | null
     extracted_data: Record<string, any>
   }>>([])
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false)
+  const [documentsLoaded, setDocumentsLoaded] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
@@ -78,15 +80,23 @@ export function ChatInterface({
     setCurrentConversationId(initialConversationId)
   }, [initialMessages, initialConversationId])
 
-  // Load user's saved documents for context
+  // Load user's saved documents for context - MUST complete before first question
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated) {
+      setDocumentsLoaded(true) // No documents to load if not authenticated
+      return
+    }
 
     const loadSavedDocuments = async () => {
+      setIsLoadingDocuments(true)
       try {
         const { supabase } = await import('@/lib/supabase')
         const { data: { session } } = await supabase!.auth.getSession()
-        if (!session?.access_token) return
+        if (!session?.access_token) {
+          setDocumentsLoaded(true)
+          setIsLoadingDocuments(false)
+          return
+        }
 
         const res = await fetch('/api/documents', {
           headers: {
@@ -100,6 +110,9 @@ export function ChatInterface({
         }
       } catch (err) {
         console.error('Failed to load saved documents:', err)
+      } finally {
+        setDocumentsLoaded(true)
+        setIsLoadingDocuments(false)
       }
     }
 
@@ -191,7 +204,22 @@ export function ChatInterface({
   }
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+    console.log('[ChatInterface] handleSend called', {
+      input: input.trim().slice(0, 50),
+      isLoading,
+      isAuthenticated,
+      documentsLoaded,
+      savedDocumentsCount: savedDocuments.length
+    })
+
+    if (!input.trim() || isLoading || (isAuthenticated && !documentsLoaded)) {
+      console.log('[ChatInterface] handleSend blocked', {
+        noInput: !input.trim(),
+        isLoading,
+        waitingForDocs: isAuthenticated && !documentsLoaded
+      })
+      return
+    }
 
     // Check if user is confirming document save
     const isConfirmation = uploadedFile && fileAnalysis &&
@@ -309,9 +337,16 @@ export function ChatInterface({
       }
     }
 
+    console.log('[ChatInterface] Calling askTaxAssistantStream', {
+      question: userMessage.content.slice(0, 50),
+      historyLength: conversationHistory.length,
+      hasDocContext: !!docContext
+    })
+
     try {
       await askTaxAssistantStream(userMessage.content, conversationHistory, {
         onStatus: (status) => {
+          console.log('[ChatInterface] onStatus:', status)
           setCurrentStatus(status)
         },
         onChunk: (chunk) => {
@@ -365,13 +400,15 @@ export function ChatInterface({
           streamingMetadataRef.current = {}
         },
         onError: (error) => {
+          console.error('[ChatInterface] onError callback:', error)
           toast.error(error)
           setIsLoading(false)
           setCurrentStatus(null)
         },
       }, undefined, undefined, docContext)
+      console.log('[ChatInterface] askTaxAssistantStream completed successfully')
     } catch (error) {
-      console.error('Failed to get response', error)
+      console.error('[ChatInterface] askTaxAssistantStream THREW error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to get response. Please try again.')
       setIsLoading(false)
       setCurrentStatus(null)
@@ -773,13 +810,17 @@ export function ChatInterface({
                 <Button
                   size="icon"
                   onClick={handleSend}
-                  disabled={!input.trim() || isLoading}
+                  disabled={!input.trim() || isLoading || (isAuthenticated && !documentsLoaded)}
                   className={cn(
                     'absolute right-1 bottom-1 h-10 w-10 rounded-xl transition-all duration-200 btn-premium',
-                    input.trim() ? 'opacity-100 scale-100' : 'opacity-50 scale-90'
+                    input.trim() && documentsLoaded ? 'opacity-100 scale-100' : 'opacity-50 scale-90'
                   )}
                 >
-                  <Send className="h-4 w-4" />
+                  {isLoadingDocuments ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>

@@ -19,7 +19,6 @@ import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, Pig
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile } from '@/hooks/useProfile'
-import { TaxDeadlineChecklist } from '@/components/TaxDeadlineChecklist'
 
 interface ProfileData {
   // Basic info
