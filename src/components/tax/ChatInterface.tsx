@@ -5,7 +5,9 @@ import { Message, Citation, UsageInfo, ConversationMessage, StreamStatus } from 
 import { askTaxAssistantStream, DocumentContext } from '@/lib/taxApi'
 import { createConversation, addMessage } from '@/lib/conversationApi'
 import { MessageBubble } from './MessageBubble'
-import { Send, Eraser, Sparkles, ArrowUp, Bot, Search, Brain, FileText, Database, Zap, Leaf, Paperclip, X, Image, Check, Loader2 } from 'lucide-react'
+import { CalculatorSuggestion } from '@/components/CalculatorSuggestion'
+import { detectCalculators, shouldSuggestCalculator } from '@/lib/calculatorDetection'
+import { Send, Eraser, Sparkles, ArrowUp, Bot, Search, Brain, FileText, Database, Zap, Leaf, Paperclip, X, Image, Check, Loader2, Calculator } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -63,6 +65,12 @@ export function ChatInterface({
   }>>([])
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false)
   const [documentsLoaded, setDocumentsLoaded] = useState(false)
+  const [calculatorSuggestions, setCalculatorSuggestions] = useState<Array<{
+    slug: string
+    name: string
+    description: string
+  }>>([])
+  const [lastCalculatorQuery, setLastCalculatorQuery] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
@@ -250,6 +258,17 @@ export function ChatInterface({
     setInput('')
     setIsLoading(true)
     setStreamingContent('')
+
+    // Detect relevant calculators for this query
+    if (shouldSuggestCalculator(userMessage.content) && userMessage.content !== lastCalculatorQuery) {
+      const suggestions = detectCalculators(userMessage.content)
+      if (suggestions.length > 0) {
+        setCalculatorSuggestions(suggestions)
+        setLastCalculatorQuery(userMessage.content)
+      } else {
+        setCalculatorSuggestions([])
+      }
+    }
     streamingContentRef.current = ''
     streamingCitationsRef.current = []
     streamingMetadataRef.current = {}
@@ -580,7 +599,25 @@ export function ChatInterface({
                   // Show ad after every 3rd assistant response
                   const assistantMessagesBefore = messages.slice(0, index + 1).filter(m => m.role === 'assistant').length
                   const showAd = msg.role === 'assistant' && assistantMessagesBefore % 3 === 0
-                  return <MessageBubble key={msg.id} message={msg} showAd={showAd} />
+
+                  // Show calculator suggestion after user message if we have suggestions
+                  const showCalculatorSuggestion = msg.role === 'user' &&
+                    calculatorSuggestions.length > 0 &&
+                    msg.content === lastCalculatorQuery
+
+                  return (
+                    <div key={msg.id}>
+                      <MessageBubble message={msg} showAd={showAd} />
+                      {showCalculatorSuggestion && (
+                        <div className="max-w-3xl mx-auto mb-4 ml-13">
+                          <CalculatorSuggestion
+                            calculators={calculatorSuggestions}
+                            onDismiss={() => setCalculatorSuggestions([])}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )
                 })}
 
                 <AnimatePresence>

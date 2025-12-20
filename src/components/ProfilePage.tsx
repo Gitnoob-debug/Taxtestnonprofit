@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight, Calendar } from 'lucide-react'
+import { ArrowLeft, Save, User, DollarSign, Loader2, Building2, Home, Users, PiggyBank, Sparkles, Bell, FileText, ChevronRight, Calendar, TrendingUp, GitCompare, LineChart, Heart, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -401,6 +401,81 @@ export function ProfilePage() {
         <Card className="mb-6 border-emerald-200">
           <CardContent className="p-4 space-y-3">
             <Link
+              href="/profile/dashboard"
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-teal-100 to-emerald-100 hover:from-teal-200 hover:to-emerald-200 transition-colors group border-2 border-teal-300"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-teal-500 rounded-lg">
+                  <LayoutDashboard className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900">My Tax Dashboard</p>
+                  <p className="text-sm text-slate-500">Your personalized tax command center</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-teal-500 group-hover:text-teal-600 transition-colors" />
+            </Link>
+            <Link
+              href="/profile/optimization"
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900">Tax Optimization Report</p>
+                  <p className="text-sm text-slate-500">Personalized strategies to save on taxes</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-amber-600 transition-colors" />
+            </Link>
+            <Link
+              href="/profile/scenarios"
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <GitCompare className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900">What-If Scenarios</p>
+                  <p className="text-sm text-slate-500">Compare different tax strategies side-by-side</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-purple-600 transition-colors" />
+            </Link>
+            <Link
+              href="/profile/planner"
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <LineChart className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900">Multi-Year Planner</p>
+                  <p className="text-sm text-slate-500">Project taxes & retirement over 5-25 years</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+            </Link>
+            <Link
+              href="/profile/family"
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-pink-50 to-rose-50 hover:from-pink-100 hover:to-rose-100 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-pink-100 rounded-lg">
+                  <Heart className="h-5 w-5 text-pink-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900">Family Tax Optimizer</p>
+                  <p className="text-sm text-slate-500">Income splitting & family expense strategies</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-pink-600 transition-colors" />
+            </Link>
+            <Link
               href="/profile/documents"
               className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 transition-colors group"
             >
@@ -409,7 +484,7 @@ export function ProfilePage() {
                   <FileText className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-slate-900">My Documents</p>
+                  <p className="font-medium text-slate-900">Document Dashboard</p>
                   <p className="text-sm text-slate-500">View and manage your uploaded tax documents</p>
                 </div>
               </div>

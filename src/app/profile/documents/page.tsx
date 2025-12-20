@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import { MyDocumentsPage } from '@/components/MyDocumentsPage'
 
 export const metadata: Metadata = {
-  title: 'My Documents | Tax Radar',
-  description: 'View and manage your uploaded tax documents.',
+  title: 'Document Dashboard | Tax Radar',
+  description: 'View your tax documents at a glance. Track income, deductions, and missing documents for filing.',
 }
 
 export default function DocumentsPage() {

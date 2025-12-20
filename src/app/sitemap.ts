@@ -30,6 +30,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/profile`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/about`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
@@ -53,13 +59,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly' as const,
       priority: 0.4,
     },
-    {
-      url: `${baseUrl}/sitemap`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.3,
-    },
   ]
+
+  // Profile feature pages (new wowza features!)
+  const profilePages = [
+    'dashboard',      // My Tax Dashboard - the one-stop shop!
+    'optimization',   // Tax Optimization Report
+    'scenarios',      // What-If Scenario Planner
+    'planner',        // Multi-Year Tax Planner
+    'family',         // Family Tax Optimizer
+    'documents',      // Document Dashboard
+    'checklist',      // Tax Season Checklist
+  ].map((slug) => ({
+    url: `${baseUrl}/profile/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.75,
+  }))
 
   // Calculator/Tools pages
   const calculatorPages = [
@@ -86,7 +102,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }))
 
-  // Academy/Learning pages (comprehensive tax guides)
+  // Academy/Learning pages - only include pages that actually exist
   const academyPages = [
     // Tax Filing & CRA
     'how-to-file-taxes-canada',
@@ -201,5 +217,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }))
 
-  return [...mainPages, ...calculatorPages, ...academyPages]
+  return [...mainPages, ...profilePages, ...calculatorPages, ...academyPages]
 }

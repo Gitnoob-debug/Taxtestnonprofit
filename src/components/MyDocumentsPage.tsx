@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -36,8 +36,16 @@ import {
   ChevronDown,
   ChevronUp,
   DollarSign,
+  TrendingUp,
+  Receipt,
+  Briefcase,
+  PiggyBank,
+  AlertTriangle,
+  CheckCircle2,
+  CircleDashed,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useProfile } from '@/hooks/useProfile'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -58,6 +66,26 @@ interface Document {
   updated_at: string
 }
 
+// Summary stats calculated from documents
+interface DocumentSummary {
+  totalIncome: number
+  employmentIncome: number
+  investmentIncome: number
+  otherIncome: number
+  totalTaxDeducted: number
+  rrspContributions: number
+  documentCount: number
+  confirmedCount: number
+}
+
+// Missing document detection
+interface MissingDocument {
+  type: string
+  label: string
+  reason: string
+  priority: 'high' | 'medium' | 'low'
+}
+
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   T4: 'T4 - Employment Income',
   'T4A': 'T4A - Pension/Other Income',
@@ -74,21 +102,197 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
 }
 
 const TAX_YEARS = [2025, 2024, 2023, 2022, 2021, 2020]
+const CURRENT_TAX_YEAR = 2024 // Tax year we're filing for
+
+// Helper to extract numeric value from extracted data
+function extractNumericValue(data: Record<string, any>, keys: string[]): number {
+  for (const key of keys) {
+    const lowerKey = key.toLowerCase()
+    for (const [k, v] of Object.entries(data)) {
+      if (k.toLowerCase().includes(lowerKey)) {
+        const num = typeof v === 'number' ? v : parseFloat(String(v).replace(/[,$]/g, ''))
+        if (!isNaN(num)) return num
+      }
+    }
+  }
+  return 0
+}
+
+// Calculate summary from documents
+function calculateSummary(docs: Document[], taxYear: number): DocumentSummary {
+  const yearDocs = docs.filter(d => d.tax_year === taxYear)
+
+  let employmentIncome = 0
+  let investmentIncome = 0
+  let otherIncome = 0
+  let totalTaxDeducted = 0
+  let rrspContributions = 0
+
+  for (const doc of yearDocs) {
+    const data = doc.extracted_data || {}
+
+    switch (doc.document_type) {
+      case 'T4':
+        employmentIncome += extractNumericValue(data, ['employment_income', 'box14', 'income', 'total_income'])
+        totalTaxDeducted += extractNumericValue(data, ['income_tax_deducted', 'box22', 'tax_deducted', 'federal_tax'])
+        break
+      case 'T5':
+      case 'T3':
+        investmentIncome += extractNumericValue(data, ['interest', 'dividends', 'capital_gains', 'income', 'total'])
+        break
+      case 'T4A':
+      case 'T4A(OAS)':
+      case 'T4A(P)':
+      case 'T4E':
+        otherIncome += extractNumericValue(data, ['income', 'benefits', 'pension', 'total'])
+        totalTaxDeducted += extractNumericValue(data, ['tax_deducted', 'income_tax'])
+        break
+      case 'RRSP':
+        rrspContributions += extractNumericValue(data, ['contribution', 'amount', 'total'])
+        break
+    }
+  }
+
+  return {
+    totalIncome: employmentIncome + investmentIncome + otherIncome,
+    employmentIncome,
+    investmentIncome,
+    otherIncome,
+    totalTaxDeducted,
+    rrspContributions,
+    documentCount: yearDocs.length,
+    confirmedCount: yearDocs.filter(d => d.user_confirmed).length,
+  }
+}
+
+// Detect missing documents based on profile
+function detectMissingDocuments(
+  docs: Document[],
+  taxYear: number,
+  profile: any
+): MissingDocument[] {
+  const missing: MissingDocument[] = []
+  const yearDocs = docs.filter(d => d.tax_year === taxYear)
+  const docTypes = new Set(yearDocs.map(d => d.document_type))
+
+  // Check for T4 if user has employment income
+  if (profile?.has_employment_income && !docTypes.has('T4')) {
+    missing.push({
+      type: 'T4',
+      label: 'T4 - Employment Income',
+      reason: 'Your profile indicates you have employment income',
+      priority: 'high',
+    })
+  }
+
+  // Check for T5 if user has investment income
+  if (profile?.has_investment_income && !docTypes.has('T5') && !docTypes.has('T3')) {
+    missing.push({
+      type: 'T5',
+      label: 'T5 - Investment Income',
+      reason: 'Your profile indicates you have investment income',
+      priority: 'medium',
+    })
+  }
+
+  // Check for RRSP receipt if user has contributions
+  if (profile?.has_rrsp_contributions && !docTypes.has('RRSP')) {
+    missing.push({
+      type: 'RRSP',
+      label: 'RRSP Contribution Receipt',
+      reason: 'Your profile indicates you made RRSP contributions',
+      priority: 'high',
+    })
+  }
+
+  // Check for T4A if user has pension income
+  if (profile?.has_pension_income && !docTypes.has('T4A') && !docTypes.has('T4A(P)') && !docTypes.has('T4A(OAS)')) {
+    missing.push({
+      type: 'T4A',
+      label: 'T4A - Pension Income',
+      reason: 'Your profile indicates you have pension income',
+      priority: 'high',
+    })
+  }
+
+  // Check for T4E if user has EI benefits
+  if (profile?.has_ei_benefits && !docTypes.has('T4E')) {
+    missing.push({
+      type: 'T4E',
+      label: 'T4E - Employment Insurance',
+      reason: 'Your profile indicates you received EI benefits',
+      priority: 'high',
+    })
+  }
+
+  // Check for T2202 if user has tuition credits
+  if (profile?.has_tuition_credits && !docTypes.has('T2202')) {
+    missing.push({
+      type: 'T2202',
+      label: 'T2202 - Tuition',
+      reason: 'Your profile indicates you have tuition credits',
+      priority: 'medium',
+    })
+  }
+
+  // Check for donation receipts if user has charitable donations
+  if (profile?.has_charitable_donations && !yearDocs.some(d =>
+    d.document_type === 'Receipt' &&
+    (d.ai_summary?.toLowerCase().includes('donation') || d.issuer_name?.toLowerCase().includes('charit'))
+  )) {
+    missing.push({
+      type: 'Receipt',
+      label: 'Charitable Donation Receipts',
+      reason: 'Your profile indicates you made charitable donations',
+      priority: 'medium',
+    })
+  }
+
+  // Check for medical expense receipts
+  if (profile?.has_medical_expenses && !yearDocs.some(d =>
+    d.document_type === 'Receipt' &&
+    d.ai_summary?.toLowerCase().includes('medical')
+  )) {
+    missing.push({
+      type: 'Receipt',
+      label: 'Medical Expense Receipts',
+      reason: 'Your profile indicates you have medical expenses',
+      priority: 'low',
+    })
+  }
+
+  return missing
+}
 
 export function MyDocumentsPage() {
   const router = useRouter()
   const { user, loading: authLoading, getToken } = useAuth()
+  const { profile, loading: profileLoading } = useProfile()
   const [documents, setDocuments] = useState<Document[]>([])
   const [documentsByYear, setDocumentsByYear] = useState<Record<number, Document[]>>({})
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedYear, setSelectedYear] = useState<string>('all')
+  const [selectedYear, setSelectedYear] = useState<string>(CURRENT_TAX_YEAR.toString())
   const [selectedType, setSelectedType] = useState<string>('all')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [expandedDocId, setExpandedDocId] = useState<string | null>(null)
+  const [showDashboard, setShowDashboard] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Calculate summary and missing docs for the selected year
+  const selectedTaxYear = selectedYear === 'all' ? CURRENT_TAX_YEAR : parseInt(selectedYear)
+  const summary = useMemo(() => calculateSummary(documents, selectedTaxYear), [documents, selectedTaxYear])
+  const missingDocs = useMemo(() => detectMissingDocuments(documents, selectedTaxYear, profile), [documents, selectedTaxYear, profile])
+
+  // Calculate completeness score
+  const completenessScore = useMemo(() => {
+    if (!profile) return 0
+    const expectedDocs = missingDocs.length + summary.documentCount
+    if (expectedDocs === 0) return 100
+    return Math.round((summary.documentCount / expectedDocs) * 100)
+  }, [missingDocs, summary, profile])
 
   useEffect(() => {
     if (authLoading) return
@@ -314,11 +518,255 @@ export function MyDocumentsPage() {
 
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">My Documents</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Document Dashboard</h1>
           <p className="text-slate-500">
-            View and manage your uploaded tax documents. All documents are securely stored and analyzed by AI.
+            Your tax documents at a glance. Upload, organize, and track everything you need for filing.
           </p>
         </div>
+
+        {/* Tax Year Summary Dashboard */}
+        {documents.length > 0 && showDashboard && (
+          <div className="mb-8 space-y-4">
+            {/* Completeness Score & Summary Header */}
+            <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-1">
+                      Tax Year {selectedTaxYear} Summary
+                    </h2>
+                    <p className="text-sm text-slate-600">
+                      {summary.documentCount} document{summary.documentCount !== 1 ? 's' : ''} uploaded
+                      {summary.confirmedCount > 0 && `, ${summary.confirmedCount} confirmed`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {/* Completeness Score Circle */}
+                    <div className="relative w-16 h-16">
+                      <svg className="w-16 h-16 transform -rotate-90">
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          className="text-slate-200"
+                        />
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          strokeDasharray={`${(completenessScore / 100) * 176} 176`}
+                          className={cn(
+                            completenessScore >= 80 ? 'text-emerald-500' :
+                            completenessScore >= 50 ? 'text-amber-500' : 'text-red-500'
+                          )}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-sm font-bold text-slate-900">{completenessScore}%</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-slate-700">Document Completeness</p>
+                      <p className="text-xs text-slate-500">
+                        {missingDocs.length === 0 ? 'All documents uploaded!' : `${missingDocs.length} missing`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Income Summary Cards */}
+            {summary.totalIncome > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-100 rounded-lg">
+                        <DollarSign className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Total Income</p>
+                        <p className="text-lg font-bold text-slate-900">
+                          {summary.totalIncome.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Briefcase className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Employment</p>
+                        <p className="text-lg font-bold text-slate-900">
+                          {summary.employmentIncome.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <TrendingUp className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Investments</p>
+                        <p className="text-lg font-bold text-slate-900">
+                          {summary.investmentIncome.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-red-100 rounded-lg">
+                        <Receipt className="h-5 w-5 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Tax Deducted</p>
+                        <p className="text-lg font-bold text-slate-900">
+                          {summary.totalTaxDeducted.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* RRSP Contributions if any */}
+            {summary.rrspContributions > 0 && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <PiggyBank className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-blue-700">RRSP Contributions</p>
+                      <p className="text-lg font-bold text-blue-900">
+                        {summary.rrspContributions.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Missing Documents Alert */}
+            {missingDocs.length > 0 && (
+              <Card className="border-amber-200 bg-amber-50">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-amber-900 mb-2">Missing Documents</h3>
+                      <p className="text-sm text-amber-700 mb-3">
+                        Based on your profile, you may be missing these documents for {selectedTaxYear}:
+                      </p>
+                      <div className="space-y-2">
+                        {missingDocs.map((doc, idx) => (
+                          <div
+                            key={idx}
+                            className={cn(
+                              "flex items-center justify-between p-2 rounded-lg",
+                              doc.priority === 'high' ? 'bg-red-100' :
+                              doc.priority === 'medium' ? 'bg-amber-100' : 'bg-yellow-50'
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <CircleDashed className={cn(
+                                "h-4 w-4",
+                                doc.priority === 'high' ? 'text-red-600' :
+                                doc.priority === 'medium' ? 'text-amber-600' : 'text-yellow-600'
+                              )} />
+                              <div>
+                                <p className="text-sm font-medium text-slate-900">{doc.label}</p>
+                                <p className="text-xs text-slate-600">{doc.reason}</p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="shrink-0 text-xs"
+                            >
+                              <Upload className="h-3 w-3 mr-1" />
+                              Upload
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* All docs present */}
+            {missingDocs.length === 0 && summary.documentCount > 0 && (
+              <Card className="border-emerald-200 bg-emerald-50">
+                <CardContent className="py-4">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                    <div>
+                      <p className="font-medium text-emerald-900">All expected documents uploaded!</p>
+                      <p className="text-sm text-emerald-700">
+                        Your document collection for {selectedTaxYear} appears complete based on your profile.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Collapse Dashboard Button */}
+            <div className="flex justify-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDashboard(false)}
+                className="text-slate-500"
+              >
+                <ChevronUp className="h-4 w-4 mr-1" />
+                Hide Dashboard
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Show Dashboard Button (when collapsed) */}
+        {documents.length > 0 && !showDashboard && (
+          <div className="mb-6 flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDashboard(true)}
+              className="text-slate-600"
+            >
+              <ChevronDown className="h-4 w-4 mr-1" />
+              Show Dashboard
+            </Button>
+          </div>
+        )}
 
         {/* Upload & Filters */}
         <Card className="mb-6">
@@ -570,41 +1018,6 @@ export function MyDocumentsPage() {
           </div>
         )}
 
-        {/* Stats */}
-        {documents.length > 0 && (
-          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-slate-900">{documents.length}</p>
-                <p className="text-sm text-slate-500">Total Documents</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-green-600">
-                  {documents.filter((d) => d.user_confirmed).length}
-                </p>
-                <p className="text-sm text-slate-500">Confirmed</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-amber-600">
-                  {documents.filter((d) => !d.user_confirmed).length}
-                </p>
-                <p className="text-sm text-slate-500">Pending Review</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-slate-900">
-                  {Object.keys(documentsByYear).length}
-                </p>
-                <p className="text-sm text-slate-500">Tax Years</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
 
       {/* Delete Confirmation Dialog */}

@@ -15,7 +15,8 @@
       "Bash(paste:*)",
       "Bash(for f in command pagination carousel calendar context-menu menubar navigation-menu)",
       "Bash(do echo -n '$f: ')",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(find:*)"
     ]
   }
 }
