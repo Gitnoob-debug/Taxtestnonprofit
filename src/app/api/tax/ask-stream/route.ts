@@ -132,7 +132,10 @@ function getDisclaimer(confidence: 'high' | 'medium' | 'low'): string {
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
+  console.log('[TAX-STREAM] Auth header present:', !!authHeader)
+
   const userProfile = await getUserProfileFromToken(authHeader)
+  console.log('[TAX-STREAM] User profile:', userProfile ? JSON.stringify(userProfile) : 'null')
 
   try {
     const body = await request.json()
