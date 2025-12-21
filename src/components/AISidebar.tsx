@@ -213,9 +213,6 @@ export function AISidebar() {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Don't render for non-authenticated users
-  if (!user) return null
-
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -333,6 +330,9 @@ export function AISidebar() {
       handleSend()
     }
   }
+
+  // Don't render for non-authenticated users
+  if (!user) return null
 
   // Collapsed state - just show toggle button
   if (!isOpen) {
