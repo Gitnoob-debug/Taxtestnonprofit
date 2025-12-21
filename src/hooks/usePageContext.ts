@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSidebar, PageContext } from '@/contexts/SidebarContext'
 
@@ -50,10 +50,10 @@ export function usePageContext() {
         timestamp: Date.now()
       })
     }
-  }, [pathname, setPageContext, pageContext?.page])
+  }, [pathname, setPageContext, pageContext?.page, pageContext?.data])
 
-  // Helper function to update page context with data
-  const updatePageData = (data: Partial<PageContext['data']>) => {
+  // Helper function to update page context with data - memoized to prevent infinite loops
+  const updatePageData = useCallback((data: Partial<PageContext['data']>) => {
     setPageContext({
       page: pathname || '',
       pageName: PAGE_NAMES[pathname || ''] || 'Unknown Page',
@@ -63,7 +63,7 @@ export function usePageContext() {
       },
       timestamp: Date.now()
     })
-  }
+  }, [pathname, setPageContext, pageContext?.data])
 
   return {
     pageContext,
