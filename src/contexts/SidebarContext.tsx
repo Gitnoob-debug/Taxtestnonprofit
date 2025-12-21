@@ -1,7 +1,6 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { useAuth } from '@/hooks/useAuth'
 
 // Page context types - what the AI can "see"
 export interface PageContext {
@@ -139,8 +138,12 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-export function SidebarProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+interface SidebarProviderProps {
+  children: ReactNode
+  userId?: string | null
+}
+
+export function SidebarProvider({ children, userId }: SidebarProviderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [pageContext, setPageContext] = useState<PageContext | null>(null)
   const [messages, setMessages] = useState<SidebarMessage[]>([])
@@ -148,18 +151,27 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   const [lastConversationDate, setLastConversationDate] = useState<Date | null>(null)
   const [conversationContinued, setConversationContinued] = useState(false)
   const [initialized, setInitialized] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  // Track user ID changes
+  useEffect(() => {
+    if (userId !== currentUserId) {
+      setCurrentUserId(userId || null)
+      setInitialized(false) // Reset to reload for new user
+    }
+  }, [userId, currentUserId])
 
   // Load conversation from localStorage on mount (only for authenticated users)
   useEffect(() => {
-    if (!user?.id || initialized) return
+    if (!currentUserId || initialized) return
 
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEY}-${user.id}`)
+      const stored = localStorage.getItem(`${STORAGE_KEY}-${currentUserId}`)
       if (stored) {
         const data: StoredConversation = JSON.parse(stored)
 
         // Validate that this is for the current user
-        if (data.userId === user.id && data.messages.length > 0) {
+        if (data.userId === currentUserId && data.messages.length > 0) {
           setMessages(data.messages.slice(-MAX_MESSAGES)) // Limit to last N messages
           setLastConversationDate(new Date(data.lastUpdated))
 
@@ -180,34 +192,34 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     }
 
     setInitialized(true)
-  }, [user?.id, initialized])
+  }, [currentUserId, initialized])
 
   // Save conversation to localStorage whenever messages change
   useEffect(() => {
-    if (!user?.id || !initialized) return
+    if (!currentUserId || !initialized) return
 
     try {
       const data: StoredConversation = {
         messages: messages.slice(-MAX_MESSAGES),
         lastPageContext: pageContext,
         lastUpdated: Date.now(),
-        userId: user.id
+        userId: currentUserId
       }
-      localStorage.setItem(`${STORAGE_KEY}-${user.id}`, JSON.stringify(data))
+      localStorage.setItem(`${STORAGE_KEY}-${currentUserId}`, JSON.stringify(data))
     } catch (error) {
       console.error('Failed to save sidebar conversation:', error)
     }
-  }, [messages, pageContext, user?.id, initialized])
+  }, [messages, pageContext, currentUserId, initialized])
 
   // Clear conversation on logout
   useEffect(() => {
-    if (!user && initialized) {
+    if (!currentUserId && initialized) {
       setMessages([])
       setPageContext(null)
       setLastConversationDate(null)
       setConversationContinued(false)
     }
-  }, [user, initialized])
+  }, [currentUserId, initialized])
 
   const toggleSidebar = useCallback(() => {
     setIsOpen(prev => !prev)
@@ -250,14 +262,14 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     setConversationContinued(false)
 
     // Also clear from localStorage
-    if (user?.id) {
+    if (currentUserId) {
       try {
-        localStorage.removeItem(`${STORAGE_KEY}-${user.id}`)
+        localStorage.removeItem(`${STORAGE_KEY}-${currentUserId}`)
       } catch (error) {
         console.error('Failed to clear sidebar conversation:', error)
       }
     }
-  }, [user?.id])
+  }, [currentUserId])
 
   const value: SidebarContextType = {
     isOpen,

@@ -2,9 +2,15 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
-import { AuthProvider } from '@/hooks/useAuth'
+import { AuthProvider, useAuth } from '@/hooks/useAuth'
 import { SidebarProvider } from '@/contexts/SidebarContext'
 import { useState } from 'react'
+
+// Wrapper that safely passes user ID to SidebarProvider
+function SidebarWrapper({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  return <SidebarProvider userId={user?.id}>{children}</SidebarProvider>
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -28,7 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <AuthProvider>
-          <SidebarProvider>{children}</SidebarProvider>
+          <SidebarWrapper>{children}</SidebarWrapper>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
