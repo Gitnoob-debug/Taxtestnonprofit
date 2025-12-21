@@ -44,7 +44,8 @@ import {
   X,
   Mail,
   Scan,
-  Gauge
+  Gauge,
+  History
 } from 'lucide-react'
 import { calculateTotalTax } from '@/lib/canadianTaxData'
 
@@ -1078,6 +1079,39 @@ export function TaxDashboard() {
             <Zap className="h-4 w-4 text-amber-500" />
             View Tax Tips
           </Link>
+          <Link
+            href="/profile/time-machine"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg transition-colors shadow-sm"
+          >
+            <History className="h-4 w-4" />
+            Tax Time Machine
+          </Link>
+        </div>
+
+        {/* Tax Time Machine Promo Banner */}
+        <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-800">
+                <History className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <p className="font-medium text-purple-900 dark:text-purple-100">
+                  Discover Money You Left on the Table
+                </p>
+                <p className="text-sm text-purple-700 dark:text-purple-300">
+                  Our AI analyzes your past 10 years of tax returns to find missed deductions and credits.
+                  Average Canadian recovery: $1,200+
+                </p>
+              </div>
+            </div>
+            <Link href="/profile/time-machine">
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap">
+                Scan My History
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Alert Banner for urgent deadlines */}
