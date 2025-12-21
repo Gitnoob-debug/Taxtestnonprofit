@@ -87,6 +87,35 @@ interface PageContext {
       summary: string
       keyFields: Record<string, string | number>
     }
+    dashboardData?: {
+      rrspRoom?: number
+      rrspContributionsYTD?: number
+      tfsaRoom?: number
+      annualIncome?: number
+      spouseIncome?: number
+      province?: string
+      employmentStatus?: string
+      maritalStatus?: string
+      profileCompleteness?: number
+      documentsNeeded?: Array<{
+        source: string
+        documents: Array<{
+          type: string
+          name: string
+          have: boolean
+        }>
+      }>
+      taxTips?: Array<{
+        title: string
+        description: string
+        priority: 'high' | 'medium' | 'low'
+        category: string
+      }>
+      hasEmploymentIncome?: boolean
+      hasSelfEmploymentIncome?: boolean
+      hasInvestmentIncome?: boolean
+      hasRentalIncome?: boolean
+    }
   }
   timestamp: number
 }
@@ -258,6 +287,68 @@ function buildPageContextString(pageContext: PageContext | null): string {
       contextParts.push(`- Key Fields:`)
       Object.entries(doc.keyFields).forEach(([key, value]) => {
         contextParts.push(`  - ${key}: ${value}`)
+      })
+    }
+  }
+
+  // Dashboard data
+  if (data.dashboardData) {
+    const dd = data.dashboardData
+    contextParts.push(`\n### Tax Dashboard Overview`)
+
+    if (dd.annualIncome) contextParts.push(`- Annual Income: $${dd.annualIncome.toLocaleString()}`)
+    if (dd.spouseIncome) contextParts.push(`- Spouse Income: $${dd.spouseIncome.toLocaleString()}`)
+    if (dd.province) contextParts.push(`- Province: ${dd.province}`)
+    if (dd.employmentStatus) contextParts.push(`- Employment: ${dd.employmentStatus}`)
+    if (dd.maritalStatus) contextParts.push(`- Marital Status: ${dd.maritalStatus}`)
+    if (dd.profileCompleteness) contextParts.push(`- Profile Completeness: ${dd.profileCompleteness}%`)
+
+    // RRSP/TFSA room
+    if (dd.rrspRoom) {
+      const remaining = dd.rrspRoom - (dd.rrspContributionsYTD || 0)
+      contextParts.push(`\n### RRSP Status`)
+      contextParts.push(`- Total RRSP Room: $${dd.rrspRoom.toLocaleString()}`)
+      if (dd.rrspContributionsYTD) contextParts.push(`- Contributions YTD: $${dd.rrspContributionsYTD.toLocaleString()}`)
+      contextParts.push(`- Remaining Room: $${remaining.toLocaleString()}`)
+    }
+    if (dd.tfsaRoom) contextParts.push(`- TFSA Room Available: $${dd.tfsaRoom.toLocaleString()}`)
+
+    // Income sources
+    const incomeSources = []
+    if (dd.hasEmploymentIncome) incomeSources.push('Employment')
+    if (dd.hasSelfEmploymentIncome) incomeSources.push('Self-Employment')
+    if (dd.hasInvestmentIncome) incomeSources.push('Investment')
+    if (dd.hasRentalIncome) incomeSources.push('Rental')
+    if (incomeSources.length > 0) {
+      contextParts.push(`\n### Income Sources: ${incomeSources.join(', ')}`)
+    }
+
+    // Document checklist - what they have and need
+    if (dd.documentsNeeded && dd.documentsNeeded.length > 0) {
+      contextParts.push(`\n### Document Checklist`)
+      dd.documentsNeeded.forEach(source => {
+        const have = source.documents.filter(d => d.have)
+        const need = source.documents.filter(d => !d.have)
+        const completion = source.documents.length > 0
+          ? Math.round((have.length / source.documents.length) * 100)
+          : 100
+
+        contextParts.push(`\n**${source.source}** (${completion}% complete)`)
+        if (have.length > 0) {
+          contextParts.push(`  ✓ Have: ${have.map(d => d.name).join(', ')}`)
+        }
+        if (need.length > 0) {
+          contextParts.push(`  ✗ Still need: ${need.map(d => d.name).join(', ')}`)
+        }
+      })
+    }
+
+    // Tax tips being shown
+    if (dd.taxTips && dd.taxTips.length > 0) {
+      contextParts.push(`\n### Current Tax Tips Displayed`)
+      dd.taxTips.forEach((tip, i) => {
+        contextParts.push(`${i + 1}. [${tip.priority}] ${tip.title}`)
+        contextParts.push(`   ${tip.description}`)
       })
     }
   }

@@ -81,6 +81,40 @@ export interface PageContext {
       summary: string
       keyFields: Record<string, string | number>
     }
+
+    // Dashboard data
+    dashboardData?: {
+      rrspRoom?: number
+      rrspContributionsYTD?: number
+      tfsaRoom?: number
+      annualIncome?: number
+      spouseIncome?: number
+      province?: string
+      employmentStatus?: string
+      maritalStatus?: string
+      profileCompleteness?: number
+      // Document checklist
+      documentsNeeded?: Array<{
+        source: string
+        documents: Array<{
+          type: string
+          name: string
+          have: boolean
+        }>
+      }>
+      // Tax tips shown
+      taxTips?: Array<{
+        title: string
+        description: string
+        priority: 'high' | 'medium' | 'low'
+        category: string
+      }>
+      // Income sources
+      hasEmploymentIncome?: boolean
+      hasSelfEmploymentIncome?: boolean
+      hasInvestmentIncome?: boolean
+      hasRentalIncome?: boolean
+    }
   }
   timestamp: number
 }

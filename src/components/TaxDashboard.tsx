@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { useAuth } from '@/hooks/useAuth'
+import { useSidebar } from '@/contexts/SidebarContext'
 import {
   ArrowLeft,
   Loader2,
@@ -744,6 +745,7 @@ function getUpcomingDeadlines(profile: ProfileData): Array<{date: Date, title: s
 export function TaxDashboard() {
   const router = useRouter()
   const { user, loading: authLoading, getToken } = useAuth()
+  const { setPageContext } = useSidebar()
   const [isLoading, setIsLoading] = useState(true)
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [documents, setDocuments] = useState<DocumentData[]>([])
@@ -947,6 +949,49 @@ export function TaxDashboard() {
     if (!profile) return []
     return getDocumentsBySource(profile, documents)
   }, [profile, documents])
+
+  // Update sidebar context with dashboard data
+  useEffect(() => {
+    if (profile && !isLoading) {
+      setPageContext({
+        page: '/profile/dashboard',
+        pageName: 'Tax Dashboard',
+        timestamp: Date.now(),
+        data: {
+          dashboardData: {
+            rrspRoom: profile.rrsp_contribution_room || undefined,
+            rrspContributionsYTD: profile.rrsp_contributions_ytd || undefined,
+            tfsaRoom: tfsaRoom || undefined,
+            annualIncome: profile.annual_income || undefined,
+            spouseIncome: profile.spouse_income || undefined,
+            province: profile.province || undefined,
+            employmentStatus: profile.employment_status || undefined,
+            maritalStatus: profile.marital_status || undefined,
+            profileCompleteness: profile.profile_completeness || undefined,
+            documentsNeeded: documentSources.map(source => ({
+              source: source.source,
+              documents: source.needed.map(doc => ({
+                type: doc.type,
+                name: doc.name,
+                have: doc.have
+              }))
+            })),
+            taxTips: personalizedTips.slice(0, 5).map(tip => ({
+              title: tip.title,
+              description: tip.description,
+              priority: tip.priority,
+              category: tip.category
+            })),
+            hasEmploymentIncome: profile.has_employment_income,
+            hasSelfEmploymentIncome: profile.has_self_employment_income,
+            hasInvestmentIncome: profile.has_investment_income,
+            hasRentalIncome: profile.has_rental_income
+          }
+        }
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, isLoading, tfsaRoom, documentSources, personalizedTips])
 
   // RRSP optimization calculation
   const rrspOptimization = useMemo(() => {
