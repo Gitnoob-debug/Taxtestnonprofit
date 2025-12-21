@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { useAuth } from '@/hooks/useAuth'
+import { useCommandCenterContext } from '@/hooks/usePageContext'
 import {
   ArrowLeft,
   Loader2,
@@ -316,6 +317,7 @@ function DeadlineItem({ deadline }: { deadline: Deadline }) {
 export function CommandCenter() {
   const router = useRouter()
   const { user, loading: authLoading, getToken } = useAuth()
+  const { setCommandCenterData } = useCommandCenterContext()
   const [data, setData] = useState<CommandCenterData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -325,6 +327,44 @@ export function CommandCenter() {
       loadData()
     }
   }, [user])
+
+  // Update sidebar context when data changes
+  useEffect(() => {
+    if (data) {
+      const moneyOnTable = data.opportunities.reduce((sum, o) => sum + o.potentialSavings, 0)
+      setCommandCenterData({
+        taxPosition: data.taxPosition,
+        opportunities: data.opportunities.map(o => ({
+          id: o.id,
+          title: o.title,
+          description: o.description,
+          potentialSavings: o.potentialSavings,
+          priority: o.priority,
+          category: o.category
+        })),
+        taxScore: {
+          score: data.taxScore.score,
+          maxScore: data.taxScore.maxScore,
+          percentile: data.taxScore.percentile,
+          factors: data.taxScore.factors.map(f => ({
+            name: f.name,
+            score: f.score,
+            maxScore: f.maxScore,
+            description: f.status
+          }))
+        },
+        bracketPosition: {
+          currentBracket: `Bracket ${data.bracketPosition.currentBracket}`,
+          currentBracketRate: data.bracketPosition.currentBracketRate * 100,
+          nextBracketThreshold: data.bracketPosition.nextBracketThreshold,
+          amountToNextBracket: data.bracketPosition.amountToNextBracket,
+          combinedMarginalRate: data.bracketPosition.combinedMarginalRate * 100
+        },
+        deadlines: data.deadlines,
+        moneyLeftOnTable: moneyOnTable
+      })
+    }
+  }, [data, setCommandCenterData])
 
   async function loadData() {
     setLoading(true)
