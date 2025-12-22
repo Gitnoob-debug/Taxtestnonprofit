@@ -1,7 +1,7 @@
 'use client'
 
-import { FilingWizard } from '@/lib/tax-filing'
+import { ConversationalFiling } from '@/lib/tax-filing/components/ConversationalFiling'
 
 export default function TaxFilingPage() {
-  return <FilingWizard taxYear={2024} />
+  return <ConversationalFiling />
 }
