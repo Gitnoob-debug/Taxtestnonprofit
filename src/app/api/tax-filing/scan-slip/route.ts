@@ -1,85 +1,110 @@
 /**
  * Tax Slip Scanner API
- * Specialized OCR for T4, T5, and other tax slips
- * Returns structured data ready for form auto-fill
+ * High-accuracy OCR for T4, T5, and other Canadian tax slips
+ * Supports both images and PDFs with field-level validation
  */
 
 import { NextRequest } from 'next/server'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
-// Structured extraction prompt for tax slips
-const EXTRACTION_PROMPT = `You are an expert Canadian tax document OCR system. Your job is to extract EXACT values from tax slips.
+// High-accuracy extraction prompt - very specific about Canadian tax slip formats
+const EXTRACTION_PROMPT = `You are an expert Canadian tax document OCR system with 99.9% accuracy requirements.
+This is for ACTUAL TAX FILING - accuracy is CRITICAL. Every number must be EXACT.
 
-CRITICAL RULES:
-1. Extract EXACT numbers as shown on the document - don't round or estimate
-2. Return amounts as numbers (no $ signs or commas)
-3. Format SIN as XXX-XXX-XXX (with dashes)
-4. If a field is blank or not visible, return null
-5. Be EXTREMELY precise - this data goes directly into tax forms
+CRITICAL ACCURACY RULES:
+1. Extract EXACT numbers as shown - never round, estimate, or guess
+2. If a value is unclear, mark confidence as "low" and include in issues
+3. Double-check all numbers - a single digit error can cause major tax problems
+4. Return null for any field you cannot read with HIGH confidence
+5. Format ALL currency as plain numbers (no $ or commas): 65000.00 not $65,000
+6. Format SIN as XXX-XXX-XXX with dashes
+7. Format dates as YYYY-MM-DD
 
-For T4 slips, extract:
-- employerName: Company name at top
-- employerAddress: Full address
-- taxYear: Year shown (usually top right)
-- box14_employmentIncome: Employment income
-- box16_cpp: CPP contributions
-- box17_qpp: QPP contributions (Quebec only)
-- box18_ei: EI premiums
-- box20_rpp: RPP contributions
-- box22_taxDeducted: Income tax deducted
-- box24_eiInsurableEarnings: EI insurable earnings
-- box26_cppPensionableEarnings: CPP pensionable earnings
-- box44_unionDues: Union dues
-- box46_charitableDonations: Charitable donations (if shown)
-- box52_pensionAdjustment: Pension adjustment
-- sin: Social Insurance Number (mask middle digits if worried, but we need format)
+DOCUMENT IDENTIFICATION:
+- T4: "Statement of Remuneration Paid" - has Box 14 (employment income), Box 22 (tax deducted)
+- T5: "Statement of Investment Income" - has Box 13 (interest), Box 24/25 (dividends)
+- T3: "Statement of Trust Income" - trust/mutual fund distributions
+- T4A: Pension/retirement income, scholarships, other income
+- T5008: Securities transactions (buy/sell)
+- NOA: Notice of Assessment from CRA
 
-For T5 slips, extract:
-- payerName: Financial institution name
-- taxYear: Year
-- box10_actualDividends: Actual amount of dividends other than eligible
-- box11_taxableDividends: Taxable amount of dividends other than eligible
-- box13_interestIncome: Interest from Canadian sources
-- box14_otherIncome: Other income
-- box24_actualEligibleDividends: Actual amount of eligible dividends
-- box25_taxableEligibleDividends: Taxable amount of eligible dividends
-- box26_dividendTaxCredit: Dividend tax credit for eligible dividends
+FOR T4 SLIPS - Extract these boxes EXACTLY:
+- Employer name (top of slip)
+- Box 10: Province of employment (2-letter code)
+- Box 12: SIN (format: XXX-XXX-XXX)
+- Box 14: Employment income (THIS IS THE KEY NUMBER)
+- Box 16: Employee's CPP contributions
+- Box 17: Employee's QPP contributions (Quebec only)
+- Box 18: Employee's EI premiums
+- Box 20: RPP contributions
+- Box 22: Income tax deducted (IMPORTANT - this is your withholding)
+- Box 24: EI insurable earnings
+- Box 26: CPP/QPP pensionable earnings
+- Box 44: Union dues
+- Box 46: Charitable donations through payroll
+- Box 52: Pension adjustment
+- Tax year (usually shown at top)
 
-For T3 slips, extract:
-- trustName: Name of trust/fund
-- taxYear: Year
-- box21_capitalGains: Capital gains
-- box23_actualDividends: Actual amount of eligible dividends
-- box25_foreignIncome: Foreign non-business income
-- box26_foreignTaxPaid: Foreign non-business tax paid
-- box32_otherIncome: Other income
-- box42_returnOfCapital: Return of capital
-- box49_actualDividends: Actual amount of dividends other than eligible
-- box50_taxableDividends: Taxable amount of dividends other than eligible
+FOR T5 SLIPS - Extract these boxes:
+- Payer name (financial institution)
+- Box 10: Actual amount of dividends other than eligible
+- Box 11: Taxable amount of dividends other than eligible
+- Box 13: Interest from Canadian sources
+- Box 14: Other income from Canadian sources
+- Box 24: Actual amount of eligible dividends
+- Box 25: Taxable amount of eligible dividends
+- Box 26: Dividend tax credit for eligible dividends
 
-RESPOND WITH JSON ONLY:
+RESPONSE FORMAT (JSON only, no markdown):
 {
-  "slipType": "T4" | "T5" | "T3" | "T4A" | "T5008" | "unknown",
+  "slipType": "T4" | "T5" | "T3" | "T4A" | "T5008" | "NOA" | "unknown",
   "confidence": "high" | "medium" | "low",
   "taxYear": 2024,
-  "issuerName": "...",
+  "issuerName": "Exact name as shown",
   "extractedFields": {
-    // All fields with values extracted
+    "box14_employmentIncome": 65432.10,
+    "box16_cpp": 3867.50,
+    "box18_ei": 1002.45,
+    "box22_taxDeducted": 12543.00
   },
   "formFieldMapping": {
-    // Map to our form fields
-    "firstName": null,
-    "lastName": null,
-    "employerName": "...",
-    "employmentIncome": 65000,
-    "taxDeducted": 12000,
-    "cppDeducted": 3800,
-    "eiDeducted": 1000,
-    // etc - include all fields we can auto-fill
+    "employerName": "Company Name Inc.",
+    "employmentIncome": 65432.10,
+    "taxDeducted": 12543.00,
+    "cppDeducted": 3867.50,
+    "eiDeducted": 1002.45
   },
-  "issues": ["Any problems or unclear values"]
+  "fieldConfidence": {
+    "employmentIncome": "high",
+    "taxDeducted": "high",
+    "cppDeducted": "medium"
+  },
+  "issues": ["Box 44 was partially obscured - value may be incorrect"],
+  "rawTextExtracted": "Key text from document for verification"
 }`
+
+// Simpler prompt for PDF text extraction
+const PDF_TEXT_PROMPT = `You are analyzing extracted text from a Canadian tax document (T4, T5, T3, etc.).
+
+The text below was extracted from a PDF. Parse it carefully and extract all tax-relevant information.
+
+CRITICAL: This is for actual tax filing. Every number must be EXACT.
+
+Extract and return JSON with the same format as a visual analysis:
+{
+  "slipType": "T4" | "T5" | "T3" | "T4A" | "T5008" | "NOA" | "unknown",
+  "confidence": "high" | "medium" | "low",
+  "taxYear": number,
+  "issuerName": "string",
+  "extractedFields": { box numbers and values },
+  "formFieldMapping": { our form field names: values },
+  "fieldConfidence": { field: confidence level },
+  "issues": ["any problems found"]
+}
+
+EXTRACTED PDF TEXT:
+`
 
 interface ScanResult {
   slipType: string
@@ -88,7 +113,222 @@ interface ScanResult {
   issuerName: string | null
   extractedFields: Record<string, any>
   formFieldMapping: Record<string, any>
+  fieldConfidence?: Record<string, string>
   issues: string[]
+  rawTextExtracted?: string
+}
+
+// Parse PDF and extract text
+async function extractPDFText(buffer: ArrayBuffer): Promise<string> {
+  try {
+    // Dynamic import for pdf-parse with type handling
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdfParse = require('pdf-parse')
+    const data = await pdfParse(Buffer.from(buffer))
+    return data.text
+  } catch (error) {
+    console.error('[PDF-PARSE] Error:', error)
+    throw new Error('Failed to parse PDF. Please try uploading an image instead.')
+  }
+}
+
+// Call AI for image analysis
+async function analyzeImage(base64: string, mimeType: string): Promise<ScanResult> {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://taxradar.ca',
+      'X-Title': 'Tax Radar Slip Scanner'
+    },
+    body: JSON.stringify({
+      model: 'anthropic/claude-3.5-sonnet', // Best for vision accuracy
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image_url',
+            image_url: { url: `data:${mimeType};base64,${base64}` }
+          },
+          { type: 'text', text: EXTRACTION_PROMPT }
+        ]
+      }],
+      max_tokens: 3000,
+      temperature: 0 // Zero temp for maximum accuracy
+    })
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('[SCAN-SLIP] Vision API error:', response.status, errorText)
+    throw new Error('Failed to analyze image')
+  }
+
+  const data = await response.json()
+  return parseAIResponse(data.choices?.[0]?.message?.content || '')
+}
+
+// Call AI for PDF text analysis
+async function analyzePDFText(text: string): Promise<ScanResult> {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://taxradar.ca',
+      'X-Title': 'Tax Radar Slip Scanner'
+    },
+    body: JSON.stringify({
+      model: 'anthropic/claude-3.5-sonnet',
+      messages: [{
+        role: 'user',
+        content: PDF_TEXT_PROMPT + text
+      }],
+      max_tokens: 3000,
+      temperature: 0
+    })
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('[SCAN-SLIP] Text API error:', response.status, errorText)
+    throw new Error('Failed to analyze document text')
+  }
+
+  const data = await response.json()
+  return parseAIResponse(data.choices?.[0]?.message?.content || '')
+}
+
+// Parse AI response into structured result
+function parseAIResponse(content: string): ScanResult {
+  try {
+    // Find JSON in response
+    const jsonMatch = content.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      throw new Error('No JSON found in response')
+    }
+
+    const result = JSON.parse(jsonMatch[0])
+
+    // Validate required fields
+    if (!result.slipType) {
+      result.slipType = 'unknown'
+    }
+    if (!result.confidence) {
+      result.confidence = 'low'
+    }
+    if (!result.formFieldMapping) {
+      result.formFieldMapping = {}
+    }
+    if (!result.issues) {
+      result.issues = []
+    }
+
+    return result as ScanResult
+  } catch (error) {
+    console.error('[SCAN-SLIP] Parse error:', error, 'Content:', content.substring(0, 500))
+    throw new Error('Failed to parse document data')
+  }
+}
+
+// Generate user-friendly confirmation message
+function generateConfirmationMessage(result: ScanResult): string {
+  const fields = result.formFieldMapping
+  const confidence = result.fieldConfidence || {}
+  const parts: string[] = []
+
+  // Header based on slip type
+  if (result.slipType === 'T4') {
+    parts.push(`📄 **${result.taxYear || ''} T4 Slip** from **${result.issuerName || 'your employer'}**`)
+    parts.push('')
+    parts.push('**Extracted Information:**')
+
+    if (fields.employmentIncome !== undefined && fields.employmentIncome !== null) {
+      const conf = confidence.employmentIncome === 'low' ? ' ⚠️' : ''
+      parts.push(`• Employment Income (Box 14): **$${formatNumber(fields.employmentIncome)}**${conf}`)
+    }
+    if (fields.taxDeducted !== undefined && fields.taxDeducted !== null) {
+      const conf = confidence.taxDeducted === 'low' ? ' ⚠️' : ''
+      parts.push(`• Tax Deducted (Box 22): **$${formatNumber(fields.taxDeducted)}**${conf}`)
+    }
+    if (fields.cppDeducted !== undefined && fields.cppDeducted !== null) {
+      const conf = confidence.cppDeducted === 'low' ? ' ⚠️' : ''
+      parts.push(`• CPP Contributions (Box 16): **$${formatNumber(fields.cppDeducted)}**${conf}`)
+    }
+    if (fields.eiDeducted !== undefined && fields.eiDeducted !== null) {
+      const conf = confidence.eiDeducted === 'low' ? ' ⚠️' : ''
+      parts.push(`• EI Premiums (Box 18): **$${formatNumber(fields.eiDeducted)}**${conf}`)
+    }
+
+  } else if (result.slipType === 'T5') {
+    parts.push(`📄 **${result.taxYear || ''} T5 Slip** from **${result.issuerName || 'your financial institution'}**`)
+    parts.push('')
+    parts.push('**Extracted Information:**')
+
+    if (fields.interestIncome !== undefined && fields.interestIncome !== null) {
+      parts.push(`• Interest Income (Box 13): **$${formatNumber(fields.interestIncome)}**`)
+    }
+    if (fields.dividendIncome !== undefined && fields.dividendIncome !== null) {
+      parts.push(`• Eligible Dividends (Box 25): **$${formatNumber(fields.dividendIncome)}**`)
+    }
+
+  } else if (result.slipType === 'T3') {
+    parts.push(`📄 **${result.taxYear || ''} T3 Slip** from **${result.issuerName || 'trust/fund'}**`)
+    parts.push('')
+    parts.push('**Extracted Information:**')
+
+    if (fields.capitalGains !== undefined && fields.capitalGains !== null) {
+      parts.push(`• Capital Gains (Box 21): **$${formatNumber(fields.capitalGains)}**`)
+    }
+    if (fields.dividendIncome !== undefined && fields.dividendIncome !== null) {
+      parts.push(`• Dividends: **$${formatNumber(fields.dividendIncome)}**`)
+    }
+
+  } else if (result.slipType === 'NOA') {
+    parts.push(`📄 **Notice of Assessment** for **${result.taxYear || 'unknown year'}**`)
+    parts.push('')
+    if (fields.refundOwing !== undefined) {
+      if (fields.refundOwing >= 0) {
+        parts.push(`• **Refund: $${formatNumber(fields.refundOwing)}**`)
+      } else {
+        parts.push(`• **Balance Owing: $${formatNumber(Math.abs(fields.refundOwing))}**`)
+      }
+    }
+    if (fields.rrspRoom !== undefined) {
+      parts.push(`• RRSP Contribution Room: **$${formatNumber(fields.rrspRoom)}**`)
+    }
+
+  } else {
+    parts.push(`📄 **${result.slipType}** document detected`)
+    parts.push('')
+    const fieldCount = Object.keys(fields).filter(k => fields[k] !== null).length
+    parts.push(`Found ${fieldCount} data fields.`)
+  }
+
+  // Confidence warning
+  if (result.confidence === 'low') {
+    parts.push('')
+    parts.push('⚠️ **Low confidence** - please verify all numbers carefully')
+  } else if (result.confidence === 'medium') {
+    parts.push('')
+    parts.push('⚡ Some values may need verification')
+  }
+
+  // Issues
+  if (result.issues && result.issues.length > 0) {
+    parts.push('')
+    parts.push('**Notes:** ' + result.issues.join('; '))
+  }
+
+  parts.push('')
+  parts.push('**Does this look correct?** Click "Yes" to add to your return, or "No" to try again.')
+
+  return parts.join('\n')
+}
+
+function formatNumber(num: number): string {
+  return num.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 export async function POST(request: NextRequest) {
@@ -104,111 +344,50 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    // Validate file type - only images for now (PDFs need different handling)
-    const validImageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
+    // Validate file type
+    const imageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
     const isPDF = file.type === 'application/pdf'
+    const isImage = imageTypes.includes(file.type)
 
-    if (!validImageTypes.includes(file.type) && !isPDF) {
+    if (!isImage && !isPDF) {
       return Response.json({
         error: 'Please upload an image (PNG, JPG, WEBP) or PDF file'
       }, { status: 400 })
     }
 
-    // For PDFs, tell user to use image instead (PDF vision support is limited)
-    if (isPDF) {
-      return Response.json({
-        error: 'Please upload an image instead of PDF. Take a photo or screenshot of your tax slip for best results.',
-        details: 'PDF scanning coming soon - for now, please use a photo or screenshot'
-      }, { status: 400 })
+    // 15MB limit
+    if (file.size > 15 * 1024 * 1024) {
+      return Response.json({ error: 'File must be under 15MB' }, { status: 400 })
     }
 
-    // 10MB limit
-    if (file.size > 10 * 1024 * 1024) {
-      return Response.json({ error: 'File must be under 10MB' }, { status: 400 })
-    }
+    console.log(`[SCAN-SLIP] Processing: ${file.name} (${file.type}, ${(file.size / 1024).toFixed(1)}KB)`)
 
-    console.log(`[TAX-SLIP-SCAN] Processing: ${file.name} (${file.type})`)
-
-    // Convert to base64
     const bytes = await file.arrayBuffer()
-    const base64 = Buffer.from(bytes).toString('base64')
-
-    // Determine correct MIME type for data URL
-    let mimeType = file.type
-    if (mimeType === 'image/jpg') {
-      mimeType = 'image/jpeg'
-    }
-
-    // Call vision API - use claude-3.5-sonnet which has good vision support
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://taxradar.ca',
-        'X-Title': 'Tax Radar Slip Scanner'
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image_url',
-              image_url: {
-                url: `data:${mimeType};base64,${base64}`
-              }
-            },
-            { type: 'text', text: EXTRACTION_PROMPT }
-          ]
-        }],
-        max_tokens: 2000,
-        temperature: 0.1 // Low temp for accuracy
-      })
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('[TAX-SLIP-SCAN] API error:', response.status, errorText)
-
-      // Parse error for better messaging
-      let errorMessage = 'Failed to process image'
-      try {
-        const errorJson = JSON.parse(errorText)
-        if (errorJson.error?.message) {
-          errorMessage = errorJson.error.message
-        }
-      } catch (e) {
-        // Use default message
-      }
-
-      return Response.json({
-        error: errorMessage,
-        details: `API returned ${response.status}`
-      }, { status: 500 })
-    }
-
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content || ''
-
-    // Parse JSON response
     let result: ScanResult
-    try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        result = JSON.parse(jsonMatch[0])
-      } else {
-        throw new Error('No JSON in response')
+
+    if (isPDF) {
+      // Extract text from PDF and analyze
+      console.log('[SCAN-SLIP] Extracting PDF text...')
+      const pdfText = await extractPDFText(bytes)
+      console.log(`[SCAN-SLIP] Extracted ${pdfText.length} chars from PDF`)
+
+      if (pdfText.length < 50) {
+        return Response.json({
+          error: 'Could not extract text from PDF. The PDF may be image-based. Please take a screenshot or photo instead.',
+          details: 'Scanned PDFs need to be converted to images'
+        }, { status: 400 })
       }
-    } catch (e) {
-      console.error('[TAX-SLIP-SCAN] Parse error:', e)
-      return Response.json({
-        error: 'Could not parse document',
-        details: 'The image may be unclear or not a recognized tax slip'
-      }, { status: 422 })
+
+      result = await analyzePDFText(pdfText)
+    } else {
+      // Analyze image directly
+      console.log('[SCAN-SLIP] Analyzing image...')
+      const base64 = Buffer.from(bytes).toString('base64')
+      const mimeType = file.type === 'image/jpg' ? 'image/jpeg' : file.type
+      result = await analyzeImage(base64, mimeType)
     }
 
-    console.log(`[TAX-SLIP-SCAN] Result: ${result.slipType} (${result.confidence})`)
+    console.log(`[SCAN-SLIP] Result: ${result.slipType} (${result.confidence}) - ${Object.keys(result.formFieldMapping || {}).length} fields`)
 
     // Return structured result
     return Response.json({
@@ -219,66 +398,19 @@ export async function POST(request: NextRequest) {
       issuerName: result.issuerName,
       extractedFields: result.extractedFields,
       formFields: result.formFieldMapping,
+      fieldConfidence: result.fieldConfidence || {},
       issues: result.issues || [],
-      // Generate confirmation message
       confirmationMessage: generateConfirmationMessage(result)
     })
 
   } catch (err) {
-    console.error('[TAX-SLIP-SCAN] Error:', err)
+    console.error('[SCAN-SLIP] Error:', err)
     return Response.json({
-      error: 'Failed to scan document',
-      details: err instanceof Error ? err.message : 'Unknown error'
+      error: err instanceof Error ? err.message : 'Failed to scan document',
+      details: 'Please try again with a clearer image or different file'
     }, { status: 500 })
   }
 }
 
-function generateConfirmationMessage(result: ScanResult): string {
-  const fields = result.formFieldMapping
-  const parts: string[] = []
-
-  if (result.slipType === 'T4') {
-    parts.push(`I found a **${result.taxYear || ''} T4** from **${result.issuerName || 'your employer'}**.`)
-    parts.push('\nHere\'s what I extracted:')
-
-    if (fields.employmentIncome) {
-      parts.push(`- Employment Income (Box 14): **$${formatNumber(fields.employmentIncome)}**`)
-    }
-    if (fields.taxDeducted) {
-      parts.push(`- Tax Deducted (Box 22): **$${formatNumber(fields.taxDeducted)}**`)
-    }
-    if (fields.cppDeducted) {
-      parts.push(`- CPP Contributions (Box 16): **$${formatNumber(fields.cppDeducted)}**`)
-    }
-    if (fields.eiDeducted) {
-      parts.push(`- EI Premiums (Box 18): **$${formatNumber(fields.eiDeducted)}**`)
-    }
-  } else if (result.slipType === 'T5') {
-    parts.push(`I found a **${result.taxYear || ''} T5** from **${result.issuerName || 'your financial institution'}**.`)
-    parts.push('\nHere\'s what I extracted:')
-
-    if (fields.interestIncome) {
-      parts.push(`- Interest Income (Box 13): **$${formatNumber(fields.interestIncome)}**`)
-    }
-    if (fields.dividendIncome) {
-      parts.push(`- Eligible Dividends (Box 25): **$${formatNumber(fields.dividendIncome)}**`)
-    }
-  } else {
-    parts.push(`I found a **${result.slipType}** document.`)
-  }
-
-  if (result.issues && result.issues.length > 0) {
-    parts.push(`\n⚠️ Notes: ${result.issues.join(', ')}`)
-  }
-
-  parts.push('\n\n**Does this look correct?** I\'ll add it to your return.')
-
-  return parts.join('\n')
-}
-
-function formatNumber(num: number): string {
-  return num.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
 export const runtime = 'nodejs'
-export const maxDuration = 60
+export const maxDuration = 120 // 2 minutes for PDF processing

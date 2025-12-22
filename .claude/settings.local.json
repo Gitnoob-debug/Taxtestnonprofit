@@ -16,7 +16,13 @@
       "Bash(for f in command pagination carousel calendar context-menu menubar navigation-menu)",
       "Bash(do echo -n '$f: ')",
       "Bash(npm install:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(scoop --version:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx cap init:*)",
+      "Bash(npx cap:*)",
+      "Bash(where:*)",
+      "Bash(npm run cap:*)"
     ]
   }
 }

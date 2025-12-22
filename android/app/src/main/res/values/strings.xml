@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tax Radar</string>
+    <string name="title_activity_main">Tax Radar</string>
+    <string name="package_name">ca.taxradar.app</string>
+    <string name="custom_url_scheme">ca.taxradar.app</string>
+</resources>
