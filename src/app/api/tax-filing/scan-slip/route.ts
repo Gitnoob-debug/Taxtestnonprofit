@@ -84,28 +84,6 @@ RESPONSE FORMAT (JSON only, no markdown):
   "rawTextExtracted": "Key text from document for verification"
 }`
 
-// Simpler prompt for PDF text extraction
-const PDF_TEXT_PROMPT = `You are analyzing extracted text from a Canadian tax document (T4, T5, T3, etc.).
-
-The text below was extracted from a PDF. Parse it carefully and extract all tax-relevant information.
-
-CRITICAL: This is for actual tax filing. Every number must be EXACT.
-
-Extract and return JSON with the same format as a visual analysis:
-{
-  "slipType": "T4" | "T5" | "T3" | "T4A" | "T5008" | "NOA" | "unknown",
-  "confidence": "high" | "medium" | "low",
-  "taxYear": number,
-  "issuerName": "string",
-  "extractedFields": { box numbers and values },
-  "formFieldMapping": { our form field names: values },
-  "fieldConfidence": { field: confidence level },
-  "issues": ["any problems found"]
-}
-
-EXTRACTED PDF TEXT:
-`
-
 interface ScanResult {
   slipType: string
   confidence: 'high' | 'medium' | 'low'
@@ -118,18 +96,48 @@ interface ScanResult {
   rawTextExtracted?: string
 }
 
-// Parse PDF and extract text
-async function extractPDFText(buffer: ArrayBuffer): Promise<string> {
-  try {
-    // Dynamic import for pdf-parse with type handling
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require('pdf-parse')
-    const data = await pdfParse(Buffer.from(buffer))
-    return data.text
-  } catch (error) {
-    console.error('[PDF-PARSE] Error:', error)
-    throw new Error('Failed to parse PDF. Please try uploading an image instead.')
+// Analyze PDF directly using Claude's PDF support
+async function analyzePDF(buffer: ArrayBuffer): Promise<ScanResult> {
+  const base64 = Buffer.from(buffer).toString('base64')
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://taxradar.ca',
+      'X-Title': 'Tax Radar Slip Scanner'
+    },
+    body: JSON.stringify({
+      model: 'anthropic/claude-3.5-sonnet',
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'file',
+            file: {
+              filename: 'document.pdf',
+              file_data: `data:application/pdf;base64,${base64}`
+            }
+          },
+          { type: 'text', text: EXTRACTION_PROMPT }
+        ]
+      }],
+      max_tokens: 3000,
+      temperature: 0
+    })
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('[SCAN-SLIP] PDF API error:', response.status, errorText)
+
+    // If PDF direct upload fails, suggest using image
+    throw new Error('PDF processing failed. Please take a screenshot or photo of your tax slip instead.')
   }
+
+  const data = await response.json()
+  return parseAIResponse(data.choices?.[0]?.message?.content || '')
 }
 
 // Call AI for image analysis
@@ -163,37 +171,6 @@ async function analyzeImage(base64: string, mimeType: string): Promise<ScanResul
     const errorText = await response.text()
     console.error('[SCAN-SLIP] Vision API error:', response.status, errorText)
     throw new Error('Failed to analyze image')
-  }
-
-  const data = await response.json()
-  return parseAIResponse(data.choices?.[0]?.message?.content || '')
-}
-
-// Call AI for PDF text analysis
-async function analyzePDFText(text: string): Promise<ScanResult> {
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'HTTP-Referer': 'https://taxradar.ca',
-      'X-Title': 'Tax Radar Slip Scanner'
-    },
-    body: JSON.stringify({
-      model: 'anthropic/claude-3.5-sonnet',
-      messages: [{
-        role: 'user',
-        content: PDF_TEXT_PROMPT + text
-      }],
-      max_tokens: 3000,
-      temperature: 0
-    })
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    console.error('[SCAN-SLIP] Text API error:', response.status, errorText)
-    throw new Error('Failed to analyze document text')
   }
 
   const data = await response.json()
@@ -366,19 +343,9 @@ export async function POST(request: NextRequest) {
     let result: ScanResult
 
     if (isPDF) {
-      // Extract text from PDF and analyze
-      console.log('[SCAN-SLIP] Extracting PDF text...')
-      const pdfText = await extractPDFText(bytes)
-      console.log(`[SCAN-SLIP] Extracted ${pdfText.length} chars from PDF`)
-
-      if (pdfText.length < 50) {
-        return Response.json({
-          error: 'Could not extract text from PDF. The PDF may be image-based. Please take a screenshot or photo instead.',
-          details: 'Scanned PDFs need to be converted to images'
-        }, { status: 400 })
-      }
-
-      result = await analyzePDFText(pdfText)
+      // Analyze PDF directly with Claude
+      console.log('[SCAN-SLIP] Analyzing PDF directly...')
+      result = await analyzePDF(bytes)
     } else {
       // Analyze image directly
       console.log('[SCAN-SLIP] Analyzing image...')
