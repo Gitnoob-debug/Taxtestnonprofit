@@ -81,6 +81,29 @@ Ask open-ended questions and extract LIFE SITUATION FLAGS:
 
 From the discovery, build a picture of what documents they need.
 
+=== HANDLING GENERAL TAX QUESTIONS (VERY IMPORTANT) ===
+
+Users may ask general tax questions during the filing process. DO NOT get confused or try to extract data from questions!
+
+DETECT QUESTIONS BY:
+- Starts with "what", "how", "can I", "do I", "is it", "should I", "why"
+- Contains "?" at the end
+- Asking about rules, limits, eligibility, deadlines, etc.
+
+WHEN USER ASKS A QUESTION:
+1. ANSWER the question helpfully and accurately (you're a tax expert!)
+2. Keep the answer concise (2-3 sentences max)
+3. Then GENTLY redirect back to where you were in the filing process
+4. Set "isQuestion": true in your response
+5. Do NOT extract any data from questions
+
+Common questions to handle:
+- "What's the RRSP contribution limit?" → Answer: 18% of previous year's income, max $31,560 for 2024
+- "Can I claim my dog/pet?" → Answer: Generally no, pets aren't tax deductible in Canada
+- "What's the deadline?" → Answer: April 30, 2025 for most people (June 15 if self-employed, but payment still due April 30)
+- "How much can I claim for home office?" → Answer: $2/day simplified method (max $500) or detailed method with T2200
+- "What medical expenses qualify?" → Answer: Prescriptions, dental, vision, travel for medical care, etc.
+
 === RESPONSE FORMAT ===
 {
   "extractedData": {
@@ -93,10 +116,35 @@ From the discovery, build a picture of what documents they need.
   },
   "message": "Your response",
   "confidence": "high" | "medium" | "low",
-  "validationIssue": "Optional - explain what's wrong with their input"
+  "validationIssue": "Optional - explain what's wrong with their input",
+  "isQuestion": false
 }
 
 === EXAMPLES ===
+
+User: "What's the RRSP limit for 2024?"
+{
+  "extractedData": {},
+  "message": "The 2024 RRSP contribution limit is 18% of your 2023 earned income, up to a maximum of $31,560. Your personal limit is on your Notice of Assessment. Now, back to your return - did you contribute to an RRSP this year?",
+  "confidence": "high",
+  "isQuestion": true
+}
+
+User: "Can I claim my cat as a dependent?"
+{
+  "extractedData": {},
+  "message": "Ha! Unfortunately pets don't qualify as dependents for tax purposes in Canada - only humans count. Speaking of dependents, do you have any children or other family members you support?",
+  "confidence": "high",
+  "isQuestion": true
+}
+
+User: "What's the deadline to file?"
+{
+  "extractedData": {},
+  "message": "The deadline is April 30, 2025 for most people. If you're self-employed, you have until June 15 but any taxes owing are still due April 30. Let's keep going - where were we?",
+  "confidence": "high",
+  "isQuestion": true
+}
 
 User: "feb 1989"
 {
@@ -250,6 +298,7 @@ interface AIResponse {
   message: string
   confidence: 'high' | 'medium' | 'low'
   validationIssue?: string
+  isQuestion?: boolean  // True if user asked a general tax question
 }
 
 export async function POST(request: NextRequest) {
@@ -369,6 +418,24 @@ Remember: Keep your response SHORT. Acknowledge what you extracted and ask for t
         message: "I didn't quite catch that. Could you please repeat?",
         confidence: 'low'
       }
+    }
+
+    // If user asked a general question, don't change state - just answer and stay where we are
+    if (aiResponse.isQuestion) {
+      // Get required documents based on current flags (no change)
+      const requiredDocuments = getRequiredDocuments(conversationState.flags as LifeSituationFlags)
+
+      return Response.json({
+        message: aiResponse.message,
+        extractedData: {},
+        fieldsUpdated: [],
+        newState: conversationState, // Keep the same state!
+        allExtractedData: extractedData,
+        confidence: aiResponse.confidence,
+        isQuestion: true,
+        requiredDocuments,
+        lifeSituationFlags: conversationState.flags
+      })
     }
 
     // Process extracted data and update state
