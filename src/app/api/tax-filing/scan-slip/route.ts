@@ -96,9 +96,11 @@ interface ScanResult {
   rawTextExtracted?: string
 }
 
-// Analyze PDF directly using Claude's PDF support
+// Analyze PDF using OpenRouter's file parser with mistral-ocr for scanned documents
 async function analyzePDF(buffer: ArrayBuffer): Promise<ScanResult> {
   const base64 = Buffer.from(buffer).toString('base64')
+
+  console.log('[SCAN-SLIP] Sending PDF to OpenRouter with mistral-ocr plugin...')
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -114,15 +116,27 @@ async function analyzePDF(buffer: ArrayBuffer): Promise<ScanResult> {
         role: 'user',
         content: [
           {
+            type: 'text',
+            text: EXTRACTION_PROMPT
+          },
+          {
             type: 'file',
             file: {
-              filename: 'document.pdf',
+              filename: 'tax-slip.pdf',
               file_data: `data:application/pdf;base64,${base64}`
             }
-          },
-          { type: 'text', text: EXTRACTION_PROMPT }
+          }
         ]
       }],
+      // Use mistral-ocr plugin for high-accuracy OCR on scanned tax documents
+      plugins: [
+        {
+          id: 'file-parser',
+          pdf: {
+            engine: 'mistral-ocr' // Best for scanned documents like tax slips
+          }
+        }
+      ],
       max_tokens: 3000,
       temperature: 0
     })
@@ -132,8 +146,55 @@ async function analyzePDF(buffer: ArrayBuffer): Promise<ScanResult> {
     const errorText = await response.text()
     console.error('[SCAN-SLIP] PDF API error:', response.status, errorText)
 
-    // If PDF direct upload fails, suggest using image
-    throw new Error('PDF processing failed. Please take a screenshot or photo of your tax slip instead.')
+    // Try fallback with pdf-text engine (free, works for text-based PDFs)
+    console.log('[SCAN-SLIP] Retrying with pdf-text engine...')
+    const fallbackResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://taxradar.ca',
+        'X-Title': 'Tax Radar Slip Scanner'
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3.5-sonnet',
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: EXTRACTION_PROMPT
+            },
+            {
+              type: 'file',
+              file: {
+                filename: 'tax-slip.pdf',
+                file_data: `data:application/pdf;base64,${base64}`
+              }
+            }
+          ]
+        }],
+        plugins: [
+          {
+            id: 'file-parser',
+            pdf: {
+              engine: 'pdf-text' // Fallback: free option for text-based PDFs
+            }
+          }
+        ],
+        max_tokens: 3000,
+        temperature: 0
+      })
+    })
+
+    if (!fallbackResponse.ok) {
+      const fallbackError = await fallbackResponse.text()
+      console.error('[SCAN-SLIP] PDF fallback also failed:', fallbackResponse.status, fallbackError)
+      throw new Error('PDF processing failed. Please try uploading a clearer image or photo of your tax slip.')
+    }
+
+    const fallbackData = await fallbackResponse.json()
+    return parseAIResponse(fallbackData.choices?.[0]?.message?.content || '')
   }
 
   const data = await response.json()
