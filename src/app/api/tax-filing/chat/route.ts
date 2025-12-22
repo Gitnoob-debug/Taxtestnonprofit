@@ -15,72 +15,119 @@ import {
   QUESTION_FLOW,
   PROVINCE_MAP,
   MARITAL_STATUS_MAP,
-  createInitialState
+  createInitialState,
+  getRequiredDocuments,
+  LifeSituationFlags
 } from '@/lib/tax-filing/conversation-engine'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
 // System prompt for the tax filing assistant
-const SYSTEM_PROMPT = `You are a friendly, conversational Canadian tax filing assistant. Your job is to:
+const SYSTEM_PROMPT = `You are a friendly, expert Canadian tax filing assistant. Your job is to:
 
-1. Extract ALL relevant data from user responses - be smart about parsing natural language
-2. Respond naturally and conversationally
-3. Skip questions for data you've already collected
+1. Extract ALL relevant data from user responses - be SMART about parsing natural language
+2. VALIDATE everything - ensure data is COMPLETE and CORRECT before accepting it
+3. Respond naturally and conversationally
 4. Keep responses SHORT - 1-2 sentences max
 
-CRITICAL INTELLIGENCE RULES:
-- EXTRACT EVERYTHING you can from each response
-- If user says "John Smith" - extract BOTH firstName: "John" AND lastName: "Smith"
-- If user says "I'm 45 and married" - extract dateOfBirth (estimate year) AND maritalStatus
-- If user says "I live at 123 Main St, Toronto ON M5V 1A1" - extract street, city, province, AND postalCode
-- If user mentions their job and salary together - extract employerName AND employmentIncome
-- If user says "I made about $65k at RBC" - extract employerName: "RBC" AND employmentIncome: 65000
-- Don't be stupid - understand natural language and extract multiple fields at once
-- Format dates as YYYY-MM-DD
-- Format SIN as XXX-XXX-XXX (with dashes)
-- Format currency as numbers only (no $ or commas)
-- Recognize province names AND cities (Toronto=ON, Vancouver=BC, Calgary=AB, etc.)
+=== CRITICAL VALIDATION RULES (DO NOT ACCEPT INVALID DATA) ===
 
-RESPONSE FORMAT:
-Always respond with valid JSON in this exact format:
+DATES - Must be COMPLETE:
+- "feb 1989" is INVALID - ask for the DAY: "I need the full date - what day in February 1989?"
+- "March 15" is INVALID - need the year
+- Only accept YYYY-MM-DD format internally (e.g., 1989-02-15)
+- If date is incomplete, set extractedData to {} and ask for missing part
+
+SIN - Must be exactly 9 digits:
+- "519007686" is VALID - format as "519-007-686"
+- "51900768" (8 digits) is INVALID - ask them to check
+- Only store as XXX-XXX-XXX format
+
+POSTAL CODE - Must be valid Canadian format:
+- "M5V1A1" or "M5V 1A1" are VALID - store as "M5V 1A1"
+- "12345" is INVALID - that's a US zip code
+
+CURRENCY - Extract as numbers:
+- "65k" = 65000
+- "$65,000.00" = 65000
+- "about 65 thousand" = 65000
+
+NAMES - Must have BOTH parts for full name:
+- "John Smith" = firstName: "John", lastName: "Smith"
+- "John" alone is fine if we already have lastName
+
+=== DISCOVERY PHASE (VERY IMPORTANT) ===
+
+When the phase is "discovery", your job is to understand the user's COMPLETE tax situation.
+Ask open-ended questions and extract LIFE SITUATION FLAGS:
+
+- hasEmployment: Did they work for an employer? (T4)
+- hasSelfEmployment: Freelance, contract, business income? (T2125)
+- hasInvestments: Interest, dividends, capital gains? (T5, T3, T5008)
+- hasRentalIncome: Rental property income?
+- hasSpouse: Married or common-law?
+- hasChildren: Children under 18, or in school?
+- hasTuition: Post-secondary education? (T2202)
+- hasChildcare: Daycare, camps, nanny expenses?
+- hasMedicalExpenses: Out-of-pocket medical/dental?
+- hasDonations: Charitable donations?
+- hasRRSP: RRSP contributions?
+- hasMovingExpenses: Moved 40km+ for work/school?
+- hasHomeOffice: Work from home?
+- isFirstTimeHomeBuyer: Bought first home?
+- hasDisability: Disability tax credit eligible?
+- isStudent: Full or part-time student?
+- hasOtherIncome: EI, pension, social assistance, etc.?
+
+From the discovery, build a picture of what documents they need.
+
+=== RESPONSE FORMAT ===
 {
   "extractedData": {
-    "fieldName1": "value1",
-    "fieldName2": "value2"
+    "fieldName": "validatedValue"
   },
-  "message": "Your conversational response with the NEXT question for data you don't have yet",
-  "confidence": "high" | "medium" | "low"
+  "lifeSituationFlags": {
+    "hasEmployment": true,
+    "hasSelfEmployment": false,
+    ...
+  },
+  "message": "Your response",
+  "confidence": "high" | "medium" | "low",
+  "validationIssue": "Optional - explain what's wrong with their input"
 }
 
-AVAILABLE FIELDS TO EXTRACT:
-- firstName, lastName (personal)
-- dateOfBirth (YYYY-MM-DD), sin (XXX-XXX-XXX)
-- maritalStatus (single, married, common-law, divorced, separated, widowed)
-- street, city, province (2-letter code), postalCode
-- employerName, employmentIncome, taxDeducted, cppContributions, eiPremiums
-- businessName, businessIncome, businessExpenses
-- interestIncome, dividendIncome, capitalGains
-- rrspContribution, rrspLimit
-- childcareExpenses, medicalExpenses, donations
+=== EXAMPLES ===
 
-Example - if user says "I'm John Smith":
+User: "feb 1989"
 {
-  "extractedData": { "firstName": "John", "lastName": "Smith" },
-  "message": "Nice to meet you, John! What's your date of birth?",
+  "extractedData": {},
+  "message": "I need the complete date - what day in February 1989 were you born?",
+  "confidence": "low",
+  "validationIssue": "Date missing day"
+}
+
+User: "I'm a software developer, married with 2 kids, I work from home"
+{
+  "extractedData": {},
+  "lifeSituationFlags": {
+    "hasEmployment": true,
+    "hasSpouse": true,
+    "hasChildren": true,
+    "hasHomeOffice": true
+  },
+  "message": "Great! As a software developer working from home with a spouse and 2 kids, you'll likely have home office expenses to claim and may be eligible for childcare deductions. Do you also have any investments, RRSP contributions, or medical expenses?",
   "confidence": "high"
 }
 
-Example - if user says "I work at TD Bank making 75k":
+User: "I made 85k at Google, got married last year, contribute to RRSP"
 {
-  "extractedData": { "employerName": "TD Bank", "employmentIncome": 75000 },
-  "message": "Got it - TD Bank at $75,000. How much tax was deducted (Box 22 on your T4)?",
-  "confidence": "high"
-}
-
-Example - if user says "I'm married, 2 kids, live in Vancouver":
-{
-  "extractedData": { "maritalStatus": "married", "province": "BC", "city": "Vancouver" },
-  "message": "Perfect! What's your street address in Vancouver?",
+  "extractedData": { "employerName": "Google", "employmentIncome": 85000 },
+  "lifeSituationFlags": {
+    "hasEmployment": true,
+    "hasSpouse": true,
+    "hasRRSP": true
+  },
+  "message": "Got it! Working at Google with $85,000 income, newly married, and contributing to RRSP. What about investments, medical expenses, or charitable donations?",
   "confidence": "high"
 }`
 
@@ -116,6 +163,27 @@ function getMissingFields(data: Partial<ExtractedData>): string[] {
 
 // Find the next appropriate phase based on collected data
 function findNextPhase(data: Partial<ExtractedData>, flags: ConversationState['flags']): { phase: ConversationPhase; subStep: number } {
+  // Discovery phase - stay here until complete
+  if (!flags.discoveryComplete) {
+    // Check if we have enough info to move on
+    const hasAnyIncomeFlag = flags.hasEmployment || flags.hasSelfEmployment || flags.hasInvestments || flags.hasRentalIncome
+    const hasAskedAboutDeductions = flags.hasRRSP !== undefined || flags.hasMedicalExpenses !== undefined
+
+    // If user already gave their name during discovery, we can move on
+    if (data.firstName && data.lastName && hasAnyIncomeFlag) {
+      // Mark discovery as complete and move to personal info (skip name since we have it)
+      return { phase: 'personal_info', subStep: 1 } // Go to SIN
+    }
+
+    // If we have some flags but no name yet, ask for name
+    if (hasAnyIncomeFlag && hasAskedAboutDeductions) {
+      return { phase: 'discovery', subStep: 2 } // Ask for name to transition
+    }
+
+    // Still in discovery - continue based on subStep
+    return { phase: 'discovery', subStep: 1 }
+  }
+
   // Personal info incomplete?
   if (!data.firstName || !data.lastName) return { phase: 'personal_info', subStep: 0 }
   if (!data.sin) return { phase: 'personal_info', subStep: 1 }
@@ -178,8 +246,10 @@ function findNextPhase(data: Partial<ExtractedData>, flags: ConversationState['f
 
 interface AIResponse {
   extractedData: Partial<ExtractedData>
+  lifeSituationFlags?: Partial<ConversationState['flags']>
   message: string
   confidence: 'high' | 'medium' | 'low'
+  validationIssue?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -205,23 +275,50 @@ export async function POST(request: NextRequest) {
            q.subStep === currentQuestion.nextPhase(extractedData as ExtractedData, conversationState.flags).subStep
     )
 
-    // Build the context for the AI
+    // Build the context for the AI - different based on phase
     const missingFields = getMissingFields(extractedData)
-    const contextPrompt = `
-CURRENT CONTEXT:
-- Current phase: ${conversationState.phase}
+    const isDiscoveryPhase = conversationState.phase === 'discovery'
+
+    let contextPrompt: string
+    if (isDiscoveryPhase) {
+      contextPrompt = `
+CURRENT PHASE: DISCOVERY (Understanding user's tax situation)
+- Current flags: ${JSON.stringify(conversationState.flags)}
+
+USER'S MESSAGE: "${message}"
+
+YOUR TASK IN DISCOVERY PHASE:
+1. Extract LIFE SITUATION FLAGS from what they share (hasEmployment, hasSpouse, hasChildren, hasRRSP, etc.)
+2. Ask follow-up questions to understand their complete tax picture
+3. After 2-3 exchanges, you should have enough info - set discoveryComplete: true in lifeSituationFlags
+4. Then transition to asking for specific personal details
+
+CRITICAL: In discovery phase, focus on FLAGS not data fields. Extract:
+- Income types: hasEmployment (T4), hasSelfEmployment, hasInvestments, hasRentalIncome
+- Family: hasSpouse, hasChildren, hasDependents
+- Deductions: hasRRSP, hasChildcare, hasMedicalExpenses, hasDonations, hasHomeOffice
+- Special: isStudent, isFirstTimeHomeBuyer, hasMovingExpenses
+
+If they already shared a lot, you can extract data AND set discoveryComplete: true to move on.`
+    } else {
+      contextPrompt = `
+CURRENT PHASE: ${conversationState.phase}
 - Data collected so far: ${JSON.stringify(extractedData)}
+- Life situation flags: ${JSON.stringify(conversationState.flags)}
 - Missing fields we still need: ${missingFields.slice(0, 5).join(', ')}
 
 USER'S MESSAGE: "${message}"
 
 INSTRUCTIONS:
-1. Extract ALL data you can from the user's message (names, numbers, dates, locations - everything)
-2. Be smart: "John Smith" = firstName + lastName, "Toronto" = city + province (ON), etc.
-3. After extracting, ask about the NEXT missing field we need
-4. Priority order: personal info first, then income, then deductions, then credits
+1. VALIDATE the input - dates need day/month/year, SIN needs 9 digits, etc.
+2. If invalid, return empty extractedData and ask for correction
+3. If valid, extract ALL data you can
+4. Be smart: "John Smith" = firstName + lastName, "Toronto" = city + province (ON), etc.
+5. After extracting, ask about the NEXT missing field we need
 
 Remember: Keep your response SHORT. Acknowledge what you extracted and ask for the next piece of info.`
+    }
+
 
     // Build messages for the API
     const messages = [
@@ -276,7 +373,14 @@ Remember: Keep your response SHORT. Acknowledge what you extracted and ask for t
 
     // Process extracted data and update state
     const newExtractedData = { ...extractedData, ...aiResponse.extractedData }
-    const newFlags = updateFlags(conversationState.flags, aiResponse.extractedData, message)
+
+    // Merge AI-provided life situation flags with existing flags
+    let newFlags = { ...conversationState.flags }
+    if (aiResponse.lifeSituationFlags) {
+      newFlags = { ...newFlags, ...aiResponse.lifeSituationFlags }
+    }
+    // Also update flags based on message parsing
+    newFlags = updateFlags(newFlags, aiResponse.extractedData, message)
 
     // Determine next phase using smart logic based on what data we have
     const next = findNextPhase(newExtractedData, newFlags)
@@ -288,14 +392,20 @@ Remember: Keep your response SHORT. Acknowledge what you extracted and ask for t
       flags: newFlags
     }
 
+    // Get required documents based on current flags
+    const requiredDocuments = getRequiredDocuments(newFlags as LifeSituationFlags)
+
     // Return the response
     return Response.json({
       message: aiResponse.message,
       extractedData: aiResponse.extractedData,
-      fieldsUpdated: Object.keys(aiResponse.extractedData),
+      fieldsUpdated: Object.keys(aiResponse.extractedData || {}),
       newState: nextState,
       allExtractedData: newExtractedData,
-      confidence: aiResponse.confidence
+      confidence: aiResponse.confidence,
+      validationIssue: aiResponse.validationIssue,
+      requiredDocuments,
+      lifeSituationFlags: newFlags
     })
 
   } catch (error) {
@@ -326,7 +436,8 @@ function updateFlags(
   }
 
   // Employment flag
-  if (lowerMessage.includes('t4') || lowerMessage.includes('employed') || lowerMessage.includes('employer')) {
+  if (lowerMessage.includes('t4') || lowerMessage.includes('employed') || lowerMessage.includes('employer') ||
+      lowerMessage.includes('work at') || lowerMessage.includes('job') || lowerMessage.includes('company')) {
     if (isYes || extractedData.employerName || extractedData.employmentIncome) {
       newFlags.hasEmployment = true
     }
@@ -336,7 +447,8 @@ function updateFlags(
   }
 
   // Self-employment flag
-  if (lowerMessage.includes('self') || lowerMessage.includes('freelance') || lowerMessage.includes('business') || lowerMessage.includes('contractor')) {
+  if (lowerMessage.includes('self') || lowerMessage.includes('freelance') || lowerMessage.includes('business') ||
+      lowerMessage.includes('contractor') || lowerMessage.includes('consulting') || lowerMessage.includes('own business')) {
     if (isYes || extractedData.businessName || extractedData.businessIncome) {
       newFlags.hasSelfEmployment = true
     }
@@ -346,7 +458,8 @@ function updateFlags(
   }
 
   // Investment flag
-  if (lowerMessage.includes('invest') || lowerMessage.includes('interest') || lowerMessage.includes('dividend') || lowerMessage.includes('stock')) {
+  if (lowerMessage.includes('invest') || lowerMessage.includes('interest') || lowerMessage.includes('dividend') ||
+      lowerMessage.includes('stock') || lowerMessage.includes('tfsa') || lowerMessage.includes('gic')) {
     if (isYes || extractedData.interestIncome || extractedData.dividendIncome || extractedData.capitalGains) {
       newFlags.hasInvestments = true
     }
@@ -366,7 +479,8 @@ function updateFlags(
   }
 
   // Medical expenses flag
-  if (lowerMessage.includes('medical') || lowerMessage.includes('dental') || lowerMessage.includes('prescription')) {
+  if (lowerMessage.includes('medical') || lowerMessage.includes('dental') || lowerMessage.includes('prescription') ||
+      lowerMessage.includes('health') || lowerMessage.includes('doctor')) {
     if (isYes || extractedData.medicalExpenses) {
       newFlags.hasMedicalExpenses = true
     }
@@ -376,13 +490,65 @@ function updateFlags(
   }
 
   // Donations flag
-  if (lowerMessage.includes('donat') || lowerMessage.includes('charit')) {
+  if (lowerMessage.includes('donat') || lowerMessage.includes('charit') || lowerMessage.includes('give to')) {
     if (isYes || extractedData.donations) {
       newFlags.hasDonations = true
     }
     if (isNo) {
       newFlags.hasDonations = false
     }
+  }
+
+  // Children flag
+  if (lowerMessage.includes('kid') || lowerMessage.includes('child') || lowerMessage.includes('son') ||
+      lowerMessage.includes('daughter') || lowerMessage.includes('dependent')) {
+    newFlags.hasChildren = true
+  }
+
+  // Spouse/married flag
+  if (lowerMessage.includes('married') || lowerMessage.includes('wife') || lowerMessage.includes('husband') ||
+      lowerMessage.includes('spouse') || lowerMessage.includes('partner') || lowerMessage.includes('common-law')) {
+    newFlags.hasSpouse = true
+  }
+  if (lowerMessage.includes('single') || lowerMessage.includes('not married')) {
+    newFlags.hasSpouse = false
+  }
+
+  // Home office flag
+  if (lowerMessage.includes('work from home') || lowerMessage.includes('home office') || lowerMessage.includes('wfh') ||
+      lowerMessage.includes('remote work')) {
+    newFlags.hasHomeOffice = true
+  }
+
+  // Childcare flag
+  if (lowerMessage.includes('daycare') || lowerMessage.includes('childcare') || lowerMessage.includes('nanny') ||
+      lowerMessage.includes('summer camp') || lowerMessage.includes('babysit')) {
+    newFlags.hasChildcare = true
+  }
+
+  // Student flag
+  if (lowerMessage.includes('student') || lowerMessage.includes('university') || lowerMessage.includes('college') ||
+      lowerMessage.includes('school') || lowerMessage.includes('tuition')) {
+    newFlags.isStudent = true
+    newFlags.hasTuition = true
+  }
+
+  // Rental income flag
+  if (lowerMessage.includes('rental') || lowerMessage.includes('rent out') || lowerMessage.includes('landlord') ||
+      lowerMessage.includes('tenant') || lowerMessage.includes('investment property')) {
+    newFlags.hasRentalIncome = true
+  }
+
+  // First time home buyer
+  if (lowerMessage.includes('first home') || lowerMessage.includes('first house') || lowerMessage.includes('bought a home') ||
+      lowerMessage.includes('bought a house') || lowerMessage.includes('first-time buyer')) {
+    newFlags.isFirstTimeHomeBuyer = true
+  }
+
+  // Moving expenses
+  if (lowerMessage.includes('moved') || lowerMessage.includes('moving') || lowerMessage.includes('relocation') ||
+      lowerMessage.includes('relocated')) {
+    newFlags.hasMovingExpenses = true
   }
 
   return newFlags

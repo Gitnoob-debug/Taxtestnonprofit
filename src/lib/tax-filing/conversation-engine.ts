@@ -10,12 +10,13 @@ import { TaxReturn, Province, MaritalStatus, T4Slip, T5Slip, SelfEmploymentIncom
 // ============================================
 
 export type ConversationPhase =
-  | 'greeting'
+  | 'discovery'        // NEW: Open-ended "tell me about yourself" phase
   | 'personal_info'
   | 'employment_status'
   | 'income_t4'
   | 'income_self_employed'
   | 'income_investment'
+  | 'income_rental'
   | 'income_other'
   | 'deductions_rrsp'
   | 'deductions_other'
@@ -23,22 +24,177 @@ export type ConversationPhase =
   | 'review'
   | 'complete'
 
+// Life situation flags - comprehensive list of tax-relevant situations
+export interface LifeSituationFlags {
+  // Income sources
+  hasEmployment: boolean         // T4 income
+  hasSelfEmployment: boolean     // T2125 business income
+  hasInvestments: boolean        // T5, T3, T5008
+  hasRentalIncome: boolean       // Rental property
+  hasOtherIncome: boolean        // EI, pension, social assistance
+
+  // Family situation
+  hasSpouse: boolean             // Married/common-law
+  hasChildren: boolean           // Dependents under 18
+  hasDependents: boolean         // Other dependents (elderly parent, etc.)
+
+  // Deductions & credits
+  hasRRSP: boolean               // RRSP contributions
+  hasTuition: boolean            // T2202 education
+  hasChildcare: boolean          // Childcare expenses
+  hasMedicalExpenses: boolean    // Medical/dental not covered
+  hasDonations: boolean          // Charitable donations
+  hasMovingExpenses: boolean     // Moved 40km+ for work/school
+  hasHomeOffice: boolean         // Work from home
+  hasDisability: boolean         // DTC eligible
+  hasStudentLoans: boolean       // Student loan interest
+
+  // Special situations
+  isFirstTimeHomeBuyer: boolean  // First home purchase (HBP)
+  isStudent: boolean             // Full/part-time student
+  isNewToCanada: boolean         // Immigration in tax year
+  leftCanada: boolean            // Emigration in tax year
+
+  // Discovery complete flag
+  discoveryComplete: boolean     // Have we gathered enough info?
+}
+
 export interface ConversationState {
   phase: ConversationPhase
   subStep: number
   waitingFor: string | null // What data we're expecting next
   collectedData: Partial<ExtractedData>
-  flags: {
-    hasEmployment: boolean
-    hasSelfEmployment: boolean
-    hasInvestments: boolean
-    hasSpouse: boolean
-    hasChildren: boolean
-    isFirstTimeHomeBuyer: boolean
-    hasRRSP: boolean
-    hasMedicalExpenses: boolean
-    hasDonations: boolean
-  }
+  flags: LifeSituationFlags
+}
+
+// Document requirement based on flags
+export interface DocumentRequirement {
+  id: string
+  name: string
+  description: string
+  status: 'required' | 'recommended' | 'optional' | 'not_needed'
+  completed: boolean
+  flagsRequired: (keyof LifeSituationFlags)[]
+}
+
+// Determine what documents are needed based on life situation
+export function getRequiredDocuments(flags: LifeSituationFlags): DocumentRequirement[] {
+  const docs: DocumentRequirement[] = [
+    {
+      id: 'personal_info',
+      name: 'Personal Information',
+      description: 'Name, SIN, date of birth, address',
+      status: 'required',
+      completed: false,
+      flagsRequired: []
+    },
+    {
+      id: 't4',
+      name: 'T4 - Employment Income',
+      description: 'Statement of Remuneration from employer',
+      status: flags.hasEmployment ? 'required' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasEmployment']
+    },
+    {
+      id: 't2125',
+      name: 'Self-Employment Records',
+      description: 'Business income and expenses',
+      status: flags.hasSelfEmployment ? 'required' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasSelfEmployment']
+    },
+    {
+      id: 't5',
+      name: 'T5 - Investment Income',
+      description: 'Interest and dividend slips',
+      status: flags.hasInvestments ? 'required' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasInvestments']
+    },
+    {
+      id: 'rental',
+      name: 'Rental Income Records',
+      description: 'Rental income and expenses',
+      status: flags.hasRentalIncome ? 'required' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasRentalIncome']
+    },
+    {
+      id: 'rrsp',
+      name: 'RRSP Contribution Receipts',
+      description: 'From financial institution',
+      status: flags.hasRRSP ? 'required' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasRRSP']
+    },
+    {
+      id: 't2202',
+      name: 'T2202 - Tuition',
+      description: 'Tuition and education amounts',
+      status: flags.hasTuition || flags.isStudent ? 'required' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasTuition', 'isStudent']
+    },
+    {
+      id: 'childcare',
+      name: 'Childcare Receipts',
+      description: 'Daycare, camps, nanny expenses',
+      status: flags.hasChildcare ? 'required' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasChildcare']
+    },
+    {
+      id: 'medical',
+      name: 'Medical Expense Receipts',
+      description: 'Out-of-pocket medical/dental costs',
+      status: flags.hasMedicalExpenses ? 'recommended' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasMedicalExpenses']
+    },
+    {
+      id: 'donations',
+      name: 'Donation Receipts',
+      description: 'Charitable donation receipts',
+      status: flags.hasDonations ? 'recommended' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasDonations']
+    },
+    {
+      id: 'home_office',
+      name: 'Home Office Expenses',
+      description: 'T2200 or simplified method records',
+      status: flags.hasHomeOffice ? 'recommended' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasHomeOffice']
+    },
+    {
+      id: 'spouse_info',
+      name: 'Spouse Information',
+      description: 'Spouse SIN and income',
+      status: flags.hasSpouse ? 'required' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasSpouse']
+    },
+    {
+      id: 'moving',
+      name: 'Moving Expense Receipts',
+      description: 'Moving costs for work/school',
+      status: flags.hasMovingExpenses ? 'recommended' : 'not_needed',
+      completed: false,
+      flagsRequired: ['hasMovingExpenses']
+    },
+    {
+      id: 'noa',
+      name: 'Notice of Assessment (Prior Year)',
+      description: 'For RRSP room and carry-forwards',
+      status: 'recommended',
+      completed: false,
+      flagsRequired: []
+    }
+  ]
+
+  return docs.filter(d => d.status !== 'not_needed')
 }
 
 export interface ExtractedData {
@@ -107,17 +263,44 @@ export interface QuestionNode {
 }
 
 export const QUESTION_FLOW: QuestionNode[] = [
-  // Greeting
+  // Discovery Phase - Open-ended questions to understand tax situation
   {
-    phase: 'greeting',
+    phase: 'discovery',
     subStep: 0,
-    question: "Hi! I'm here to help you file your 2024 tax return. Let's make this easy - I'll ask you some questions and fill everything out for you. Ready to get started? First, what's your first name?",
+    question: "Hi! I'm here to help you file your 2024 tax return. To make sure I get you all the deductions you deserve, tell me a bit about yourself - what do you do for work, your family situation, any big life changes this year? The more you share, the better I can help!",
+    waitingFor: 'lifeSituation',
+    extractionHints: ['employed', 'self-employed', 'married', 'kids', 'children', 'student', 'retired', 'work from home'],
+    nextPhase: (data, flags) => {
+      // Stay in discovery until we have enough info
+      if (!flags.discoveryComplete) {
+        return { phase: 'discovery', subStep: 1 }
+      }
+      return { phase: 'personal_info', subStep: 0 }
+    }
+  },
+  {
+    phase: 'discovery',
+    subStep: 1,
+    question: "Great! And what about deductions - did you contribute to RRSP, have medical expenses, childcare costs, or make any charitable donations?",
+    waitingFor: 'deductionSituation',
+    extractionHints: ['rrsp', 'medical', 'dental', 'donations', 'childcare', 'daycare'],
+    nextPhase: (data, flags) => {
+      if (!flags.discoveryComplete) {
+        return { phase: 'discovery', subStep: 2 }
+      }
+      return { phase: 'personal_info', subStep: 0 }
+    }
+  },
+  {
+    phase: 'discovery',
+    subStep: 2,
+    question: "Perfect! Based on what you've told me, I have a good picture of your tax situation. Let's get your return started - first, what's your full name?",
     waitingFor: 'firstName',
-    extractionHints: ['first name', 'name'],
+    extractionHints: ['name', 'first name', 'last name'],
     nextPhase: () => ({ phase: 'personal_info', subStep: 0 })
   },
 
-  // Personal Info
+  // Personal Info - now we ask for specific details
   {
     phase: 'personal_info',
     subStep: 0,
@@ -469,21 +652,67 @@ export function formatQuestion(question: string, data: Partial<ExtractedData>): 
 
 export function createInitialState(): ConversationState {
   return {
-    phase: 'greeting',
+    phase: 'discovery',
     subStep: 0,
-    waitingFor: 'firstName',
+    waitingFor: 'lifeSituation',
     collectedData: {},
     flags: {
+      // Income sources
       hasEmployment: false,
       hasSelfEmployment: false,
       hasInvestments: false,
+      hasRentalIncome: false,
+      hasOtherIncome: false,
+      // Family
       hasSpouse: false,
       hasChildren: false,
-      isFirstTimeHomeBuyer: false,
+      hasDependents: false,
+      // Deductions & credits
       hasRRSP: false,
+      hasTuition: false,
+      hasChildcare: false,
       hasMedicalExpenses: false,
-      hasDonations: false
+      hasDonations: false,
+      hasMovingExpenses: false,
+      hasHomeOffice: false,
+      hasDisability: false,
+      hasStudentLoans: false,
+      // Special situations
+      isFirstTimeHomeBuyer: false,
+      isStudent: false,
+      isNewToCanada: false,
+      leftCanada: false,
+      // Discovery status
+      discoveryComplete: false
     }
+  }
+}
+
+// Default empty flags for initialization
+export function createEmptyFlags(): LifeSituationFlags {
+  return {
+    hasEmployment: false,
+    hasSelfEmployment: false,
+    hasInvestments: false,
+    hasRentalIncome: false,
+    hasOtherIncome: false,
+    hasSpouse: false,
+    hasChildren: false,
+    hasDependents: false,
+    hasRRSP: false,
+    hasTuition: false,
+    hasChildcare: false,
+    hasMedicalExpenses: false,
+    hasDonations: false,
+    hasMovingExpenses: false,
+    hasHomeOffice: false,
+    hasDisability: false,
+    hasStudentLoans: false,
+    isFirstTimeHomeBuyer: false,
+    isStudent: false,
+    isNewToCanada: false,
+    leftCanada: false,
+    discoveryComplete: false
   }
 }
 

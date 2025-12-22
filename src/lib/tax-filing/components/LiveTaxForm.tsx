@@ -121,7 +121,7 @@ export function LiveTaxForm({
           <FormSection
             title="Personal Information"
             icon={<User className="h-4 w-4" />}
-            isActive={conversationState.phase === 'greeting' || conversationState.phase === 'personal_info'}
+            isActive={conversationState.phase === 'discovery' || conversationState.phase === 'personal_info'}
             hasData={hasPersonalInfo}
           >
             <FormField

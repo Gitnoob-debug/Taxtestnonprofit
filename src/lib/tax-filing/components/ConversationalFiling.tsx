@@ -16,9 +16,12 @@ import {
   createInitialState,
   getCurrentQuestion,
   formatQuestion,
-  QUESTION_FLOW
+  QUESTION_FLOW,
+  DocumentRequirement,
+  LifeSituationFlags
 } from '../conversation-engine'
 import { LiveTaxForm } from './LiveTaxForm'
+import { DocumentChecklist, DocumentChecklistCompact } from './DocumentChecklist'
 import { formatCurrency } from '../tax-engine'
 
 // Scanned slip data awaiting confirmation
@@ -44,6 +47,10 @@ export function ConversationalFiling() {
   const [pendingSlip, setPendingSlip] = useState<PendingSlipData | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Document tracking state
+  const [completedDocuments, setCompletedDocuments] = useState<string[]>([])
+  const [requiredDocuments, setRequiredDocuments] = useState<DocumentRequirement[]>([])
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -77,6 +84,58 @@ export function ConversationalFiling() {
       setMessages([greeting])
     }
   }, [])
+
+  // Helper function to track completed documents based on data
+  const updateCompletedDocuments = (data: Partial<ExtractedData>, flags: LifeSituationFlags) => {
+    const completed: string[] = []
+
+    // Personal info complete
+    if (data.firstName && data.lastName && data.sin && data.dateOfBirth && data.street && data.city && data.province && data.postalCode) {
+      completed.push('personal_info')
+    }
+
+    // T4 complete
+    if (data.employerName && data.employmentIncome !== undefined) {
+      completed.push('t4')
+    }
+
+    // Self-employment info
+    if (data.businessName && data.businessIncome !== undefined) {
+      completed.push('t2125')
+    }
+
+    // Investment info
+    if (data.interestIncome !== undefined || data.dividendIncome !== undefined) {
+      completed.push('t5')
+    }
+
+    // RRSP
+    if (data.rrspContribution !== undefined) {
+      completed.push('rrsp')
+    }
+
+    // Medical
+    if (data.medicalExpenses !== undefined) {
+      completed.push('medical')
+    }
+
+    // Donations
+    if (data.donations !== undefined) {
+      completed.push('donations')
+    }
+
+    // Childcare
+    if (data.childcareExpenses !== undefined) {
+      completed.push('childcare')
+    }
+
+    // Spouse info
+    if (data.spouseFirstName && data.spouseIncome !== undefined) {
+      completed.push('spouse_info')
+    }
+
+    setCompletedDocuments(completed)
+  }
 
   // Handle sending a message
   const handleSend = async () => {
@@ -113,6 +172,14 @@ export function ConversationalFiling() {
       // Update state
       setExtractedData(data.allExtractedData)
       setConversationState(data.newState)
+
+      // Update required documents list
+      if (data.requiredDocuments) {
+        setRequiredDocuments(data.requiredDocuments)
+      }
+
+      // Track completed documents based on extracted data
+      updateCompletedDocuments(data.allExtractedData, data.newState.flags)
 
       // Highlight updated fields
       if (data.fieldsUpdated && data.fieldsUpdated.length > 0) {
@@ -478,13 +545,28 @@ export function ConversationalFiling() {
             </CardContent>
           </Card>
 
-          {/* Right Side - Live Form */}
-          <div className="hidden lg:block">
-            <LiveTaxForm
-              extractedData={extractedData}
-              conversationState={conversationState}
-              recentlyUpdatedFields={recentlyUpdatedFields}
+          {/* Right Side - Document Checklist + Live Form */}
+          <div className="hidden lg:flex lg:flex-col gap-4 h-full overflow-hidden">
+            {/* Document Checklist */}
+            <DocumentChecklist
+              flags={conversationState.flags as LifeSituationFlags}
+              completedDocuments={completedDocuments}
+              onDocumentClick={(docId) => {
+                // Could trigger upload for specific document type
+                if (docId === 't4' || docId === 't5' || docId === 'rrsp') {
+                  fileInputRef.current?.click()
+                }
+              }}
             />
+
+            {/* Live Form - takes remaining space */}
+            <div className="flex-1 overflow-auto">
+              <LiveTaxForm
+                extractedData={extractedData}
+                conversationState={conversationState}
+                recentlyUpdatedFields={recentlyUpdatedFields}
+              />
+            </div>
           </div>
         </div>
       </div>
