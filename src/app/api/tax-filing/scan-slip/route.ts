@@ -104,11 +104,21 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    // Validate file type
-    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'application/pdf']
-    if (!validTypes.includes(file.type)) {
+    // Validate file type - only images for now (PDFs need different handling)
+    const validImageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
+    const isPDF = file.type === 'application/pdf'
+
+    if (!validImageTypes.includes(file.type) && !isPDF) {
       return Response.json({
         error: 'Please upload an image (PNG, JPG, WEBP) or PDF file'
+      }, { status: 400 })
+    }
+
+    // For PDFs, tell user to use image instead (PDF vision support is limited)
+    if (isPDF) {
+      return Response.json({
+        error: 'Please upload an image instead of PDF. Take a photo or screenshot of your tax slip for best results.',
+        details: 'PDF scanning coming soon - for now, please use a photo or screenshot'
       }, { status: 400 })
     }
 
@@ -123,7 +133,13 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer()
     const base64 = Buffer.from(bytes).toString('base64')
 
-    // Call vision API
+    // Determine correct MIME type for data URL
+    let mimeType = file.type
+    if (mimeType === 'image/jpg') {
+      mimeType = 'image/jpeg'
+    }
+
+    // Call vision API - use claude-3.5-sonnet which has good vision support
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -133,14 +149,14 @@ export async function POST(request: NextRequest) {
         'X-Title': 'Tax Radar Slip Scanner'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-sonnet-4',
+        model: 'anthropic/claude-3.5-sonnet',
         messages: [{
           role: 'user',
           content: [
             {
               type: 'image_url',
               image_url: {
-                url: `data:${file.type};base64,${base64}`
+                url: `data:${mimeType};base64,${base64}`
               }
             },
             { type: 'text', text: EXTRACTION_PROMPT }
@@ -152,9 +168,24 @@ export async function POST(request: NextRequest) {
     })
 
     if (!response.ok) {
-      const error = await response.text()
-      console.error('[TAX-SLIP-SCAN] API error:', error)
-      return Response.json({ error: 'Failed to process image' }, { status: 500 })
+      const errorText = await response.text()
+      console.error('[TAX-SLIP-SCAN] API error:', response.status, errorText)
+
+      // Parse error for better messaging
+      let errorMessage = 'Failed to process image'
+      try {
+        const errorJson = JSON.parse(errorText)
+        if (errorJson.error?.message) {
+          errorMessage = errorJson.error.message
+        }
+      } catch (e) {
+        // Use default message
+      }
+
+      return Response.json({
+        error: errorMessage,
+        details: `API returned ${response.status}`
+      }, { status: 500 })
     }
 
     const data = await response.json()
