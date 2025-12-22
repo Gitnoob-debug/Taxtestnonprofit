@@ -22,7 +22,8 @@
       "Bash(npx cap init:*)",
       "Bash(npx cap:*)",
       "Bash(where:*)",
-      "Bash(npm run cap:*)"
+      "Bash(npm run cap:*)",
+      "Bash(cat:*)"
     ]
   }
 }

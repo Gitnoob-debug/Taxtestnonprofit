@@ -27,7 +27,21 @@ DOCUMENT IDENTIFICATION:
 - T3: "Statement of Trust Income" - trust/mutual fund distributions
 - T4A: Pension/retirement income, scholarships, other income
 - T5008: Securities transactions (buy/sell)
-- NOA: Notice of Assessment from CRA
+- NOA: Notice of Assessment from CRA - contains RRSP room, refund/balance owing, total income assessed
+
+FOR NOTICE OF ASSESSMENT (NOA) - Extract these KEY fields:
+- Tax year the assessment is for
+- Total income assessed (line 15000)
+- Net income (line 23600)
+- Taxable income (line 26000)
+- Total tax payable
+- Total credits
+- Refund OR Balance owing (the final amount - CRITICAL)
+- RRSP/PRPP deduction limit for next year (VERY IMPORTANT for planning)
+- Unused RRSP contributions available to deduct
+- Any amounts owing or carried forward
+- Home Buyers' Plan (HBP) balance if shown
+- Lifelong Learning Plan (LLP) balance if shown
 
 FOR T4 SLIPS - Extract these boxes EXACTLY:
 - Employer name (top of slip)
@@ -57,11 +71,13 @@ FOR T5 SLIPS - Extract these boxes:
 - Box 26: Dividend tax credit for eligible dividends
 
 RESPONSE FORMAT (JSON only, no markdown):
+
+For T4/T5/T3/T4A slips:
 {
-  "slipType": "T4" | "T5" | "T3" | "T4A" | "T5008" | "NOA" | "unknown",
+  "slipType": "T4",
   "confidence": "high" | "medium" | "low",
   "taxYear": 2024,
-  "issuerName": "Exact name as shown",
+  "issuerName": "Employer/Payer Name",
   "extractedFields": {
     "box14_employmentIncome": 65432.10,
     "box16_cpp": 3867.50,
@@ -75,13 +91,42 @@ RESPONSE FORMAT (JSON only, no markdown):
     "cppDeducted": 3867.50,
     "eiDeducted": 1002.45
   },
-  "fieldConfidence": {
-    "employmentIncome": "high",
-    "taxDeducted": "high",
-    "cppDeducted": "medium"
+  "fieldConfidence": { ... },
+  "issues": [],
+  "rawTextExtracted": "Key text"
+}
+
+For NOA (Notice of Assessment) - EXTRACT ALL VALUES:
+{
+  "slipType": "NOA",
+  "confidence": "high",
+  "taxYear": 2023,
+  "issuerName": "Canada Revenue Agency",
+  "extractedFields": {
+    "totalIncome": 75000.00,
+    "netIncome": 68000.00,
+    "taxableIncome": 65000.00,
+    "totalTaxPayable": 12000.00,
+    "totalCredits": 2500.00,
+    "refundOrOwing": 1500.00,
+    "isRefund": true,
+    "rrspDeductionLimit": 15000.00,
+    "unusedRrspContributions": 3000.00,
+    "hbpBalance": 0,
+    "llpBalance": 0
   },
-  "issues": ["Box 44 was partially obscured - value may be incorrect"],
-  "rawTextExtracted": "Key text from document for verification"
+  "formFieldMapping": {
+    "totalIncome": 75000.00,
+    "netIncome": 68000.00,
+    "taxableIncome": 65000.00,
+    "refundOwing": 1500.00,
+    "isRefund": true,
+    "rrspRoom": 15000.00,
+    "unusedRrsp": 3000.00
+  },
+  "fieldConfidence": { ... },
+  "issues": [],
+  "rawTextExtracted": "Summary of your 2023 assessment..."
 }`
 
 interface ScanResult {
@@ -324,17 +369,46 @@ function generateConfirmationMessage(result: ScanResult): string {
     }
 
   } else if (result.slipType === 'NOA') {
-    parts.push(`📄 **Notice of Assessment** for **${result.taxYear || 'unknown year'}**`)
+    parts.push(`📄 **${result.taxYear || ''} Notice of Assessment** from CRA`)
     parts.push('')
-    if (fields.refundOwing !== undefined) {
-      if (fields.refundOwing >= 0) {
-        parts.push(`• **Refund: $${formatNumber(fields.refundOwing)}**`)
+    parts.push('**Key Information:**')
+
+    // Show refund/balance owing prominently
+    if (fields.refundOwing !== undefined && fields.refundOwing !== null) {
+      if (fields.isRefund || fields.refundOwing > 0) {
+        parts.push(`✅ **Refund: $${formatNumber(Math.abs(fields.refundOwing))}**`)
       } else {
-        parts.push(`• **Balance Owing: $${formatNumber(Math.abs(fields.refundOwing))}**`)
+        parts.push(`⚠️ **Balance Owing: $${formatNumber(Math.abs(fields.refundOwing))}**`)
       }
     }
-    if (fields.rrspRoom !== undefined) {
-      parts.push(`• RRSP Contribution Room: **$${formatNumber(fields.rrspRoom)}**`)
+
+    parts.push('')
+    parts.push('**Income Summary:**')
+    if (fields.totalIncome !== undefined && fields.totalIncome !== null) {
+      parts.push(`• Total Income: **$${formatNumber(fields.totalIncome)}**`)
+    }
+    if (fields.netIncome !== undefined && fields.netIncome !== null) {
+      parts.push(`• Net Income: **$${formatNumber(fields.netIncome)}**`)
+    }
+    if (fields.taxableIncome !== undefined && fields.taxableIncome !== null) {
+      parts.push(`• Taxable Income: **$${formatNumber(fields.taxableIncome)}**`)
+    }
+
+    parts.push('')
+    parts.push('**RRSP Information (Important for Next Year):**')
+    if (fields.rrspRoom !== undefined && fields.rrspRoom !== null) {
+      parts.push(`• RRSP Deduction Limit: **$${formatNumber(fields.rrspRoom)}**`)
+    }
+    if (fields.unusedRrsp !== undefined && fields.unusedRrsp !== null) {
+      parts.push(`• Unused RRSP Contributions: **$${formatNumber(fields.unusedRrsp)}**`)
+    }
+
+    // HBP/LLP if present
+    if (fields.hbpBalance !== undefined && fields.hbpBalance > 0) {
+      parts.push(`• Home Buyers' Plan Balance: **$${formatNumber(fields.hbpBalance)}**`)
+    }
+    if (fields.llpBalance !== undefined && fields.llpBalance > 0) {
+      parts.push(`• Lifelong Learning Plan Balance: **$${formatNumber(fields.llpBalance)}**`)
     }
 
   } else {
