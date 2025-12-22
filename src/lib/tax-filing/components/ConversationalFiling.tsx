@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Bot, User, Loader2, CheckCircle2, Sparkles } from 'lucide-react'
+import { Send, Bot, User, Loader2, CheckCircle2, Sparkles, Camera, Upload, FileText, X, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Progress } from '@/components/ui/progress'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   ConversationState,
   ConversationMessage,
@@ -20,6 +21,15 @@ import {
 import { LiveTaxForm } from './LiveTaxForm'
 import { formatCurrency } from '../tax-engine'
 
+// Scanned slip data awaiting confirmation
+interface PendingSlipData {
+  slipType: string
+  confidence: string
+  formFields: Record<string, any>
+  confirmationMessage: string
+  issuerName: string | null
+}
+
 export function ConversationalFiling() {
   // Conversation state
   const [conversationState, setConversationState] = useState<ConversationState>(createInitialState)
@@ -28,6 +38,12 @@ export function ConversationalFiling() {
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [recentlyUpdatedFields, setRecentlyUpdatedFields] = useState<string[]>([])
+
+  // Image upload state
+  const [isUploading, setIsUploading] = useState(false)
+  const [pendingSlip, setPendingSlip] = useState<PendingSlipData | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -136,6 +152,160 @@ export function ConversationalFiling() {
     }
   }
 
+  // Handle file upload
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    setUploadError(null)
+
+    // Add user message showing they uploaded
+    const uploadMessage: ConversationMessage = {
+      role: 'user',
+      content: `📎 Uploaded: ${file.name}`,
+      timestamp: Date.now()
+    }
+    setMessages(prev => [...prev, uploadMessage])
+
+    // Add "scanning" message
+    const scanningMessage: ConversationMessage = {
+      role: 'assistant',
+      content: '📷 Scanning your tax slip... Give me a moment to read this.',
+      timestamp: Date.now()
+    }
+    setMessages(prev => [...prev, scanningMessage])
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/tax-filing/scan-slip', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to scan document')
+      }
+
+      const data = await response.json()
+
+      // Store pending slip data for confirmation
+      setPendingSlip({
+        slipType: data.slipType,
+        confidence: data.confidence,
+        formFields: data.formFields,
+        confirmationMessage: data.confirmationMessage,
+        issuerName: data.issuerName
+      })
+
+      // Update messages with what we found
+      setMessages(prev => {
+        const updated = [...prev]
+        // Remove the "scanning" message
+        updated.pop()
+        // Add the confirmation message
+        updated.push({
+          role: 'assistant',
+          content: data.confirmationMessage,
+          timestamp: Date.now()
+        })
+        return updated
+      })
+
+    } catch (error) {
+      console.error('Upload error:', error)
+      setUploadError(error instanceof Error ? error.message : 'Failed to scan document')
+
+      // Update messages with error
+      setMessages(prev => {
+        const updated = [...prev]
+        updated.pop() // Remove "scanning" message
+        updated.push({
+          role: 'assistant',
+          content: `❌ Sorry, I couldn't read that document. ${error instanceof Error ? error.message : 'Please try again with a clearer image.'}`,
+          timestamp: Date.now()
+        })
+        return updated
+      })
+    } finally {
+      setIsUploading(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  // Confirm scanned slip data
+  const confirmSlipData = () => {
+    if (!pendingSlip) return
+
+    // Merge scanned data into extracted data
+    const newData = { ...extractedData }
+    const fieldsUpdated: string[] = []
+
+    // Map the form fields to our data structure
+    Object.entries(pendingSlip.formFields).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        (newData as any)[key] = value
+        fieldsUpdated.push(key)
+      }
+    })
+
+    // If we got employer name, set the flag
+    if (pendingSlip.formFields.employerName || pendingSlip.formFields.employmentIncome) {
+      setConversationState(prev => ({
+        ...prev,
+        flags: { ...prev.flags, hasEmployment: true }
+      }))
+    }
+
+    setExtractedData(newData)
+    setRecentlyUpdatedFields(fieldsUpdated)
+    setTimeout(() => setRecentlyUpdatedFields([]), 2000)
+
+    // Add confirmation message
+    const confirmMessage: ConversationMessage = {
+      role: 'user',
+      content: '✓ Yes, that looks correct!',
+      timestamp: Date.now()
+    }
+    setMessages(prev => [...prev, confirmMessage])
+
+    // Add follow-up message
+    const followUp: ConversationMessage = {
+      role: 'assistant',
+      content: `Perfect! I've added the ${pendingSlip.slipType} data to your return. ${fieldsUpdated.length} fields updated. Do you have any other tax slips to add, or should we continue with the questions?`,
+      timestamp: Date.now(),
+      fieldsUpdated
+    }
+    setMessages(prev => [...prev, followUp])
+
+    setPendingSlip(null)
+  }
+
+  // Reject scanned slip data
+  const rejectSlipData = () => {
+    const rejectMessage: ConversationMessage = {
+      role: 'user',
+      content: '✗ No, that\'s not right',
+      timestamp: Date.now()
+    }
+    setMessages(prev => [...prev, rejectMessage])
+
+    const helpMessage: ConversationMessage = {
+      role: 'assistant',
+      content: 'No problem! You can try uploading a clearer photo, or I can ask you the questions directly. What would you prefer?',
+      timestamp: Date.now()
+    }
+    setMessages(prev => [...prev, helpMessage])
+
+    setPendingSlip(null)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -231,29 +401,78 @@ export function ConversationalFiling() {
                 </div>
               </ScrollArea>
 
+              {/* Confirmation buttons when slip is pending */}
+              {pendingSlip && (
+                <div className="p-4 border-t bg-muted/50">
+                  <p className="text-sm font-medium mb-3 text-center">Does this look correct?</p>
+                  <div className="flex gap-3 justify-center">
+                    <Button
+                      onClick={confirmSlipData}
+                      className="flex-1 max-w-32"
+                      variant="default"
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Yes, add it
+                    </Button>
+                    <Button
+                      onClick={rejectSlipData}
+                      className="flex-1 max-w-32"
+                      variant="outline"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      No, wrong
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Input */}
               <div className="p-4 border-t">
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+
                 <div className="flex gap-2">
+                  {/* Upload button */}
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLoading || isUploading || !!pendingSlip}
+                    size="icon"
+                    variant="outline"
+                    title="Upload T4/T5 slip"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Camera className="h-4 w-4" />
+                    )}
+                  </Button>
+
                   <Input
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Type your answer..."
-                    disabled={isLoading}
+                    placeholder={pendingSlip ? "Confirm the scanned data above..." : "Type your answer or upload a tax slip..."}
+                    disabled={isLoading || isUploading || !!pendingSlip}
                     className="flex-1"
                     autoFocus
                   />
                   <Button
                     onClick={handleSend}
-                    disabled={!inputValue.trim() || isLoading}
+                    disabled={!inputValue.trim() || isLoading || isUploading || !!pendingSlip}
                     size="icon"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Press Enter to send
+                  Press Enter to send · Click 📷 to upload a tax slip
                 </p>
               </div>
             </CardContent>
