@@ -7,6 +7,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin, getUserFromToken } from '@/lib/server/supabase-admin'
 import {
   ConversationState,
+  ConversationPhase,
   ExtractedData,
   ConversationMessage,
   getCurrentQuestion,
@@ -22,50 +23,64 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 // System prompt for the tax filing assistant
 const SYSTEM_PROMPT = `You are a friendly, conversational Canadian tax filing assistant. Your job is to:
 
-1. Extract specific data from user responses (names, numbers, dates, etc.)
+1. Extract ALL relevant data from user responses - be smart about parsing natural language
 2. Respond naturally and conversationally
-3. Ask the next question in the sequence
-4. Keep responses SHORT - 1-2 sentences max for acknowledgment, then the next question
+3. Skip questions for data you've already collected
+4. Keep responses SHORT - 1-2 sentences max
 
-CRITICAL RULES:
-- ALWAYS extract the requested data from the user's message
+CRITICAL INTELLIGENCE RULES:
+- EXTRACT EVERYTHING you can from each response
+- If user says "John Smith" - extract BOTH firstName: "John" AND lastName: "Smith"
+- If user says "I'm 45 and married" - extract dateOfBirth (estimate year) AND maritalStatus
+- If user says "I live at 123 Main St, Toronto ON M5V 1A1" - extract street, city, province, AND postalCode
+- If user mentions their job and salary together - extract employerName AND employmentIncome
+- If user says "I made about $65k at RBC" - extract employerName: "RBC" AND employmentIncome: 65000
+- Don't be stupid - understand natural language and extract multiple fields at once
 - Format dates as YYYY-MM-DD
 - Format SIN as XXX-XXX-XXX (with dashes)
 - Format currency as numbers only (no $ or commas)
-- Recognize province names and abbreviations
-- Be encouraging and friendly but BRIEF
-- If the user's response is unclear, ask for clarification
-
-You will receive context about what data to extract and what question to ask next.
+- Recognize province names AND cities (Toronto=ON, Vancouver=BC, Calgary=AB, etc.)
 
 RESPONSE FORMAT:
 Always respond with valid JSON in this exact format:
 {
   "extractedData": {
-    "fieldName": "extracted value"
+    "fieldName1": "value1",
+    "fieldName2": "value2"
   },
-  "message": "Your conversational response including the next question",
+  "message": "Your conversational response with the NEXT question for data you don't have yet",
   "confidence": "high" | "medium" | "low"
 }
 
-Example - if waiting for firstName and user says "I'm John":
+AVAILABLE FIELDS TO EXTRACT:
+- firstName, lastName (personal)
+- dateOfBirth (YYYY-MM-DD), sin (XXX-XXX-XXX)
+- maritalStatus (single, married, common-law, divorced, separated, widowed)
+- street, city, province (2-letter code), postalCode
+- employerName, employmentIncome, taxDeducted, cppContributions, eiPremiums
+- businessName, businessIncome, businessExpenses
+- interestIncome, dividendIncome, capitalGains
+- rrspContribution, rrspLimit
+- childcareExpenses, medicalExpenses, donations
+
+Example - if user says "I'm John Smith":
 {
-  "extractedData": { "firstName": "John" },
-  "message": "Nice to meet you, John! And your last name?",
+  "extractedData": { "firstName": "John", "lastName": "Smith" },
+  "message": "Nice to meet you, John! What's your date of birth?",
   "confidence": "high"
 }
 
-Example - if waiting for province and user says "I live in Toronto":
+Example - if user says "I work at TD Bank making 75k":
 {
-  "extractedData": { "province": "ON" },
-  "message": "Ontario, great! What's your mailing address? Just the street address is fine.",
+  "extractedData": { "employerName": "TD Bank", "employmentIncome": 75000 },
+  "message": "Got it - TD Bank at $75,000. How much tax was deducted (Box 22 on your T4)?",
   "confidence": "high"
 }
 
-Example - if waiting for employmentIncome and user says "about 65 thousand":
+Example - if user says "I'm married, 2 kids, live in Vancouver":
 {
-  "extractedData": { "employmentIncome": 65000 },
-  "message": "$65,000 - got it! And Box 22, the income tax deducted?",
+  "extractedData": { "maritalStatus": "married", "province": "BC", "city": "Vancouver" },
+  "message": "Perfect! What's your street address in Vancouver?",
   "confidence": "high"
 }`
 
@@ -74,6 +89,91 @@ interface ChatRequest {
   conversationState: ConversationState
   conversationHistory: ConversationMessage[]
   extractedData: Partial<ExtractedData>
+}
+
+// Get missing fields in priority order
+function getMissingFields(data: Partial<ExtractedData>): string[] {
+  const priorityFields = [
+    // Personal (required)
+    'firstName', 'lastName', 'sin', 'dateOfBirth', 'province', 'street', 'city', 'postalCode', 'maritalStatus',
+    // Employment (if applicable)
+    'employerName', 'employmentIncome', 'taxDeducted', 'cppDeducted', 'eiDeducted',
+    // Self-employment (if applicable)
+    'businessName', 'businessIncome', 'businessExpenses',
+    // Investments (if applicable)
+    'interestIncome', 'dividendIncome', 'capitalGains',
+    // Deductions
+    'rrspContribution',
+    // Credits
+    'medicalExpenses', 'donations'
+  ]
+
+  return priorityFields.filter(field => {
+    const value = data[field as keyof ExtractedData]
+    return value === undefined || value === null || value === ''
+  })
+}
+
+// Find the next appropriate phase based on collected data
+function findNextPhase(data: Partial<ExtractedData>, flags: ConversationState['flags']): { phase: ConversationPhase; subStep: number } {
+  // Personal info incomplete?
+  if (!data.firstName || !data.lastName) return { phase: 'personal_info', subStep: 0 }
+  if (!data.sin) return { phase: 'personal_info', subStep: 1 }
+  if (!data.dateOfBirth) return { phase: 'personal_info', subStep: 2 }
+  if (!data.province) return { phase: 'personal_info', subStep: 3 }
+  if (!data.street) return { phase: 'personal_info', subStep: 4 }
+  if (!data.city) return { phase: 'personal_info', subStep: 5 }
+  if (!data.postalCode) return { phase: 'personal_info', subStep: 6 }
+  if (!data.maritalStatus) return { phase: 'personal_info', subStep: 7 }
+
+  // Spouse info if married
+  if ((data.maritalStatus === 'married' || data.maritalStatus === 'common-law') && !data.spouseFirstName) {
+    return { phase: 'personal_info', subStep: 8 }
+  }
+
+  // Employment status - need to determine if they have employment
+  if (flags.hasEmployment === false && flags.hasSelfEmployment === false && flags.hasInvestments === false) {
+    // Haven't asked about income yet
+    return { phase: 'employment_status', subStep: 0 }
+  }
+
+  // T4 income if they have employment
+  if (flags.hasEmployment && !data.employmentIncome) {
+    if (!data.employerName) return { phase: 'income_t4', subStep: 0 }
+    return { phase: 'income_t4', subStep: 1 }
+  }
+  if (flags.hasEmployment && data.employmentIncome && !data.taxDeducted) {
+    return { phase: 'income_t4', subStep: 2 }
+  }
+
+  // Self-employment
+  if (flags.hasSelfEmployment && !data.businessIncome) {
+    if (!data.businessName) return { phase: 'income_self_employed', subStep: 0 }
+    return { phase: 'income_self_employed', subStep: 1 }
+  }
+
+  // Investments
+  if (flags.hasInvestments && data.interestIncome === undefined) {
+    return { phase: 'income_investment', subStep: 0 }
+  }
+
+  // RRSP
+  if (flags.hasRRSP && !data.rrspContribution) {
+    return { phase: 'deductions_rrsp', subStep: 1 }
+  }
+
+  // Medical
+  if (flags.hasMedicalExpenses && !data.medicalExpenses) {
+    return { phase: 'credits', subStep: 1 }
+  }
+
+  // Donations
+  if (flags.hasDonations && !data.donations) {
+    return { phase: 'credits', subStep: 3 }
+  }
+
+  // All collected - go to review
+  return { phase: 'review', subStep: 0 }
 }
 
 interface AIResponse {
@@ -106,20 +206,22 @@ export async function POST(request: NextRequest) {
     )
 
     // Build the context for the AI
+    const missingFields = getMissingFields(extractedData)
     const contextPrompt = `
 CURRENT CONTEXT:
-- Waiting for: ${currentQuestion.waitingFor}
-- Extraction hints: ${currentQuestion.extractionHints.join(', ')}
 - Current phase: ${conversationState.phase}
 - Data collected so far: ${JSON.stringify(extractedData)}
+- Missing fields we still need: ${missingFields.slice(0, 5).join(', ')}
 
 USER'S MESSAGE: "${message}"
 
-NEXT QUESTION TO ASK (if data is extracted successfully):
-${nextQuestionNode ? formatQuestion(nextQuestionNode.question, extractedData) : "You've completed the conversation! Summarize what was collected and ask if everything looks correct."}
+INSTRUCTIONS:
+1. Extract ALL data you can from the user's message (names, numbers, dates, locations - everything)
+2. Be smart: "John Smith" = firstName + lastName, "Toronto" = city + province (ON), etc.
+3. After extracting, ask about the NEXT missing field we need
+4. Priority order: personal info first, then income, then deductions, then credits
 
-Extract the "${currentQuestion.waitingFor}" field from the user's message and respond conversationally.
-Remember: Keep your response SHORT. Just acknowledge what they said and ask the next question.`
+Remember: Keep your response SHORT. Acknowledge what you extracted and ask for the next piece of info.`
 
     // Build messages for the API
     const messages = [
@@ -176,24 +278,14 @@ Remember: Keep your response SHORT. Just acknowledge what they said and ask the 
     const newExtractedData = { ...extractedData, ...aiResponse.extractedData }
     const newFlags = updateFlags(conversationState.flags, aiResponse.extractedData, message)
 
-    // Determine next phase
-    let nextState: ConversationState
-    if (Object.keys(aiResponse.extractedData).length > 0) {
-      const next = currentQuestion.nextPhase(newExtractedData as ExtractedData, newFlags)
-      nextState = {
-        phase: next.phase,
-        subStep: next.subStep,
-        waitingFor: QUESTION_FLOW.find(q => q.phase === next.phase && q.subStep === next.subStep)?.waitingFor || null,
-        collectedData: newExtractedData,
-        flags: newFlags
-      }
-    } else {
-      // No data extracted, stay on same question
-      nextState = {
-        ...conversationState,
-        collectedData: newExtractedData,
-        flags: newFlags
-      }
+    // Determine next phase using smart logic based on what data we have
+    const next = findNextPhase(newExtractedData, newFlags)
+    const nextState: ConversationState = {
+      phase: next.phase,
+      subStep: next.subStep,
+      waitingFor: QUESTION_FLOW.find(q => q.phase === next.phase && q.subStep === next.subStep)?.waitingFor || null,
+      collectedData: newExtractedData,
+      flags: newFlags
     }
 
     // Return the response
