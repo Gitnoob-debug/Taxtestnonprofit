@@ -12,7 +12,6 @@ import {
   Star,
   Info
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { DocumentRequirement, LifeSituationFlags, getRequiredDocuments } from '../conversation-engine'
@@ -25,7 +24,7 @@ interface DocumentChecklistProps {
 }
 
 export function DocumentChecklist({ flags, completedDocuments, onDocumentClick }: DocumentChecklistProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(false) // Collapsed by default
 
   // Get required documents based on flags
   const documents = getRequiredDocuments(flags)
@@ -57,64 +56,62 @@ export function DocumentChecklist({ flags, completedDocuments, onDocumentClick }
 
   if (!showChecklist) {
     return (
-      <Card className="bg-muted/30">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <Info className="h-5 w-5" />
-            <div>
-              <p className="text-sm font-medium">Document Checklist</p>
-              <p className="text-xs">Tell me about yourself so I can determine what documents you'll need.</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-3 px-3 py-2 bg-muted/30 rounded-lg text-muted-foreground">
+        <Info className="h-4 w-4 flex-shrink-0" />
+        <span className="text-xs">Tell me about yourself to see required documents</span>
+      </div>
     )
   }
 
+  // Compact collapsed view - just a slim bar
   return (
-    <Card>
-      <CardHeader
-        className="pb-2 cursor-pointer"
+    <div className="bg-card border rounded-lg overflow-hidden">
+      {/* Header - always visible, acts as toggle */}
+      <div
+        className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            Documents Needed
-          </CardTitle>
+        <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
+            <span className="text-sm font-medium">Documents</span>
+            <Badge variant={progress === 100 ? "default" : "outline"} className="text-xs h-5">
               {completedRequired}/{requiredDocs.length}
             </Badge>
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            {progress === 100 && (
+              <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
             )}
           </div>
+          <Progress value={progress} className="h-1 mt-1" />
         </div>
-        <Progress value={progress} className="h-1.5 mt-2" />
-      </CardHeader>
+        {isExpanded ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        )}
+      </div>
 
+      {/* Expanded content */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden"
           >
-            <CardContent className="pt-0 pb-4">
+            <div className="px-3 pb-3 pt-1 border-t max-h-[200px] overflow-y-auto">
               {/* Required Documents */}
               {required.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-xs font-semibold text-destructive mb-2 flex items-center gap-1">
-                    <Star className="h-3 w-3" />
+                <div className="mb-2">
+                  <p className="text-xs font-semibold text-destructive mb-1 flex items-center gap-1">
+                    <Star className="h-2.5 w-2.5" />
                     REQUIRED
                   </p>
-                  <div className="space-y-2">
+                  <div className="space-y-0.5">
                     {required.map((doc) => (
-                      <DocumentItem
+                      <DocumentItemCompact
                         key={doc.id}
                         doc={doc}
                         onClick={() => onDocumentClick?.(doc.id)}
@@ -126,11 +123,11 @@ export function DocumentChecklist({ flags, completedDocuments, onDocumentClick }
 
               {/* Recommended Documents */}
               {recommended.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-xs font-semibold text-amber-600 mb-2">RECOMMENDED</p>
-                  <div className="space-y-2">
+                <div className="mb-2">
+                  <p className="text-xs font-semibold text-amber-600 mb-1">RECOMMENDED</p>
+                  <div className="space-y-0.5">
                     {recommended.map((doc) => (
-                      <DocumentItem
+                      <DocumentItemCompact
                         key={doc.id}
                         doc={doc}
                         onClick={() => onDocumentClick?.(doc.id)}
@@ -143,10 +140,10 @@ export function DocumentChecklist({ flags, completedDocuments, onDocumentClick }
               {/* Optional Documents */}
               {optional.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">OPTIONAL</p>
-                  <div className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">OPTIONAL</p>
+                  <div className="space-y-0.5">
                     {optional.map((doc) => (
-                      <DocumentItem
+                      <DocumentItemCompact
                         key={doc.id}
                         doc={doc}
                         onClick={() => onDocumentClick?.(doc.id)}
@@ -155,27 +152,16 @@ export function DocumentChecklist({ flags, completedDocuments, onDocumentClick }
                   </div>
                 </div>
               )}
-
-              {/* Summary message */}
-              <div className="mt-4 pt-3 border-t">
-                <p className="text-xs text-muted-foreground">
-                  {progress === 100 ? (
-                    <span className="text-green-600 font-medium">All required documents collected!</span>
-                  ) : (
-                    <>Upload or provide info for required documents to complete your return.</>
-                  )}
-                </p>
-              </div>
-            </CardContent>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </Card>
+    </div>
   )
 }
 
-// Individual document item
-function DocumentItem({
+// Compact document item for expanded dropdown
+function DocumentItemCompact({
   doc,
   onClick
 }: {
@@ -183,39 +169,27 @@ function DocumentItem({
   onClick?: () => void
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
+    <div
       className={`
-        flex items-start gap-2 p-2 rounded-lg transition-colors cursor-pointer
+        flex items-center gap-2 py-1 px-1.5 rounded text-xs cursor-pointer transition-colors
         ${doc.completed
-          ? 'bg-green-50 dark:bg-green-950/20'
+          ? 'text-green-700 dark:text-green-400'
           : doc.status === 'required'
-            ? 'bg-red-50/50 dark:bg-red-950/10 hover:bg-red-50 dark:hover:bg-red-950/20'
-            : 'hover:bg-muted/50'
+            ? 'text-foreground hover:bg-red-50 dark:hover:bg-red-950/20'
+            : 'text-muted-foreground hover:bg-muted/50'
         }
       `}
       onClick={onClick}
     >
       {doc.completed ? (
-        <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+        <CheckCircle2 className="h-3 w-3 text-green-600 flex-shrink-0" />
       ) : doc.status === 'required' ? (
-        <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+        <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
       ) : (
-        <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+        <Circle className="h-3 w-3 text-muted-foreground flex-shrink-0" />
       )}
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium truncate ${doc.completed ? 'text-green-700 dark:text-green-400' : ''}`}>
-          {doc.name}
-        </p>
-        <p className="text-xs text-muted-foreground truncate">
-          {doc.description}
-        </p>
-      </div>
-      {!doc.completed && (
-        <Upload className="h-4 w-4 text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-      )}
-    </motion.div>
+      <span className="truncate">{doc.name}</span>
+    </div>
   )
 }
 
