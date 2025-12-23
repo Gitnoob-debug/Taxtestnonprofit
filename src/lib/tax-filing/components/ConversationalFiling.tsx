@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Bot, User, Loader2, CheckCircle2, Sparkles, Camera, Upload, FileText, X, Check } from 'lucide-react'
+import { Send, Bot, User, Loader2, CheckCircle2, Sparkles, Camera, Upload, FileText, X, Check, Building2, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -22,7 +22,13 @@ import {
 } from '../conversation-engine'
 import { LiveTaxForm } from './LiveTaxForm'
 import { DocumentChecklist, DocumentChecklistCompact } from './DocumentChecklist'
+import { CRAAutoFillGuide } from './CRAAutoFillGuide'
 import { formatCurrency } from '../tax-engine'
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 // Scanned slip data awaiting confirmation
 interface PendingSlipData {
@@ -51,6 +57,9 @@ export function ConversationalFiling() {
   // Document tracking state
   const [completedDocuments, setCompletedDocuments] = useState<string[]>([])
   const [requiredDocuments, setRequiredDocuments] = useState<DocumentRequirement[]>([])
+
+  // CRA Auto-fill guide dialog
+  const [showCRAGuide, setShowCRAGuide] = useState(false)
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -388,12 +397,31 @@ export function ConversationalFiling() {
                 <p className="text-xs text-muted-foreground">2024 Tax Return</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs text-muted-foreground">Progress</p>
-                <p className="text-sm font-medium">{progress}%</p>
+            <div className="flex items-center gap-3">
+              {/* CRA Auto-fill Guide Button */}
+              <Dialog open={showCRAGuide} onOpenChange={setShowCRAGuide}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
+                    <Building2 className="h-4 w-4" />
+                    CRA Auto-fill Guide
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+                  <CRAAutoFillGuide
+                    mode="self"
+                    onComplete={() => setShowCRAGuide(false)}
+                    onDismiss={() => setShowCRAGuide(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+
+              <div className="flex items-center gap-2">
+                <div className="text-right hidden sm:block">
+                  <p className="text-xs text-muted-foreground">Progress</p>
+                  <p className="text-sm font-medium">{progress}%</p>
+                </div>
+                <Progress value={progress} className="w-24 sm:w-32" />
               </div>
-              <Progress value={progress} className="w-24 sm:w-32" />
             </div>
           </div>
         </div>
